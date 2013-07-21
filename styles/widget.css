@@ -1,0 +1,550 @@
+body {
+  margin: 0;
+  position: relative;
+  cursor: default;
+}
+
+[role="application"] {
+  -moz-user-select: none;
+  pointer-events: none;
+}
+
+[role="application"] * {
+  -moz-user-select: none;
+}
+
+[aria-haspopup] {
+  pointer-events: auto;
+}
+
+[role="region"] {
+  position: relative;
+}
+
+[aria-hidden="true"] {
+  display: none;
+}
+
+[aria-expanded="false"] {
+  display: none;
+}
+
+[aria-disabled="true"] {
+  pointer-events: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Tab View
+ * -------------------------------------------------------------------------- */
+
+[role="tablist"] {
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+[role="tab"] {
+  display: block;
+  position: relative;
+  float: left;
+  border-radius: 4px 4px 0 0;
+  padding: 4px 8px;
+  list-style-type: none;
+  pointer-events: auto;
+}
+
+[role="tab"] span {
+  display: block;
+}
+
+[role="tab"] label {
+  display: block;
+  float: left;
+  overflow: hidden;
+  width: calc(100% - 24px);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+[role="tab"] .close {
+  float: right;
+  margin-right: -2px;
+  width: 16px;
+  height: 16px;
+}
+
+[role="tab"]:first-of-type:last-of-type .close {
+  visibility: hidden;
+}
+
+/* --------------------------------------------------------------------------
+ * Tree View
+ * -------------------------------------------------------------------------- */
+
+[role="tree"] {
+  margin: 0;
+  padding: 0;
+  pointer-events: auto;
+}
+
+[role="tree"] [role="group"] {
+  margin: 0;
+  padding: 0;
+}
+
+[role="tree"] li {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  pointer-events: none;
+}
+
+[role="treeitem"] + .expander {
+  display: block;
+  margin-top: -18px;
+  width: 18px;
+  height: 18px;
+  pointer-events: auto;
+}
+
+[role="treeitem"][aria-expanded="false"] {
+  display: block;
+}
+
+[role="treeitem"][aria-expanded="false"] ~ [role="group"] {
+  display: none;
+}
+
+[role="treeitem"] {
+  display: block;
+  padding-left: 18px;
+  height: 18px;
+  line-height: 18px;
+  pointer-events: auto;
+}
+
+[role="treeitem"] label {
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+[role="treeitem"][aria-level="2"] + .expander {
+  margin-left: 18px;
+}
+
+[role="treeitem"][aria-level="2"] {
+  padding-left: 40px;
+}
+
+[role="treeitem"][aria-level="3"] + .expander {
+  margin-left: 40px;
+}
+
+[role="treeitem"][aria-level="3"] {
+  padding-left: 60px;
+}
+
+/* --------------------------------------------------------------------------
+ * Grid View
+ * -------------------------------------------------------------------------- */
+
+[role="grid"] {
+  position: relative;
+  pointer-events: auto;
+}
+
+[role="grid"] table {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+[role="grid"] col[data-hidden="true"] {
+  display: table-column;
+  visibility: collapse;
+  width: 0 !important;
+}
+
+[role="grid"] th[aria-hidden="true"],
+[role="grid"] td[aria-hidden="true"] {
+  display: table-cell;
+}
+
+[role="grid"] th,
+[role="grid"] td {
+  margin: 0;
+  border: 0;
+  padding: 0;
+  height: 18px;
+  line-height: 18px;
+}
+
+[role="grid"] th label,
+[role="grid"] th time,
+[role="grid"] td label,
+[role="grid"] td time {
+  display: block;
+  overflow: hidden;
+  padding: 0 4px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+
+[role="grid"] th {
+  font-weight: normal;
+  text-align: left;
+}
+
+[role="grid"] hgroup {
+  position: absolute;
+  left: -99999px;
+}
+
+[role="grid"] .grid-header {
+  position: relative;
+}
+
+[role="grid"] .grid-header [aria-sort] label {
+  padding-right: 18px;
+}
+
+[role="grid"] .grid-header [aria-sort] label:after {
+  display: block;
+  content: '';
+  float: right;
+  margin: 0 -18px 0 0;
+  width: 18px;
+  height: 18px;
+}
+
+
+[role="grid"] .column-picker {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+[role="grid"] .column-picker [role="menu"] {
+  right: 0;
+}
+
+[role="grid"] .grid-body {
+  position: relative;
+  overflow: hidden;
+}
+
+[role="grid"] .grid-body tbody[aria-busy="true"] {
+  display: none; /* for sorting performance */
+}
+
+[role="grid"] tbody td {
+  pointer-events: none;
+}
+
+[role="grid"] tbody td[aria-readonly="false"] {
+  pointer-events: auto;
+}
+
+[role="grid"] tbody td [role="checkbox"] {
+  display: block;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+#column-drag-image-container {
+  position: absolute;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+canvas[id^="column-drag-image-"] {
+  position: absolute;
+  top: 0;
+  z-index: 101;
+  pointer-events: none;
+  transition: left .5s;
+}
+
+canvas[id^="column-drag-image-"].follower {
+  z-index: 102;
+  opacity: .5;
+  transition: none;
+}
+
+/* --------------------------------------------------------------------------
+ * Menu
+ * -------------------------------------------------------------------------- */
+
+[role^="menu"] {
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+[role^="menu"][aria-expanded="false"] {
+  display: none;
+}
+
+[role="menubar"] {
+  position: absolute;
+}
+
+[role="menubar"],
+[role="menu"] {
+  z-index: 2000;
+  pointer-events: auto;
+}
+
+[role="menubar"] > li,
+[role="menu"] > li {
+  display: block;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+[role="menubar"] > li {
+  float: left;
+}
+
+[role="menubar"] > li > [role="menuitem"] {
+  padding: 0 8px;
+  height: 18px;
+  line-height: 18px;
+}
+
+[role="menu"] {
+  position: absolute;
+  border-radius: 4px;
+  padding: 4px 0; 
+}
+
+[role="menu"] [role="menu"] {
+  top: -4px;
+  left: 100%;
+}
+
+[role="menu"] [role="menu"].dir-left {
+  right: 100%;
+  left: auto;
+}
+
+[role="menu"] [role^="menuitem"] { /* exclude menubar items */
+  padding: 0 24px;
+  line-height: 18px;
+  white-space: nowrap;
+}
+
+[role="menu"] [role="menuitem"][aria-haspopup="true"]:after { /* exclude menubar items */
+  display: block;
+  float: right;
+  margin: -18px -24px 0 0;
+  width: 18px;
+  height: 18px;
+  content: '';
+}
+
+a[role="menuitem"] {
+  color: inherit;
+  text-decoration: none;
+  cursor: default;
+}
+
+[role^="menuitem"][aria-disabled="true"] {
+  opacity: .5;
+}
+
+[role^="menuitem"] label {
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+[role^="menuitem"][aria-checked="true"]:before {
+  display: block;
+  float: left;
+  margin-left: -18px;
+  width: 18px;
+  height: 18px;
+  content: '';
+}
+
+[role="menu"] [role="separator"] {
+  margin: 4px 0;
+  border-bottom: 1px solid;
+  height: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * Dialog
+ * -------------------------------------------------------------------------- */
+
+.dialog-wrapper {
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+[role="dialog"],
+[role="alertdialog"] {
+  position: absolute;
+  top: 80px;
+  left: 50%;
+  margin-left: -200px;
+  padding: 40px;
+  width: 360px;
+}
+
+[role="dialog"] h2,
+[role="alertdialog"] h2 {
+  margin: 0;
+}
+
+[role="dialog"] button,
+[role="alertdialog"] button {
+  display: inline-block;
+}
+
+/* --------------------------------------------------------------------------
+ * Splitter
+ * -------------------------------------------------------------------------- */
+
+.splitter {
+  position: relative;
+  z-index: 100;
+  width: 100%;
+  height: 4px;
+  cursor: ns-resize;
+  pointer-events: auto;
+}
+
+.splitter[aria-orientation="vertical"] {
+  cursor: ew-resize;
+  width: 4px;
+  height: 100%;
+}
+
+[data-splitter] * {
+  pointer-events: auto;
+}
+
+[data-splitter="horizontal"] {
+  cursor: ns-resize;
+}
+
+[data-splitter="vertical"] {
+  cursor: ew-resize;
+}
+
+/* --------------------------------------------------------------------------
+ * Listbox
+ * -------------------------------------------------------------------------- */
+
+[role="listbox"] {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+  pointer-events: auto;
+}
+
+[role="listbox"] [role="option"] {
+  padding: 0 4px;
+  height: 18px;
+  line-height: 18px;
+}
+
+[role="listbox"] [role="option"] label {
+  display: block;
+  pointer-events: none;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* --------------------------------------------------------------------------
+ * ScrollBar
+ * -------------------------------------------------------------------------- */
+
+[role="scrollbar"] {
+  position: absolute;
+  right: 2px;
+  z-index: 1000;
+  outline: 0;
+  border-radius: 8px;
+  width: 8px;
+  min-height: 16px;
+  background-color: #999;
+  opacity: .2;
+  transition: opacity .3s;
+  pointer-events: auto;
+}
+
+[role="scrollbar"]:hover,
+[role="scrollbar"]:focus {
+  opacity: .4;
+}
+
+[role="scrollbar"][aria-disabled="true"] {
+  opacity: 0;
+}
+
+/* --------------------------------------------------------------------------
+ * RadioGroup & CheckBox
+ * -------------------------------------------------------------------------- */
+
+[role="radio"],
+[role="radio"] + label,
+[role="checkbox"],
+[role="checkbox"] + label {
+  display: inline-block;
+  vertical-align: top;
+  pointer-events: auto;
+}
+
+[role="radio"][aria-hidden="true"],
+[role="radio"][aria-hidden="true"] + label,
+[role="checkbox"][aria-hidden="true"],
+[role="checkbox"][aria-hidden="true"] + label {
+  display: none;
+}
+
+[role="radio"],
+[role="checkbox"] {
+  margin: 2px;
+  width: 12px;
+  height: 12px;
+  line-height: 12px;
+}
+
+[role="radio"] + label,
+[role="checkbox"] + label {
+  height: 16px;
+  line-height: 16px;
+}
+
+/* --------------------------------------------------------------------------
+ * Button
+ * -------------------------------------------------------------------------- */
+
+[role="button"] {
+  pointer-events: auto;
+}
+
+[role="button"][aria-disabled="true"] {
+  opacity: .5;
+}
