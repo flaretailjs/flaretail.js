@@ -920,7 +920,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
       } else if (column.type === 'time') {
         let $label = $cell.appendChild(document.createElement('time'));
         // TODO: add a pref to use PST
-        $label.textContent = new Date(value).toLocaleFormat('%Y-%m-%d %H:%M');
+        $label.textContent = (new Date(value)).toLocaleFormat('%Y-%m-%d %H:%M');
         $label.setAttribute('datetime', value);
       } else {
         let $label = $cell.appendChild(document.createElement('label'));
@@ -2536,7 +2536,7 @@ BriteGrid.widget.Window.prototype = Object.create(BriteGrid.widget.RoleType.prot
 
 BriteGrid.widget.Dialog = function (options) {
   this.options = {
-    id: options.id || new Date().getTime(),
+    id: options.id || (new Date()).getTime(),
     type: options.type,
     title: options.title,
     message: options.message,
