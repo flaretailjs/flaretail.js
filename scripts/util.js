@@ -111,6 +111,26 @@ BriteGrid.util.app.install = (manifest, callback) => {
   request.addEventListener('error', event => callback(event));
 };
 
+BriteGrid.util.app.fullscreen_enabled = () => {
+  return document.fullscreenEnabled || document.mozFullScreenEnabled;
+}
+
+BriteGrid.util.app.toggle_fullscreen = () => {
+  if (document.fullscreenElement === null || document.mozFullScreenElement === null) {
+    if (document.body.requestFullscreen) {
+      document.body.requestFullscreen();
+    } else if (document.body.mozRequestFullScreen) {
+      document.body.mozRequestFullScreen();
+    }
+  } else {
+    if (document.cancelFullScreen) {
+      document.cancelFullScreen();
+    } else if (document.mozCancelFullScreen) {
+      document.mozCancelFullScreen();
+    }
+  }
+};
+
 /* --------------------------------------------------------------------------
  * Theme
  * -------------------------------------------------------------------------- */
