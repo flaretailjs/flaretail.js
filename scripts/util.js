@@ -54,7 +54,7 @@ BriteGrid.util.event.unbind = function (that, target, types, use_capture = false
 
 BriteGrid.util.request = {};
 
-BriteGrid.util.request.build_query = function (query) {
+BriteGrid.util.request.build_query = query => {
   let fields = [];
 
   for (let [key, value] of Iterator(query)) {
@@ -80,13 +80,9 @@ BriteGrid.util.prefs = {};
 BriteGrid.util.Storage = function () {
   let req = this.request = indexedDB.open("MyTestDatabase", 1),
       db = this.db = null;
-  req.addEventListener('error', function (event) {
-  });
-  req.addEventListener('success', function (event) {
-    db = request.result;
-  });
-  db.addEventListener('error', function (event) {
-  });
+  req.addEventListener('error', event => {});
+  req.addEventListener('success', event => db = request.result);
+  db.addEventListener('error', event => {});
 };
 
 /* --------------------------------------------------------------------------
@@ -103,22 +99,14 @@ BriteGrid.util.app.can_install = function (callback) {
   }
 
   let request = apps.getInstalled();
-  request.addEventListener('success', function () {
-    callback(request.result.length === 0);
-  });
-  request.addEventListener('error', function () {
-    callback(false);
-  });
+  request.addEventListener('success', () => callback(request.result.length === 0));
+  request.addEventListener('error', () => callback(false));
 };
 
 BriteGrid.util.app.install = function (manifest, callback) {
   let request = navigator.mozApps.install(manifest);
-  request.addEventListener('success', function (event) {
-    callback(event);
-  });
-  request.addEventListener('error', function (event) {
-    callback(event);
-  });
+  request.addEventListener('success', event => callback(event));
+  request.addEventListener('error', event => callback(event));
 };
 
 /* --------------------------------------------------------------------------
@@ -130,20 +118,20 @@ BriteGrid.util.theme = {};
 Object.defineProperties(BriteGrid.util.theme, {
   'list': {
     enumerable : true,
-    get: function () { return document.styleSheetSets; }
+    get: () => document.styleSheetSets
   },
   'default': {
     enumerable : true,
-    get: function () { return document.preferredStyleSheetSet; }
+    get: () => document.preferredStyleSheetSet
   },
   'selected': {
     enumerable : true,
-    get: function () { return document.selectedStyleSheetSet; },
-    set: function (name) { document.selectedStyleSheetSet = name; }
+    get: () => document.selectedStyleSheetSet,
+    set: name => document.selectedStyleSheetSet = name
   }
 });
 
-BriteGrid.util.theme.preload_images = function (callback) {
+BriteGrid.util.theme.preload_images = callback => {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
@@ -170,7 +158,7 @@ BriteGrid.util.theme.preload_images = function (callback) {
 
   for (let src of images) {
     let image = new Image();
-    image.addEventListener('load', function (event) {
+    image.addEventListener('load', event => {
       loaded++;
       if (loaded === total) {
         callback();
@@ -204,7 +192,7 @@ BriteGrid.util.l10n = {};
 
 BriteGrid.util.style = {};
 
-BriteGrid.util.style.get = function (element, property) {
+BriteGrid.util.style.get = (element, property) => {
   return window.getComputedStyle(element, null).getPropertyValue(property);
 };
 
@@ -214,13 +202,9 @@ BriteGrid.util.style.get = function (element, property) {
 
 BriteGrid.util.object = {};
 
-BriteGrid.util.object.clone = function (obj) {
-  return JSON.parse(JSON.stringify(obj));
-};
+BriteGrid.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
 
-BriteGrid.util.object.equals = function (o1, o2) {
-  return o1.toSource() === o2.toSource();
-};
+BriteGrid.util.object.equals = (o1, o2) => o1.toSource() === o2.toSource();
 
 /* --------------------------------------------------------------------------
  * Array
@@ -228,9 +212,7 @@ BriteGrid.util.object.equals = function (o1, o2) {
 
 BriteGrid.util.array = {};
 
-BriteGrid.util.array.clone = function (array) {
-  return Array.slice(array);
-};
+BriteGrid.util.array.clone = array => Array.slice(array);
 
 /* --------------------------------------------------------------------------
  * String
@@ -238,7 +220,7 @@ BriteGrid.util.array.clone = function (array) {
 
 BriteGrid.util.string = {};
 
-BriteGrid.util.string.sanitize = function (str) {
+BriteGrid.util.string.sanitize = str => {
   let chars = {
     '<': '&lt;',
     '>': '&gt;',
