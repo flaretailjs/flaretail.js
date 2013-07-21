@@ -150,8 +150,7 @@ BriteGrid.util.theme.preload_images = callback => {
     }
   }
 
-  // Note that Set.size was a method in Firefox 18 and earlier
-  let total = typeof images.size === 'function' ? images.size() : images.size,
+  let total = images.size,
       loaded = 0;
 
   for (let src of images) {
