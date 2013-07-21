@@ -289,7 +289,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       expanding = multi && event.shiftKey;
 
   switch (kcode) {
-    case event.DOM_VK_SPACE:
+    case event.DOM_VK_SPACE: {
       if (ctrl) {
         break; // Move focus only
       }
@@ -307,11 +307,12 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         this.view.selected = selected;
       }
       break;
+    }
 
     // TODO: The behavior with Page Up/Down should be different
 
     case event.DOM_VK_HOME:
-    case event.DOM_VK_PAGE_UP:
+    case event.DOM_VK_PAGE_UP: {
       this.view.focused = items[0];
       if (ctrl) {
         break; // Move focus only
@@ -322,9 +323,10 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       }
       this.view.selected = items.slice(0, selected_idx + 1).reverse();
       break;
+    }
 
     case event.DOM_VK_END:
-    case event.DOM_VK_PAGE_DOWN:
+    case event.DOM_VK_PAGE_DOWN: {
       this.view.focused = items[items.length - 1];
       if (ctrl) {
         break; // Move focus only
@@ -335,9 +337,10 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       }
       this.view.selected = items.slice(selected_idx);
       break;
+    }
 
     case event.DOM_VK_UP:
-    case event.DOM_VK_LEFT:
+    case event.DOM_VK_LEFT: {
       if (focused_idx > 0) {
         this.view.focused = items[focused_idx - 1];
       } else if (cycle) {
@@ -363,9 +366,10 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         this.view.selected = selected;
       }
       break;
+    }
 
     case event.DOM_VK_DOWN:
-    case event.DOM_VK_RIGHT:
+    case event.DOM_VK_RIGHT: {
       if (focused_idx < items.length - 1) {
         this.view.focused = items[focused_idx + 1];
       } else if (cycle) {
@@ -391,8 +395,9 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         this.view.selected = selected;
       }
       break;
+    }
 
-    default:
+    default: {
       // Select All
       if (ctrl && kcode === event.DOM_VK_A) {
         this.view.selected = items;
@@ -458,6 +463,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       window.setTimeout(() => {
         delete this.data.search_key;
       }, 1500);
+    }
   }
 
   return BriteGrid.util.event.ignore(event);
@@ -582,7 +588,7 @@ BriteGrid.widget.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
     set: (obj, prop, value) => {
       switch (prop) {
-        case 'selected':
+        case 'selected': {
           // Validation: this.selectd.value is always Array
           if (!Array.isArray(value)) {
             value = [value];
@@ -600,6 +606,7 @@ BriteGrid.widget.Grid.prototype.activate_extend = function () {
             $item.setAttribute('aria-selected', 'true');
           }
           break;
+        }
       }
 
       obj[prop] = value;
@@ -639,24 +646,28 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
       let value;
 
       switch (prop) {
-        case 'index':
+        case 'index': {
           value = obj.element.cellIndex;
           break;
-        case 'width':
+        }
+        case 'width': {
           value = parseInt(BriteGrid.util.style.get(obj.element, 'width'));
           break;
-        case 'left':
+        }
+        case 'left': {
           value = obj.element.offsetLeft;
           break;
-        default:
+        }
+        default: {
           value = obj[prop];
+        }
       }
 
       return value;
     },
     set: (obj, prop, value) => {
       switch (prop) {
-        case 'hidden':
+        case 'hidden': {
           // Reflect the change of row's visibility to UI
           if (value === true) {
             this.hide_column(obj);
@@ -665,6 +676,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
           }
           this.view.container.dispatchEvent(new CustomEvent('ColumnEdited'));
           break;
+        }
       }
 
       obj[prop] = value;
@@ -789,27 +801,32 @@ BriteGrid.widget.Grid.prototype.onkeydown_extend = function (event) {
 
   switch (kcode) {
     case event.DOM_VK_LEFT:
-    case event.DOM_VK_RIGHT:
+    case event.DOM_VK_RIGHT: {
       // Do nothing
       break;
+    }
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_PAGE_DOWN:
-    case event.DOM_VK_SPACE:
+    case event.DOM_VK_SPACE: {
       // Handled by the ScrollBar widget
       return true;
-    case event.DOM_VK_B:
+    }
+    case event.DOM_VK_B: {
       if (!modifiers && focused_idx > 0) {
         this.view.selected = this.view.focused = items[focused_idx - 1];
       }
       break;
-    case event.DOM_VK_F:
+    }
+    case event.DOM_VK_F: {
       if (!modifiers && focused_idx < items.length - 1) {
         this.view.selected = this.view.focused = items[focused_idx + 1];
       }
       break;
-    default:
+    }
+    default: {
       // The default behavior
       this.onkeydown(event);
+    }
   }
 
   return BriteGrid.util.event.ignore(event);
@@ -967,14 +984,17 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
           value,
           normalized_value;
       switch (column.type) {
-        case 'integer':
+        case 'integer': {
           value = parseInt($cell.textContent);
           break;
-        case 'boolean': // checkbox
+        }
+        case 'boolean': { // checkbox
           value = $cell.querySelector('[role="checkbox"]').getAttribute('aria-checked') === 'true';
           break;
-        default: // string
+        }
+        default: { // string
           value = $cell.textContent;
+        }
       }
       row.data[column.id] = value;
     };
@@ -1027,12 +1047,15 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
     let a_val = a.data[cond.key],
         b_val = b.data[cond.key];
     switch (type) {
-      case 'integer':
+      case 'integer': {
         return a_val > b_val;
-      case 'boolean':
+      }
+      case 'boolean': {
         return a_val < b_val;
-      default:
+      }
+      default: {
         return nomalize(a_val) > nomalize(b_val);
+      }
     }
   });
 
@@ -1518,18 +1541,21 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
         items = view.members;
     switch (kcode) {
       case event.DOM_VK_UP:
-      case event.DOM_VK_END:
+      case event.DOM_VK_END: {
         view.selected = view.focused = items[items.length - 1];
         break;
+      }
       case event.DOM_VK_DOWN:
       case event.DOM_VK_RIGHT:
-      case event.DOM_VK_HOME:
+      case event.DOM_VK_HOME: {
         view.selected = view.focused = items[0];
         break;
+      }
       case event.DOM_VK_ESCAPE:
-      case event.DOM_VK_TAB:
+      case event.DOM_VK_TAB: {
         this.close();
         break;
+      }
     }
     return;
   }
@@ -1537,7 +1563,7 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
   BriteGrid.util.event.ignore(event);
 
   switch (kcode) {
-    case event.DOM_VK_RIGHT:
+    case event.DOM_VK_RIGHT: {
       if (has_submenu) {
         // Select the first item in the submenu
         let view = menus.get(event.target).view;
@@ -1550,7 +1576,8 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
         view.selected = view.focused = target;
       }
       break;
-    case event.DOM_VK_LEFT:
+    }
+    case event.DOM_VK_LEFT: {
       if (parent) {
         let view = parent.view,
             items = view.members,
@@ -1560,19 +1587,23 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
         view.selected = view.focused = target;
       }
       break;
-    case event.DOM_VK_ESCAPE:
+    }
+    case event.DOM_VK_ESCAPE: {
       this.close();
       break;
+    }
     case event.DOM_VK_RETURN:
-    case event.DOM_VK_SPACE:
+    case event.DOM_VK_SPACE: {
       if (!has_submenu) {
         this.select(event);
         this.close(true);
       }
       break;
-    default:
+    }
+    default: {
       // The default behavior
       this.onkeydown(event);
+    }
   }
 };
 
@@ -1751,17 +1782,20 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
       menuitems = menu.members;
 
   switch (event.keyCode) {
-    case event.DOM_VK_TAB:
+    case event.DOM_VK_TAB: {
       return true; // Focus management
+    }
     case event.DOM_VK_HOME:
-    case event.DOM_VK_DOWN:
+    case event.DOM_VK_DOWN: {
       menu.selected = menu.focused = menuitems[0];
       break;
+    }
     case event.DOM_VK_END:
-    case event.DOM_VK_UP:
+    case event.DOM_VK_UP: {
       menu.selected = menu.focused = menuitems[menuitems.length - 1];
       break;
-    case event.DOM_VK_SPACE:
+    }
+    case event.DOM_VK_SPACE: {
       if (event.target.getAttribute('aria-selected') === 'true') {
         menu.container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
@@ -1770,15 +1804,18 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
         this.view.selected = event.target;
       }
       break;
-    case event.DOM_VK_ESCAPE:
+    }
+    case event.DOM_VK_ESCAPE: {
       if (event.target.getAttribute('aria-selected') === 'true') {
         menu.container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       }
       break;
-    default:
+    }
+    default: {
       // The default behavior
       this.onkeydown(event);
+    }
   }
 
   return BriteGrid.util.event.ignore(event);
@@ -1883,7 +1920,7 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
       items = this.view.members;
 
   switch (event.keyCode) {
-    case event.DOM_VK_LEFT:
+    case event.DOM_VK_LEFT: {
       if ($item.getAttribute('aria-expanded') === 'true') {
         this.expand($item); // Collapse the subgroup
       } else {
@@ -1899,7 +1936,8 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
         this.view.selected = this.view.focused = $selected;
       }
       break;
-    case event.DOM_VK_RIGHT:
+    }
+    case event.DOM_VK_RIGHT: {
       if ($item.getAttribute('aria-expanded') === 'false') {
         this.expand($item); // Expand the subgroup
       } else if ($item.hasAttribute('aria-expanded')) {
@@ -1908,9 +1946,11 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
         this.view.selected = this.view.focused = $selected;
       }
       break;
-    default:
+    }
+    default: {
       // The default behavior
       this.onkeydown(event);
+    }
   }
 };
 
@@ -2407,39 +2447,46 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
       ch = $owner.clientHeight;
 
   switch (event.keyCode) {
-    case event.DOM_VK_TAB:
+    case event.DOM_VK_TAB: {
       return true; // Focus management
-    case event.DOM_VK_HOME:
+    }
+    case event.DOM_VK_HOME: {
       if (this.options.adjusted) {
         return false;
       }
       $owner.scrollTop = 0;
       break;
-    case event.DOM_VK_END:
+    }
+    case event.DOM_VK_END: {
       if (this.options.adjusted) {
         return false;
       }
       $owner.scrollTop = $owner.scrollTopMax;
       break;
-    case event.DOM_VK_PAGE_UP:
+    }
+    case event.DOM_VK_PAGE_UP: {
       $owner.scrollTop -= ch;
       break;
-    case event.DOM_VK_PAGE_DOWN:
+    }
+    case event.DOM_VK_PAGE_DOWN: {
       $owner.scrollTop += ch;
       break;
-    case event.DOM_VK_UP:
+    }
+    case event.DOM_VK_UP: {
       if (this.options.adjusted) {
         return false;
       }
       $owner.scrollTop -= 40;
       break;
-    case event.DOM_VK_DOWN:
+    }
+    case event.DOM_VK_DOWN: {
       if (this.options.adjusted) {
         return false;
       }
       $owner.scrollTop += 40;
       break;
-    case event.DOM_VK_SPACE:
+    }
+    case event.DOM_VK_SPACE: {
       if (this.options.adjusted) {
         return false;
       }
@@ -2449,6 +2496,7 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
         $owner.scrollTop += ch;
       }
       break;
+    }
   }
 
   BriteGrid.util.event.ignore(event);
@@ -2557,10 +2605,12 @@ BriteGrid.widget.Dialog.prototype.onclick = function (event) {
 
 BriteGrid.widget.Dialog.prototype.onkeypress = function (event) {
   switch (event.keyCode) {
-    case event.DOM_VK_RETURN:
+    case event.DOM_VK_RETURN: {
       break;
-    case event.DOM_VK_ESCAPE:
+    }
+    case event.DOM_VK_ESCAPE: {
       break;
+    }
   }
 };
 
