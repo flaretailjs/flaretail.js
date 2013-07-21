@@ -204,8 +204,6 @@ BriteGrid.util.object = {};
 
 BriteGrid.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
 
-BriteGrid.util.object.equals = (o1, o2) => o1.toSource() === o2.toSource();
-
 /* --------------------------------------------------------------------------
  * Array
  * -------------------------------------------------------------------------- */

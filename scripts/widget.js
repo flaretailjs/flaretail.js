@@ -692,9 +692,8 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   let handler = {
     set: (obj, prop, value) => {
       // Reflect Data change into View
-      let equals = BriteGrid.util.object.equals;
       for (let row of this.data.rows) {
-        if (equals(row.data, obj)) {
+        if (Object.is(row.data, obj)) {
           let $cell = row.element.querySelector('[data-id="' + prop + '"]');
           if (this.data.columns[prop].type === 'boolean') {
             $cell.querySelector('[role="checkbox"]').setAttribute('aria-checked', value);
