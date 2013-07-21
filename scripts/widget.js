@@ -25,7 +25,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
   this.options = this.options || {};
   this.options.item_roles = this.options.item_roles || [];
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
-  this.options.multiselectable = $container.getAttribute('aria-multiselectable') === 'true';
+  this.options.multiselectable = $container.mozMatchesSelector('[aria-multiselectable="true"]');
 
   let get_items = selector => {
     // Convert NodeList to Array for convenience in operation
@@ -156,8 +156,8 @@ BriteGrid.widget.Button = function ($button) {
   };
 
   this.data = new Proxy({
-    disabled: $button.getAttribute('aria-disabled') === 'true',
-    pressed: $button.getAttribute('aria-pressed') === 'true'
+    disabled: $button.mozMatchesSelector('[aria-disabled="true"]'),
+    pressed: $button.mozMatchesSelector('[aria-pressed="true"]')
   },
   {
     set: (obj, prop, value) => {
@@ -734,7 +734,7 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
 
   let $target = event.target;
 
-  if ($target.getAttribute('role') === 'columnheader') {
+  if ($target.mozMatchesSelector('[role="columnheader"]')) {
     if (event.button === 0 && this.options.reorderable) {
       BriteGrid.util.event.bind(this, window, ['mousemove', 'mouseup']);
     }
@@ -745,10 +745,10 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
   }
 
   // Editable checkbox in cells
-  if ($target.getAttribute('role') === 'checkbox') {
+  if ($target.mozMatchesSelector('[role="checkbox"]')) {
     let index = $target.parentElement.parentElement.sectionRowIndex,
         id = $target.parentElement.dataset.id,
-        value = $target.getAttribute('aria-checked') !== 'true';
+        value = !$target.mozMatchesSelector('[aria-checked="true"]');
     this.data.rows[index].data[id] = value;
     return;
   }
@@ -781,7 +781,7 @@ BriteGrid.widget.Grid.prototype.onmouseup = function (event) {
   let $target = event.target,
       options = this.options;
 
-  if ($target.getAttribute('role') === 'columnheader' && options.sortable) {
+  if ($target.mozMatchesSelector('[role="columnheader"]') && options.sortable) {
     options.sort_conditions.key = $target.dataset.id;
   }
 };
@@ -988,7 +988,7 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
           break;
         }
         case 'boolean': { // checkbox
-          value = $cell.querySelector('[role="checkbox"]').getAttribute('aria-checked') === 'true';
+          value = $cell.querySelector('[role="checkbox"]').mozMatchesSelector('[aria-checked="true"]');
           break;
         }
         default: { // string
@@ -1427,7 +1427,7 @@ BriteGrid.widget.Menu = function ($container, data = []) {
 
   // Context menu
   let $owner = document.querySelector('[aria-owns="' + $container.id + '"]');
-  if ($owner && $owner.getAttribute('role') !== 'menuitem') {
+  if ($owner && !$owner.mozMatchesSelector('[role="menuitem"]')) {
     this.view.owner = $owner;
     BriteGrid.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
   }
@@ -1580,7 +1580,7 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
       if (parent) {
         let view = parent.view,
             items = view.members,
-            target = view.container.getAttribute('role') === 'menubar'
+            target = view.container.mozMatchesSelector('[role="menubar"]')
                    ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1]
                    : view.selected[0];
         view.selected = view.focused = target;
@@ -1795,7 +1795,7 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
       break;
     }
     case event.DOM_VK_SPACE: {
-      if (event.target.getAttribute('aria-selected') === 'true') {
+      if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
         menu.container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       } else {
@@ -1805,7 +1805,7 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
       break;
     }
     case event.DOM_VK_ESCAPE: {
-      if (event.target.getAttribute('aria-selected') === 'true') {
+      if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
         menu.container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       }
@@ -1852,7 +1852,7 @@ BriteGrid.widget.RadioGroup = function ($container, data) {
 BriteGrid.widget.RadioGroup.prototype = Object.create(BriteGrid.widget.Select.prototype);
 
 BriteGrid.widget.RadioGroup.prototype.onmousedown_extend = function (event) {
-  if (event.target.localName === 'label') {
+  if (event.target.mozMatchesSelector('label')) {
     BriteGrid.util.event.ignore(event);
   }  
 
@@ -1860,7 +1860,7 @@ BriteGrid.widget.RadioGroup.prototype.onmousedown_extend = function (event) {
 };
 
 BriteGrid.widget.RadioGroup.prototype.onclick = function (event) {
-  if (event.target.localName === 'label') {
+  if (event.target.mozMatchesSelector('label')) {
     let $target = document.querySelector('[aria-labelledby="' + event.target.id + '"]');
     this.view.selected = this.view.focused = $target;
   }
@@ -1904,7 +1904,7 @@ BriteGrid.widget.Tree = function ($container, data) {
 BriteGrid.widget.Tree.prototype = Object.create(BriteGrid.widget.Select.prototype);
 
 BriteGrid.widget.Tree.prototype.onmousedown_extend = function (event) {
-  if (event.target.className === 'expander') {
+  if (event.target.mozMatchesSelector('.expander')) {
     this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
   } else {
     // The default behavior
@@ -1920,7 +1920,7 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
 
   switch (event.keyCode) {
     case event.DOM_VK_LEFT: {
-      if ($item.getAttribute('aria-expanded') === 'true') {
+      if ($item.mozMatchesSelector('[aria-expanded="true"]')) {
         this.expand($item); // Collapse the subgroup
       } else {
         // Select the parent item
@@ -1937,7 +1937,7 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
       break;
     }
     case event.DOM_VK_RIGHT: {
-      if ($item.getAttribute('aria-expanded') === 'false') {
+      if ($item.mozMatchesSelector('[aria-expanded="false"]')) {
         this.expand($item); // Expand the subgroup
       } else if ($item.hasAttribute('aria-expanded')) {
         // Select the item just below
@@ -2053,12 +2053,12 @@ BriteGrid.widget.Tree.prototype.get_data = function () {
 };
 
 BriteGrid.widget.Tree.prototype.expand = function ($item) {
-  let expanded = $item.getAttribute('aria-expanded') === 'true' ? false : true,
+  let expanded = $item.mozMatchesSelector('[aria-expanded="true"]'),
       items = this.view.container.querySelectorAll('[role="treeitem"]'),
       selector = '#' + $item.getAttribute('aria-owns') + ' [aria-selected="true"]',
       children = Array.slice(document.querySelectorAll(selector));
 
-  $item.setAttribute('aria-expanded', expanded);
+  $item.setAttribute('aria-expanded', !expanded);
 
   // Update data with visible items
   this.view.members = Array.filter(items, $item => $item.offsetParent !== null);
@@ -2107,7 +2107,7 @@ BriteGrid.widget.TreeGrid.prototype = Object.create(BriteGrid.widget.Grid.protot
 BriteGrid.widget.TabList = function ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
-  if ($container.getAttribute('aria-multiselectable') === 'true') {
+  if ($container.mozMatchesSelector('[aria-multiselectable="true"]')) {
     throw new Error('Multi-selectable tab list is not supported yet.');
   }
 
@@ -2154,7 +2154,7 @@ BriteGrid.widget.TabList.prototype = Object.create(BriteGrid.widget.Composite.pr
 
 BriteGrid.widget.TabList.prototype.onclick = function (event) {
   if (event.currentTarget === this.view.container &&
-      event.target.className === 'close') {
+      event.target.mozMatchesSelector('.close')) {
     this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
   }
 };
@@ -2256,7 +2256,7 @@ BriteGrid.widget.Checkbox = function ($checkbox) {
   };
 
   this.data = new Proxy({
-    checked: $checkbox.getAttribute('aria-checked') === 'true'
+    checked: $checkbox.mozMatchesSelector('[aria-checked="true"]')
   },
   {
     set: (obj, prop, value) => {
@@ -2597,7 +2597,7 @@ BriteGrid.widget.Dialog.prototype.activate = function () {
 };
 
 BriteGrid.widget.Dialog.prototype.onclick = function (event) {
-  if (event.target.getAttribute('role') === 'button') {
+  if (event.target.mozMatchesSelector('[role="button"]')) {
   }
 };
 
