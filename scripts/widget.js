@@ -643,7 +643,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
           value = obj.element.cellIndex;
           break;
         case 'width':
-          value = parseInt(BriteGrid.util.style.get(obj.element, 'width'), 10);
+          value = parseInt(BriteGrid.util.style.get(obj.element, 'width'));
           break;
         case 'left':
           value = obj.element.offsetLeft;
@@ -968,7 +968,7 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
           normalized_value;
       switch (column.type) {
         case 'integer':
-          value = parseInt($cell.textContent, 10);
+          value = parseInt($cell.textContent);
           break;
         case 'boolean': // checkbox
           value = $cell.querySelector('[role="checkbox"]').getAttribute('aria-checked') === 'true';
@@ -2629,8 +2629,8 @@ BriteGrid.widget.Splitter = function ($splitter) {
       id: id,
       collapsible: $target.hasAttribute('aria-expanded'),
       expanded: $target.getAttribute('aria-expanded') || true,
-      current: parseInt(BriteGrid.util.style.get($target, prop), 10),
-      min: parseInt(BriteGrid.util.style.get($target, 'min-' + prop), 10)
+      current: parseInt(BriteGrid.util.style.get($target, prop)),
+      min: parseInt(BriteGrid.util.style.get($target, 'min-' + prop))
     },
     {
       set: function (obj, prop, value) {
