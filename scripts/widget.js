@@ -879,7 +879,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
 
   let $grid_body = this.view.body = document.createElement('div'),
       $table = $grid_body.appendChild(document.createElement('table')),
-      $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
+      $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode()),
       $tbody = $table.appendChild(document.createElement('tbody')),
       cond = this.options.sort_conditions,
       row_prefix = $grid.id + '-row-';
@@ -1982,7 +1982,7 @@ BriteGrid.widget.Tree.prototype.build = function () {
   $group.setAttribute('role', 'group');
 
   let get_item = obj => {
-    let $item = $treeitem.cloneNode(true),
+    let $item = $treeitem.cloneNode(),
         item_id = $tree.id + '-' + obj.id;
     $item.firstChild.textContent = obj.label;
     $item.id = item_id;
@@ -2189,7 +2189,7 @@ BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $pane
       index = items.indexOf($selected),
       $next_tab = items[index + 1];
 
-  let $tab = items[0].cloneNode(true);
+  let $tab = items[0].cloneNode();
   $tab.id = 'tab-' + name;
   $tab.title = label || title;
   $tab.tabIndex = -1;
