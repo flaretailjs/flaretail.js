@@ -54,16 +54,15 @@ BriteGrid.util.event.unbind = function (that, $target, types, use_capture = fals
 BriteGrid.util.request = {};
 
 BriteGrid.util.request.build_query = query => {
-  let fields = [];
+  let fields = new Set();
 
   for (let [key, value] of Iterator(query)) {
-    value = Array.isArray(value) ? value : [value];
-    for (let val of value) {
-      fields.push([encodeURIComponent(key), encodeURIComponent(val)].join('='));
+    for (let val of (Array.isArray(value) ? value : [value])) {
+      fields.add([encodeURIComponent(key), encodeURIComponent(val)].join('='));
     }
   }
 
-  return fields.join('&');
+  return [...fields].join('&');
 };
 
 /* --------------------------------------------------------------------------
@@ -218,14 +217,12 @@ BriteGrid.util.array.clone = array => Array.slice(array);
 BriteGrid.util.string = {};
 
 BriteGrid.util.string.sanitize = str => {
-  let chars = {
+  let chars = new Map(Iterator({
     '<': '&lt;',
     '>': '&gt;',
     '&': '&amp;',
     '"': '&quot;'
-  };
+  }));
 
-  return str.replace(/./g, function (match) {
-    return match in chars ? chars[match] : match;
-  });
+  return str.replace(/./g, match => chars.get(match) || match);
 };

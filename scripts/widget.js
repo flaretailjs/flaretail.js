@@ -1030,13 +1030,14 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   $tbody.setAttribute('aria-busy', 'true'); // display: none
 
   // Normalization: ignore brackets for comparison
-  let nomalized_values = {},
+  let nomalized_values = new Map(),
       nomalize = str => {
-        if (nomalized_values[str]) {
-          return nomalized_values[str];
-        } else {
-          return nomalized_values[str] = str.replace(/[\"\'\(\)\[\]\{\}<>«»]/g, '').toLowerCase();
+        let value = nomalized_values.get(str);
+        if (!value) {
+          value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
+          nomalized_values.set(str, value);
         }
+        return value;
       };
 
   this.data.rows.sort((a, b) => {
