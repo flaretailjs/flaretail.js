@@ -23,8 +23,8 @@ BriteGrid.util.event.ignore = function (event) {
 };
 
 // This function allows to set multiple event listeners as once
-BriteGrid.util.event.bind = function (that, target, types, use_capture = false, unbind = false) {
-  if (!target) {
+BriteGrid.util.event.bind = function (that, $target, types, use_capture = false, unbind = false) {
+  if (!$target) {
     return false;
   }
 
@@ -34,18 +34,17 @@ BriteGrid.util.event.bind = function (that, target, types, use_capture = false, 
     }
 
     if (unbind) {
-      target.removeEventListener(type, that, use_capture);
+      $target.removeEventListener(type, that, use_capture);
     } else {
-      target.addEventListener(type, that, use_capture);
+      $target.addEventListener(type, that, use_capture);
     }
   }
 
   return true;
 };
 
-BriteGrid.util.event.unbind = function (that, target, types, use_capture = false)
-{
-  this.bind(that, target, types, use_capture, true);
+BriteGrid.util.event.unbind = function (that, $target, types, use_capture = false) {
+  this.bind(that, $target, types, use_capture, true);
 };
 
 /* --------------------------------------------------------------------------
@@ -192,8 +191,8 @@ BriteGrid.util.l10n = {};
 
 BriteGrid.util.style = {};
 
-BriteGrid.util.style.get = (element, property) => {
-  return window.getComputedStyle(element, null).getPropertyValue(property);
+BriteGrid.util.style.get = ($element, property) => {
+  return window.getComputedStyle($element, null).getPropertyValue(property);
 };
 
 /* --------------------------------------------------------------------------
