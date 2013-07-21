@@ -131,6 +131,20 @@ BriteGrid.util.app.toggle_fullscreen = () => {
   }
 };
 
+BriteGrid.util.app.auth_notification = () => {
+  Notification.requestPermission(permission => {});
+};
+
+BriteGrid.util.app.show_notification = (title, options = {}) => {
+  new Notification(title, {
+    dir: options.dir || 'auto',
+    lang: options.lang || 'en-US',
+    body: options.body || '',
+    tag: options.tag || '',
+    icon: options.icon || ''
+  });
+};
+
 /* --------------------------------------------------------------------------
  * Theme
  * -------------------------------------------------------------------------- */
