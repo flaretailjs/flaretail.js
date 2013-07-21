@@ -873,7 +873,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     // Refresh the tbody with the passed data
     this.data.rows = row_data;
-    $grid.removeChild(this.view.body);
+    this.view.body.remove();
   }
 
   let $grid_body = this.view.body = document.createElement('div'),
@@ -1291,7 +1291,7 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
 
   // Cleanup
   drag.header.removeAttribute('data-grabbed');
-  document.body.removeChild(drag.container);
+  drag.container.remove();
   $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
   delete this.data.drag;
 };
@@ -2231,12 +2231,11 @@ BriteGrid.widget.TabList.prototype.close_tab = function ($tab) {
   }
 
   // Remove tabpanel
-  let $panel = document.getElementById($tab.getAttribute('aria-controls'));
-  $panel.parentElement.removeChild($panel);
+  document.getElementById($tab.getAttribute('aria-controls')).remove();
 
   // Remove tab
   items.splice(index, 1); // Update data
-  this.view.container.removeChild($tab); // Update view
+  $tab.remove(); // Update view
 };
 
 /* --------------------------------------------------------------------------
