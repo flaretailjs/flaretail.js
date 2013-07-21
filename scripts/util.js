@@ -142,10 +142,9 @@ BriteGrid.util.theme.preload_images = callback => {
       // Support for multiple background
       for (let m of match) {
         let src = m.match(RegExp(pattern))[1];
-        if (images.has(src)) {
-          continue;
+        if (!images.has(src)) {
+          images.add(src);
         }
-        images.add(src);
       }
     }
   }
