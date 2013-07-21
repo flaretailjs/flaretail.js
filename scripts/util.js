@@ -89,19 +89,23 @@ BriteGrid.util.Storage = function () {
 
 BriteGrid.util.app = {};
 
-BriteGrid.util.app.can_install = function (callback) {
+BriteGrid.util.app.can_install = (manifest, callback) => {
   let apps = navigator.mozApps;
   if (!apps) {
     callback(false);
     return;
   }
 
-  let request = apps.getInstalled();
-  request.addEventListener('success', () => callback(request.result.length === 0));
-  request.addEventListener('error', () => callback(false));
+  let request = apps.checkInstalled(manifest);
+  request.addEventListener('success', event => {
+    // IndexedDB has been deactivated in WebAppRT on Firefox 24 and earlier versions (Bug 827346)
+    let idb_enabled = navigator.userAgent.match(/Firefox\/(\d+)/) && parseInt(RegExp.$1) >= 25;
+    callback(!request.result && idb_enabled);
+  });
+  request.addEventListener('error', event => callback(false));
 };
 
-BriteGrid.util.app.install = function (manifest, callback) {
+BriteGrid.util.app.install = (manifest, callback) => {
   let request = navigator.mozApps.install(manifest);
   request.addEventListener('success', event => callback(event));
   request.addEventListener('error', event => callback(event));
