@@ -162,7 +162,9 @@ Object.defineProperties(BriteGrid.util.theme, {
   },
   'selected': {
     enumerable : true,
-    get: () => document.selectedStyleSheetSet,
+    // A regression since Firefox 20: selectedStyleSheetSet returns empty (Bug 894874)
+    get: () => document.selectedStyleSheetSet ||
+               document.lastStyleSheetSet || document.preferredStyleSheetSet,
     set: name => document.selectedStyleSheetSet = name
   }
 });
