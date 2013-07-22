@@ -1680,6 +1680,7 @@ BriteGrid.widget.Menu.prototype.open = function () {
   let $container = this.view.container;
   $container.setAttribute('aria-expanded', 'true');
   $container.removeAttribute('aria-activedescendant');
+  $container.dispatchEvent(new CustomEvent('MenuOpened'));
 
   // Show the submenu on the left if there is not enough space
   let rect = $container.getBoundingClientRect(),
@@ -1710,6 +1711,7 @@ BriteGrid.widget.Menu.prototype.close = function (propagation) {
 
   $container.setAttribute('aria-expanded', 'false');
   $container.removeAttribute('aria-activedescendant');
+  $container.dispatchEvent(new CustomEvent('MenuClosed'));
   this.view.selected = [];
 
   if (parent) {
