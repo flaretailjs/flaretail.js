@@ -76,7 +76,7 @@ BriteGrid.util.prefs = {};
  * -------------------------------------------------------------------------- */
 
 BriteGrid.util.Storage = function () {
-  let req = this.request = indexedDB.open("MyTestDatabase", 1),
+  let req = this.request = indexedDB.open('MyTestDatabase', 1),
       db = this.db = null;
   req.addEventListener('error', event => {});
   req.addEventListener('success', event => db = request.result);
