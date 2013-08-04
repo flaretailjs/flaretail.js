@@ -1350,7 +1350,7 @@ BriteGrid.widget.ListBox.prototype = Object.create(BriteGrid.widget.Select.proto
 
 BriteGrid.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new WeakMap(),
-      fragment = document.createDocumentFragment();
+      $fragment = new DocumentFragment();
 
   for (let item of this.data.structure) {
     let $item = document.createElement('li'),
@@ -1367,14 +1367,14 @@ BriteGrid.widget.ListBox.prototype.build = function () {
       }
     }
 
-    fragment.appendChild($item);
+    $fragment.appendChild($item);
 
     // Save the item/obj reference
     map.set($item, item);
     item.element = $item;
   }
 
-  this.view.container.appendChild(fragment);
+  this.view.container.appendChild($fragment);
 };
 
 BriteGrid.widget.ListBox.prototype.get_data = function () {
@@ -1618,7 +1618,7 @@ BriteGrid.widget.Menu.prototype.onblur_extend = function (event) {
 
 BriteGrid.widget.Menu.prototype.build = function (data) {
   let $container = this.view.container,
-      fragment = document.createDocumentFragment(),
+      $fragment = new DocumentFragment(),
       structure = [],
       rebuild = false;
 
@@ -1637,7 +1637,7 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
 
     if (item.type === 'separator') {
       $outer.setAttribute('role', 'separator');
-      fragment.appendChild($outer);
+      $fragment.appendChild($outer);
       continue;
     }
 
@@ -1660,7 +1660,7 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
       }
     }
 
-    fragment.appendChild($outer);
+    $fragment.appendChild($outer);
 
     // Save the item/obj reference
     item.element = $item;
@@ -1668,7 +1668,7 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
   }
 
   this.data.structure = structure;
-  $container.appendChild(fragment);
+  $container.appendChild($fragment);
 
   if (rebuild) {
     this.activate(true);
@@ -1964,7 +1964,7 @@ BriteGrid.widget.Tree.prototype.ondblclick = function (event) {
 
 BriteGrid.widget.Tree.prototype.build = function () {
   let $tree = this.view.container,
-      fragment = document.createDocumentFragment(),
+      $fragment = new DocumentFragment(),
       structure = this.data.structure,
       map = this.data.map = new WeakMap(),
       level = 1;
@@ -2022,9 +2022,9 @@ BriteGrid.widget.Tree.prototype.build = function () {
 
   // Build the tree recursively
   for (let obj of structure) {
-    fragment.appendChild(get_item(obj));
+    $fragment.appendChild(get_item(obj));
   }
-  $tree.appendChild(fragment);
+  $tree.appendChild($fragment);
 };
 
 BriteGrid.widget.Tree.prototype.get_data = function () {
