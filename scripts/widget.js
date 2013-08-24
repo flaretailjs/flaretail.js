@@ -104,7 +104,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
     attributeFilter: ['aria-hidden', 'aria-disabled']
   });
 
-  return true;
+  return;
 };
 
 // Catch-all event handler
