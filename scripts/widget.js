@@ -2383,9 +2383,26 @@ BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
   // Scroll by row
   if (this.options.adjusted) {
     let rect = $owner.getBoundingClientRect(),
-        row = document.elementFromPoint(rect.left, rect.top).parentElement,
-        top = ($owner.scrollTop < row.offsetTop + row.offsetHeight / 2)
-            ? row.offsetTop : row.nextElementSibling.offsetTop;
+        $elm = document.elementFromPoint(rect.left, rect.top),
+        top = 0;
+
+    while ($elm) {
+      if ($elm.mozMatchesSelector('[role="row"], [role="option"], [role="treeitem"]')) {
+        break;
+      }
+      $elm = $elm.parentElement;
+    }
+
+    if (!$elm) {
+      return; // traversal failed
+    }
+
+    if ($owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling) {
+      top = $elm.offsetTop;
+    } else {
+      top = $elm.nextElementSibling.offsetTop;
+    }
+
     $owner.scrollTop = top;
   }
 
