@@ -2360,6 +2360,8 @@ BriteGrid.widget.ScrollBar.prototype.onmouseup = function (event) {
 };
 
 BriteGrid.widget.ScrollBar.prototype.onwheel = function (event) {
+  event.preventDefault();
+
   let $owner = this.view.owner,
       top = $owner.scrollTop + event.deltaY;
 
