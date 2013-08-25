@@ -717,6 +717,11 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
 
   // Sort handler
   this.data.rows = new Proxy(rows, {
+    // A proxyifixed array needs the get trap even if it's not necessary, or the set trap is not
+    // called. This is a regression since Firefox 21 (Bug 876114)
+    get: function(obj, prop) {
+      return obj[prop];
+    },
     set: (obj, prop, value) => {
       if (!isNaN(prop) && value.element) {
         $tbody.appendChild(value.element);
