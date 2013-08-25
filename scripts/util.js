@@ -2,7 +2,7 @@
  * BriteGrid Utility Library
  * Copyright © 2012 BriteGrid. All rights reserved.
  * Using: ECMAScript Harmony
- * Requires: Firefox 18
+ * Requires: Firefox 22
  */
 
 'use strict';

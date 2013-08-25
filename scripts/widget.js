@@ -2,7 +2,7 @@
  * WAI-ARIA-based accessible app widget library
  * Copyright © 2012 BriteGrid. All rights reserved.
  * Using: ECMAScript Harmony
- * Requires: Firefox 18
+ * Requires: Firefox 24
  */
 
 'use strict';
