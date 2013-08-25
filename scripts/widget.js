@@ -2389,9 +2389,19 @@ BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
     $owner.scrollTop = top;
   }
 
-  $controller.setAttribute('aria-valuenow', $owner.scrollTop);
-  $controller.style.top = $owner.scrollTop + 2 
-    + Math.floor($owner.clientHeight * $owner.scrollTop / $owner.scrollHeight) + 'px';
+  let st = $owner.scrollTop,
+      ch = $owner.clientHeight,
+      sh = $owner.scrollHeight,
+      ctrl_height = parseInt($controller.style.height),
+      ctrl_adj = 0;
+
+  // Consider scrollbar's min-height
+  if (ctrl_height < 16) {
+    ctrl_adj = 20 - ctrl_height;
+  }
+
+  $controller.setAttribute('aria-valuenow', st);
+  $controller.style.top = st + 2 + Math.floor((ch - ctrl_adj) * (st / sh)) + 'px';
 };
 
 BriteGrid.widget.ScrollBar.prototype.onkeydown = function (event) {
@@ -2515,9 +2525,10 @@ BriteGrid.widget.ScrollBar.prototype.set_height = function () {
   let $owner = this.view.owner,
       $controller = this.view.controller,
       sh = $owner.scrollHeight,
-      ch = $owner.clientHeight;
+      ch = $owner.clientHeight,
+      ctrl_height = Math.floor(ch * ch / sh) - 4;
 
-  $controller.style.height = Math.floor(ch * ch / sh) - 4 + 'px'; 
+  $controller.style.height = ((ctrl_height < 0) ? 0 : ctrl_height) + 'px'; 
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
 };
 
