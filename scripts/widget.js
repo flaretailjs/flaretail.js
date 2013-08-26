@@ -891,12 +891,35 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   // Sort the data first
   this.sort(cond, 'key', cond.key, null, true);
 
+  // Create a template row
+  let $_row = document.createElement('tr');
+  $_row.draggable = false;
+  $_row.setAttribute('role', 'row');
+  $_row.setAttribute('aria-selected', 'false');
+  for (let column of this.data.columns) {
+    let $cell;
+    if (column.key) {
+      $cell = $_row.appendChild(document.createElement('th'));
+      $cell.scope = 'row';
+      $cell.setAttribute('role', 'rowheader');
+    } else {
+      $cell = $_row.insertCell(-1);
+      $cell.setAttribute('role', 'gridcell');
+    }
+    if (column.type === 'boolean') {
+      let $checkbox = $cell.appendChild(document.createElement('span'));
+      $checkbox.setAttribute('role', 'checkbox');
+      $cell.setAttribute('aria-readonly', 'false');
+    } else {
+      $cell.appendChild(document.createElement((column.type === 'time') ? 'time' : 'label'));
+    }
+    $cell.dataset.id = column.id;
+    $cell.dataset.type = column.type;
+  }
+
   for (let row of this.data.rows) {
-    let $row = row.element = $tbody.insertRow(-1);
+    let $row = row.element = $tbody.appendChild($_row.cloneNode());
     $row.id = row_prefix + row.data.id;
-    $row.draggable = false;
-    $row.setAttribute('role', 'row');
-    $row.setAttribute('aria-selected', 'false');
     $row.dataset.id = row.data.id;
     // Custom data
     if (row.dataset && Object.keys(row.dataset).length) {
@@ -905,33 +928,18 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
       }
     }
 
-    for (let column of this.data.columns) {
-      let $cell;
-      if (column.key) {
-        $cell = $row.appendChild(document.createElement('th'));
-        $cell.scope = 'row';
-        $cell.setAttribute('role', 'rowheader');
-      } else {
-        $cell = $row.insertCell(-1);
-        $cell.setAttribute('role', 'gridcell');
-      }
-      let value = row.data[column.id];
+    for (let [i, column] of Iterator(this.data.columns)) {
+      let $child = $row.cells[i].firstElementChild,
+          value = row.data[column.id];
       if (column.type === 'boolean') {
-        let $checkbox = $cell.appendChild(document.createElement('span'));
-        $checkbox.setAttribute('role', 'checkbox');
-        $checkbox.setAttribute('aria-checked', value === true);
-        $cell.setAttribute('aria-readonly', 'false');
+        $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
-        let $label = $cell.appendChild(document.createElement('time'));
         // TODO: add a pref to use PST
-        $label.textContent = (new Date(value)).toLocaleFormat('%Y-%m-%d %H:%M');
-        $label.setAttribute('datetime', value);
+        $child.textContent = (new Date(value)).toLocaleFormat('%Y-%m-%d %H:%M');
+        $child.setAttribute('datetime', value);
       } else {
-        let $label = $cell.appendChild(document.createElement('label'));
-        $label.textContent = value;
+        $child.textContent = value;
       }
-      $cell.dataset.id = column.id;
-      $cell.dataset.type = column.type;
     }
   }    
 
