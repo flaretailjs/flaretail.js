@@ -692,16 +692,12 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   let handler = {
     set: (obj, prop, value) => {
       // Reflect Data change into View
-      for (let row of this.data.rows) {
-        if (Object.is(row.data, obj)) {
-          let $cell = row.element.querySelector('[data-id="' + prop + '"]');
-          if (this.data.columns[prop].type === 'boolean') {
-            $cell.querySelector('[role="checkbox"]').setAttribute('aria-checked', value);
-          } else {
-            $cell.textContent = value;
-          }
-          break;
-        }
+      let row = this.data.rows.filter(row => row.data.id === obj.id)[0],
+          $elm = row.element.querySelector('[data-id="' + prop + '"] > *');
+      if (this.data.columns[prop].type === 'boolean') {
+        $elm.setAttribute('aria-checked', value);
+      } else {
+        $elm.textContent = value;
       }
       obj[prop] = value;
     }
