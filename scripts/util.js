@@ -58,11 +58,11 @@ BriteGrid.util.request.build_query = query => {
 
   for (let [key, value] of Iterator(query)) {
     for (let val of (Array.isArray(value) ? value : [value])) {
-      fields.add([encodeURIComponent(key), encodeURIComponent(val)].join('='));
+      fields.add(encodeURIComponent(key) + '=' + encodeURIComponent(val));
     }
   }
 
-  return [...fields].join('&');
+  return '?' + [...fields].join('&');
 };
 
 /* --------------------------------------------------------------------------
