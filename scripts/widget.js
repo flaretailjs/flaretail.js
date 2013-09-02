@@ -674,7 +674,10 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
           } else {
             this.show_column(obj);
           }
-          this.view.container.dispatchEvent(new CustomEvent('ColumnEdited'));
+          // Fire an event
+          this.view.container.dispatchEvent(new CustomEvent('ColumnModified', {
+            detail: { columns: columns }
+          }));
           break;
         }
       }
@@ -1079,7 +1082,10 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
     this.ensure_row_visibility(selected[selected.length - 1]);
   }
 
-  $grid.dispatchEvent(new CustomEvent('Sorted'));
+  // Fire an event
+  $grid.dispatchEvent(new CustomEvent('Sorted', {
+    detail: { conditions: cond }
+  }));
 };
 
 BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
@@ -1304,6 +1310,11 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
   drag.container.remove();
   $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
   delete this.data.drag;
+
+  // Fire an event
+  $grid.dispatchEvent(new CustomEvent('ColumnModified', {
+    detail: { columns: columns }
+  }));
 };
 
 /* --------------------------------------------------------------------------
