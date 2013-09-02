@@ -1527,14 +1527,21 @@ BriteGrid.widget.Menu.prototype.onmouseover = function (event) {
 }
 
 BriteGrid.widget.Menu.prototype.oncontextmenu = function (event) {
-  let $owner = this.view.owner;
+  let $owner = this.view.owner,
+      $container = this.view.container;
+
   if ($owner) {
-    let style = this.view.container.style;
+    let style = $container.style;
     style.top = event.layerY + 'px';
     style.left = event.layerX + 'px';
 
     if (event.currentTarget === $owner) {
       this.open(event);
+    }
+
+    if ($container.getBoundingClientRect().right > window.innerWidth) {
+      // The menu is shown beyond the window width. Reposition it
+      style.left = ($owner.offsetWidth - $container.offsetWidth - 4) + 'px';
     }
   }
 
