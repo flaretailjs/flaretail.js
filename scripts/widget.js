@@ -260,8 +260,6 @@ BriteGrid.widget.Composite.prototype.select_with_mouse = function (event) {
 
   this.view.selected = selected;
   this.view.focused = selected[selected.length - 1];
-
-  return BriteGrid.util.event.ignore(event);
 };
 
 BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
@@ -734,8 +732,6 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
 };
 
 BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
-  BriteGrid.util.event.ignore(event);
-
   let $target = event.target;
 
   if ($target.mozMatchesSelector('[role="columnheader"]')) {
@@ -1508,6 +1504,12 @@ BriteGrid.widget.Menu.prototype.onmousedown = function (event) {
     return;
   }
 
+  let parent = this.data.parent;
+  if (parent && event.target === parent.view.selected[0]) {
+    // Just opening the menu
+    return;
+  }
+
   if (event.currentTarget === window) {
     this.close(true);
   } else if (!this.data.menus.has(event.target) && this.view.members.indexOf(event.target) > -1) {
@@ -1940,8 +1942,6 @@ BriteGrid.widget.Tree.prototype.onmousedown_extend = function (event) {
     // The default behavior
     this.onmousedown(event);
   }
-
-  return BriteGrid.util.event.ignore(event);
 };
 
 BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
