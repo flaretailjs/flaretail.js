@@ -2212,7 +2212,7 @@ BriteGrid.widget.TabList.prototype.set_close_button = function ($tab) {
   $tab.appendChild(button);
 };
 
-BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position) {
+BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
   let items = this.view.members,
       $selected = this.view.selected[0],
       index = items.indexOf($selected),
@@ -2226,6 +2226,12 @@ BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $pane
   $tab.setAttribute('aria-controls', 'tabpanel-' + name);
   $tab.querySelector('label').textContent = title;
   $tab.querySelector('[role="button"]').setAttribute('aria-controls', $tab.id);
+
+  if (dataset) {
+    for (let [prop, value] of Iterator(dataset)) {
+      $tab.dataset[prop] = value;
+    }
+  }
 
   // Add tab
   if (position === 'next' && $next_tab) {
