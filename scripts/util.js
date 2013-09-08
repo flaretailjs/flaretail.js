@@ -16,6 +16,25 @@ BriteGrid.util = {};
 
 BriteGrid.util.event = {};
 
+BriteGrid.util.event.set_keybind = function ($target, key, modifiers, command) {
+  $target.addEventListener('keydown', event => {
+    // Check the key code
+    if (event.keyCode !== event['DOM_VK_' + key]) {
+      return;
+    }
+    // Check modifier keys
+    modifiers = modifiers ? modifiers.split(',') : [];
+    for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
+      if ((modifiers.indexOf(mod) > -1 && !event[mod + 'Key']) ||
+          (modifiers.indexOf(mod) === -1 && event[mod + 'Key'])) {
+        return;
+      }
+    }
+    // Execute command
+    command(event);
+  });
+};
+
 BriteGrid.util.event.ignore = function (event) {
   event.preventDefault();
   event.stopPropagation();
