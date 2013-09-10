@@ -242,6 +242,53 @@ BriteGrid.util.history = {};
 BriteGrid.util.l10n = {};
 
 /* --------------------------------------------------------------------------
+ * Internationalization
+ * -------------------------------------------------------------------------- */
+
+BriteGrid.util.i18n = {};
+
+BriteGrid.util.i18n.options = {
+  date: {
+    timezone: 'local',
+    format: 'relative'
+  }
+};
+
+BriteGrid.util.i18n.format_date = function (str) {
+  let timezone = this.options.date.timezone,
+      format = this.options.date.format,
+      now = new Date(),
+      date = new Date(str),
+      shifted_date,
+      dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
+        (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset()) > date.getTimezoneOffset();
+
+  // TODO: We can soon use the ECMAScript Intl API
+  // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString
+
+  // Timezone conversion
+  if (timezone !== 'local') {
+    let utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000,
+        offset = (timezone === 'PST') ? 3600000 * (dst ? -7 : -8) : 0;
+    shifted_date = new Date(utc + offset);
+  }
+
+  // Relative dates
+  if (format === 'relative') {
+    if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
+      if (date.getDate() === now.getDate()) {
+        return (shifted_date || date).toLocaleFormat('Today %l:%M %p'); // l10n
+      }
+      if (date.getDate() === now.getDate() - 1) {
+        return (shifted_date || date).toLocaleFormat('Yesterday %l:%M %p'); // l10n
+      }
+    }
+  }
+
+  return (shifted_date || date).toLocaleFormat('%Y-%m-%d %l:%M %p');
+};
+
+/* --------------------------------------------------------------------------
  * Style
  * -------------------------------------------------------------------------- */
 

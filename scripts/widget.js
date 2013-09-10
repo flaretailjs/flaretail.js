@@ -930,8 +930,8 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
         $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
         // TODO: add a pref to use PST
-        $child.textContent = (new Date(value)).toLocaleFormat('%Y-%m-%d %H:%M');
-        $child.setAttribute('datetime', value);
+        $child.textContent = BriteGrid.util.i18n.format_date(value);
+        $child.dateTime = value;
       } else {
         $child.textContent = value;
       }
