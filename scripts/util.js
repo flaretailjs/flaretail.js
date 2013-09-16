@@ -194,7 +194,8 @@ BriteGrid.util.theme.preload_images = callback => {
 
   for (let [i, sheet] of Iterator(document.styleSheets)) {
     for (let [i, rule] of Iterator(sheet.cssRules)) {
-      let match = rule.style && rule.style.backgroundImage.match(RegExp(pattern, 'g'));
+      let match = rule.style && rule.style.backgroundImage &&
+                  rule.style.backgroundImage.match(RegExp(pattern, 'g'));
       if (!match) {
         continue;
       }
