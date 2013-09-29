@@ -54,6 +54,10 @@ body {
   pointer-events: auto;
 }
 
+[role="tab"][aria-hidden="true"] {
+  display: none;
+}
+
 [role="tab"] span {
   display: block;
 }
