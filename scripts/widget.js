@@ -2158,15 +2158,8 @@ BriteGrid.widget.TabList = function ($container) {
   this.view = new Proxy(this.view, {
     set: (obj, prop, value) => {
       if (prop === 'selected') {
-        if (!Array.isArray(value)) {
-          value = [value];
-        }
-        let $new_tab = value[0],
-            app_name = document.body.dataset.name,
-            title = $new_tab.querySelector('label').textContent;
-        title += app_name ? ' | ' + app_name : '';
-        document.title = title;
-        this.switch_tabpanel(obj[prop][0], $new_tab);
+        value = (Array.isArray(value)) ? value : [value];
+        this.switch_tabpanel(obj[prop][0], value[0]);
       }
 
       obj[prop] = value;
