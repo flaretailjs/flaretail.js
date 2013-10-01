@@ -118,7 +118,8 @@ BriteGrid.util.app.can_install = (manifest, callback) => {
   let request = apps.checkInstalled(manifest);
   request.addEventListener('success', event => {
     // IndexedDB has been deactivated in WebAppRT on Firefox 24 and earlier versions (Bug 827346)
-    let idb_enabled = navigator.userAgent.match(/Firefox\/(\d+)/) && parseInt(RegExp.$1) >= 25;
+    let idb_enabled = navigator.userAgent.match(/(Mobile|Tablet)/) ||
+                      navigator.userAgent.match(/Firefox\/(\d+)/) && parseInt(RegExp.$1) >= 25;
     callback(!request.result && idb_enabled);
   });
   request.addEventListener('error', event => callback(false));

@@ -1,3 +1,8 @@
+html {
+  font-size: 10px;
+  line-height: 1;
+}
+
 body {
   margin: 0;
   position: relative;
@@ -45,11 +50,11 @@ body {
 }
 
 [role="tab"] {
-  display: block;
+  display: inline-block;
   position: relative;
   float: left;
-  border-radius: 4px 4px 0 0;
-  padding: 4px 8px;
+  border-radius: .4rem .4rem 0 0;
+  padding: .4rem .8rem;
   list-style-type: none;
   pointer-events: auto;
 }
@@ -66,7 +71,7 @@ body {
   display: block;
   float: left;
   overflow: hidden;
-  width: calc(100% - 24px);
+  width: calc(100% - 2.4rem);
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
@@ -78,9 +83,9 @@ body {
 
 [role="tab"] .close {
   float: right;
-  margin-right: -2px;
-  width: 16px;
-  height: 16px;
+  margin-right: -.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
 }
 
 [role="tab"]:first-of-type:last-of-type .close {
@@ -111,9 +116,9 @@ body {
 
 [role="treeitem"] + .expander {
   display: block;
-  margin-top: -18px;
-  width: 18px;
-  height: 18px;
+  margin-top: -1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
   pointer-events: auto;
 }
 
@@ -127,9 +132,9 @@ body {
 
 [role="treeitem"] {
   display: block;
-  padding-left: 18px;
-  height: 18px;
-  line-height: 18px;
+  padding-left: 1.8rem;
+  height: 1.8rem;
+  line-height: 1.8rem;
   pointer-events: auto;
 }
 
@@ -142,19 +147,19 @@ body {
 }
 
 [role="treeitem"][aria-level="2"] + .expander {
-  margin-left: 18px;
+  margin-left: 1.8rem;
 }
 
 [role="treeitem"][aria-level="2"] {
-  padding-left: 40px;
+  padding-left: 4rem;
 }
 
 [role="treeitem"][aria-level="3"] + .expander {
-  margin-left: 40px;
+  margin-left: 4rem;
 }
 
 [role="treeitem"][aria-level="3"] {
-  padding-left: 60px;
+  padding-left: 6rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -190,8 +195,8 @@ body {
   margin: 0;
   border: 0;
   padding: 0;
-  height: 18px;
-  line-height: 18px;
+  height: 1.8rem;
+  line-height: 1.8rem;
 }
 
 [role="grid"] th label,
@@ -200,7 +205,7 @@ body {
 [role="grid"] td time {
   display: block;
   overflow: hidden;
-  padding: 0 4px;
+  padding: 0 .4rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
@@ -221,16 +226,16 @@ body {
 }
 
 [role="grid"] .grid-header [aria-sort] label {
-  padding-right: 18px;
+  padding-right: 1.8rem;
 }
 
 [role="grid"] .grid-header [aria-sort] label:after {
   display: block;
   content: '';
   float: right;
-  margin: 0 -18px 0 0;
-  width: 18px;
-  height: 18px;
+  margin: 0 -1.8rem 0 0;
+  width: 1.8rem;
+  height: 1.8rem;
 }
 
 
@@ -247,6 +252,10 @@ body {
 [role="grid"] .grid-body {
   position: relative;
   overflow: hidden;
+}
+
+body.touch [role="grid"] .grid-body {
+  overflow: scroll;
 }
 
 [role="grid"] .grid-body tbody[aria-busy="true"] {
@@ -326,19 +335,19 @@ canvas[id^="column-drag-image-"].follower {
 }
 
 [role="menubar"] > li > [role="menuitem"] {
-  padding: 0 8px;
-  height: 18px;
-  line-height: 18px;
+  padding: 0 .8rem;
+  height: 1.8rem;
+  line-height: 1.8rem;
 }
 
 [role="menu"] {
   position: absolute;
-  border-radius: 4px;
-  padding: 4px 0; 
+  border-radius: .4rem;
+  padding: .4rem 0; 
 }
 
 [role="menu"] [role="menu"] {
-  top: -4px;
+  top: -.4rem;
   left: 100%;
 }
 
@@ -348,17 +357,17 @@ canvas[id^="column-drag-image-"].follower {
 }
 
 [role="menu"] [role^="menuitem"] { /* exclude menubar items */
-  padding: 0 24px;
-  line-height: 18px;
+  padding: 0 2.4rem;
+  line-height: 1.8rem;
   white-space: nowrap;
 }
 
 [role="menu"] [role="menuitem"][aria-haspopup="true"]:after { /* exclude menubar items */
   display: block;
   float: right;
-  margin: -18px -24px 0 0;
-  width: 18px;
-  height: 18px;
+  margin: -1.8rem -2.4rem 0 0;
+  width: 1.8rem;
+  height: 1.8rem;
   content: '';
 }
 
@@ -383,15 +392,15 @@ a[role="menuitem"] {
 [role^="menuitem"][aria-checked="true"]:before {
   display: block;
   float: left;
-  margin-left: -18px;
-  width: 18px;
-  height: 18px;
+  margin-left: -1.8rem;
+  width: 1.8rem;
+  height: 1.8rem;
   content: '';
 }
 
 [role="menu"] [role="separator"] {
-  margin: 4px 0;
-  border-bottom: 1px solid;
+  margin: .4rem 0;
+  border-bottom: .1rem solid;
   height: 0;
 }
 
@@ -411,11 +420,11 @@ a[role="menuitem"] {
 [role="dialog"],
 [role="alertdialog"] {
   position: absolute;
-  top: 80px;
+  top: 8rem;
   left: 50%;
-  margin-left: -200px;
-  padding: 40px;
-  width: 360px;
+  margin-left: -20rem;
+  padding: 4rem;
+  width: 36rem;
 }
 
 [role="dialog"] h2,
@@ -436,14 +445,14 @@ a[role="menuitem"] {
   position: relative;
   z-index: 100;
   width: 100%;
-  height: 4px;
+  height: .4rem;
   cursor: ns-resize;
   pointer-events: auto;
 }
 
 .splitter[aria-orientation="vertical"] {
   cursor: ew-resize;
-  width: 4px;
+  width: .4rem;
   height: 100%;
 }
 
@@ -471,9 +480,9 @@ a[role="menuitem"] {
 }
 
 [role="listbox"] [role="option"] {
-  padding: 0 4px;
-  height: 18px;
-  line-height: 18px;
+  padding: 0 .4rem;
+  height: 1.8rem;
+  line-height: 1.8rem;
 }
 
 [role="listbox"] [role="option"] label {
@@ -490,12 +499,12 @@ a[role="menuitem"] {
 
 [role="scrollbar"] {
   position: absolute;
-  right: 2px;
+  right: .2rem;
   z-index: 1000;
   outline: 0;
-  border-radius: 8px;
-  width: 8px;
-  min-height: 16px;
+  border-radius: .8rem;
+  width: .8rem;
+  min-height: 1.6rem;
   background-color: #999;
   opacity: .2;
   transition: opacity .3s;
@@ -509,6 +518,10 @@ a[role="menuitem"] {
 
 [role="scrollbar"][aria-disabled="true"] {
   opacity: 0;
+}
+
+body.touch [role="scrollbar"] {
+  display: none;
 }
 
 /* --------------------------------------------------------------------------
@@ -533,16 +546,16 @@ a[role="menuitem"] {
 
 [role="radio"],
 [role="checkbox"] {
-  margin: 2px;
-  width: 12px;
-  height: 12px;
-  line-height: 12px;
+  margin: .2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  line-height: 1.2rem;
 }
 
 [role="radio"] + label,
 [role="checkbox"] + label {
-  height: 16px;
-  line-height: 16px;
+  height: 1.6rem;
+  line-height: 1.6rem;
 }
 
 /* --------------------------------------------------------------------------
@@ -556,3 +569,17 @@ a[role="menuitem"] {
 [role="button"][aria-disabled="true"] {
   opacity: .5;
 }
+
+/* --------------------------------------------------------------------------
+ * Mobile Support
+ * -------------------------------------------------------------------------- */
+
+/* On a Firefox OS phone, results of the resolution media feature are different
+   between an app and an in-browser page. Use the width feature instead. */
+@media (max-width: 640px) {
+
+html {
+  font-size: 12px;
+}
+
+} /* end @media */
