@@ -1762,7 +1762,9 @@ BriteGrid.widget.Menu.prototype.close = function (propagation) {
   this.view.selected = [];
 
   if (parent) {
-    parent.view.focused.focus();
+    if (parent.view.focused) {
+      parent.view.focused.focus();
+    }
     if (propagation) {
       parent.close(true);
     }
