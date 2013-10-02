@@ -20,7 +20,7 @@ BriteGrid.widget.mode = {
   touch: 'ontouchstart' in window
 }
 
-window.addEventListener('DOMContentLoaded', event => {
+window.addEventListener('DOMContentLoaded', function (event) {
   if (BriteGrid.widget.mode.touch) {
     document.body.classList.add('touch');
   }
@@ -43,7 +43,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
   this.options.multiselectable = $container.mozMatchesSelector('[aria-multiselectable="true"]');
 
-  let get_items = selector => {
+  let get_items = function (selector) {
     // Convert NodeList to Array for convenience in operation
     return Array.slice($container.querySelectorAll(selector));
   };
@@ -94,7 +94,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
     'focus', 'blur',
   ], true); // Set use_capture true to catch events on descendants
 
-  let observer = new MutationObserver(mutations => {
+  let observer = new MutationObserver(function (mutations) {
     for (let mutation of mutations) {
       let $item = mutation.target;
 
@@ -112,7 +112,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
         // TODO: Update the member list when an element is added or removed
       }
     }
-  });
+  }.bind(this));
   observer.observe($container, {
     subtree: true,
     childList: true,
@@ -176,7 +176,7 @@ BriteGrid.widget.Button = function ($button) {
     pressed: $button.mozMatchesSelector('[aria-pressed="true"]')
   },
   {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       if (prop === 'disabled' || prop === 'pressed') {
         $button.setAttribute('aria-' + prop, value);
       }
@@ -428,7 +428,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
           char = this.data.search_key || '';
       char = char === input ? input : char + input;
       let pattern = new RegExp('^' + char, 'i');
-      let get_label = $item => {
+      let get_label = function ($item) {
         let $element;
         if ($item.hasAttribute('aria-labelledby')) {
           $element = document.getElementById($item.getAttribute('aria-labelledby'));
@@ -474,9 +474,9 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       this.data.search_key = char;
 
       // Forget the character(s) after 1.5s
-      window.setTimeout(() => {
+      window.setTimeout(function () {
         delete this.data.search_key;
-      }, 1500);
+      }.bind(this), 1500);
     }
   }
 
@@ -507,7 +507,7 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
     this.view.container.dispatchEvent(new CustomEvent('Selected', {
       detail: {
         items: newval,
-        ids: newval ? newval.map($item => $item.dataset.id) : []
+        ids: newval ? newval.map(function ($item) $item.dataset.id) : []
       }
     }));
   }
@@ -600,7 +600,7 @@ BriteGrid.widget.Grid.prototype = Object.create(BriteGrid.widget.Composite.proto
 
 BriteGrid.widget.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       switch (prop) {
         case 'selected': {
           // Validation: this.selectd.value is always Array
@@ -638,7 +638,7 @@ BriteGrid.widget.Grid.prototype.activate_extend = function () {
 
 BriteGrid.widget.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
-    get: (obj, prop) => {
+    get: function (obj, prop) {
       // The default behavior
       if (prop in obj) {
         return obj[prop];
@@ -656,7 +656,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
 
   // Handler to show/hide column
   let handler = {
-    get: (obj, prop) => {
+    get: function (obj, prop) {
       let value;
 
       switch (prop) {
@@ -679,7 +679,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
 
       return value;
     },
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       switch (prop) {
         case 'hidden': {
           // Reflect the change of row's visibility to UI
@@ -697,7 +697,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
       }
 
       obj[prop] = value;
-    }
+    }.bind(this)
   };
 
   for (let [i, col] of Iterator(columns)) {
@@ -707,9 +707,9 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
 
 BriteGrid.widget.Grid.prototype.activate_rows = function () {
   let handler = {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       // Reflect Data change into View
-      let row = this.data.rows.filter(row => row.data.id === obj.id)[0],
+      let row = this.data.rows.filter(function (row) row.data.id === obj.id)[0],
           $elm = row.element.querySelector('[data-id="' + prop + '"] > *');
       if (this.data.columns[prop].type === 'boolean') {
         $elm.setAttribute('aria-checked', value);
@@ -717,7 +717,7 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
         $elm.textContent = value;
       }
       obj[prop] = value;
-    }
+    }.bind(this)
   };
 
   let rows = this.data.rows,
@@ -735,7 +735,7 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
     get: function(obj, prop) {
       return obj[prop];
     },
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       if (!isNaN(prop) && value.element) {
         $tbody.appendChild(value.element);
       }
@@ -1057,7 +1057,7 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   // Normalization: ignore brackets for comparison
   let nomalized_values = new Map(),
-      nomalize = str => {
+      nomalize = function (str) {
         let value = nomalized_values.get(str);
         if (!value) {
           value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
@@ -1066,7 +1066,7 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
         return value;
       };
 
-  this.data.rows.sort((a, b) => {
+  this.data.rows.sort(function (a, b) {
     if (cond.order === 'descending') {
       [a, b] = [b, a]; // reverse()
     }
@@ -1107,9 +1107,9 @@ BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
   $picker.id = this.view.container.id + '-columnpicker';
   $picker.setAttribute('role', 'menu');
   $picker.setAttribute('aria-expanded', 'false');
-  $picker.addEventListener('MenuItemSelected', event => {
+  $picker.addEventListener('MenuItemSelected', function (event) {
     this.toggle_column(event.explicitOriginalTarget.dataset.id);
-  }, false);
+  }.bind(this), false);
 
   let $header = this.view.header;
   $header.appendChild($picker);
@@ -1208,7 +1208,7 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
   style.height = $grid.offsetHeight + 'px';
 
   let handler = {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       if (prop === 'left') {
         let $image = document.getElementById('column-drag-image-' + obj.index);
         if ($image.className !== 'follower') {
@@ -1492,7 +1492,7 @@ BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   }
 
   this.view = new Proxy(this.view, {
-    set: (obj, prop, newval) => {
+    set: function (obj, prop, newval) {
       let oldval = obj[prop];
 
       if (prop === 'focused') {
@@ -2030,7 +2030,7 @@ BriteGrid.widget.Tree.prototype.build = function () {
   let $group = document.createElement('ul');
   $group.setAttribute('role', 'group');
 
-  let get_item = obj => {
+  let get_item = function (obj) {
     let $item = $treeitem.cloneNode(),
         item_id = $tree.id + '-' + obj.id;
     $item.firstChild.textContent = obj.label;
@@ -2111,7 +2111,7 @@ BriteGrid.widget.Tree.prototype.expand = function ($item) {
   $item.setAttribute('aria-expanded', !expanded);
 
   // Update data with visible items
-  this.view.members = Array.filter(items, $item => $item.offsetParent !== null);
+  this.view.members = Array.filter(items, function ($item) $item.offsetParent !== null);
 
   if (!children.length) {
     return;
@@ -2125,7 +2125,7 @@ BriteGrid.widget.Tree.prototype.expand = function ($item) {
   }
 
   // Remove the item's children from selection
-  let selected = this.view.selected.filter($item => children.indexOf($item) === -1);
+  let selected = this.view.selected.filter(function ($item) children.indexOf($item) === -1);
 
   // Add the item to selection
   selected.push($item);
@@ -2176,14 +2176,14 @@ BriteGrid.widget.TabList = function ($container) {
   this.activate();
 
   this.view = new Proxy(this.view, {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       if (prop === 'selected') {
         value = (Array.isArray(value)) ? value : [value];
         this.switch_tabpanel(obj[prop][0], value[0]);
       }
 
       obj[prop] = value;
-    }
+    }.bind(this)
   });
 
   if (this.options.removable) {
@@ -2308,7 +2308,7 @@ BriteGrid.widget.Checkbox = function ($checkbox) {
     checked: $checkbox.mozMatchesSelector('[aria-checked="true"]')
   },
   {
-    set: (obj, prop, value) => {
+    set: function (obj, prop, value) {
       if (prop === 'checked') {
         $checkbox.setAttribute('aria-checked', value);
         $checkbox.dispatchEvent(new CustomEvent('Changed'));
@@ -2375,9 +2375,9 @@ BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
   BGue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
   // Recalculate the height of scrollbar when elements are added or removed
-  let observer = new MutationObserver(() => {
+  let observer = new MutationObserver(function () {
     this.set_height();
-  });
+  }.bind(this));
   observer.observe($owner, {
     subtree: true,
     childList: true,
@@ -2760,7 +2760,7 @@ BriteGrid.widget.Splitter = function ($splitter) {
       min: parseInt(BriteGrid.util.style.get($target, 'min-' + prop))
     },
     {
-      set: (obj, prop, value) => {
+      set: function (obj, prop, value) {
         if (prop === 'expanded' && obj.collapsible) {
           document.getElementById(obj.id).setAttribute('aria-expanded', value);
         }

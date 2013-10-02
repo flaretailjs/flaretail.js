@@ -17,7 +17,7 @@ BriteGrid.util = {};
 BriteGrid.util.event = {};
 
 BriteGrid.util.event.set_keybind = function ($target, key, modifiers, command) {
-  $target.addEventListener('keydown', event => {
+  $target.addEventListener('keydown', function (event) {
     // Check the key code
     if (event.keyCode !== event['DOM_VK_' + key]) {
       return;
@@ -72,7 +72,7 @@ BriteGrid.util.event.unbind = function (that, $target, types, use_capture = fals
 
 BriteGrid.util.request = {};
 
-BriteGrid.util.request.build_query = query => {
+BriteGrid.util.request.build_query = function (query) {
   let fields = new Set();
 
   for (let [key, value] of Iterator(query)) {
@@ -97,9 +97,9 @@ BriteGrid.util.prefs = {};
 BriteGrid.util.Storage = function () {
   let req = this.request = indexedDB.open('MyTestDatabase', 1),
       db = this.db = null;
-  req.addEventListener('error', event => {});
-  req.addEventListener('success', event => db = request.result);
-  db.addEventListener('error', event => {});
+  req.addEventListener('error', function (event) {});
+  req.addEventListener('success', function (event) db = request.result);
+  db.addEventListener('error', function (event) {});
 };
 
 /* --------------------------------------------------------------------------
@@ -108,7 +108,7 @@ BriteGrid.util.Storage = function () {
 
 BriteGrid.util.app = {};
 
-BriteGrid.util.app.can_install = (manifest, callback) => {
+BriteGrid.util.app.can_install = function (manifest, callback) {
   let apps = navigator.mozApps;
   if (!apps) {
     callback(false);
@@ -116,26 +116,26 @@ BriteGrid.util.app.can_install = (manifest, callback) => {
   }
 
   let request = apps.checkInstalled(manifest);
-  request.addEventListener('success', event => {
+  request.addEventListener('success', function (event) {
     // IndexedDB has been deactivated in WebAppRT on Firefox 24 and earlier versions (Bug 827346)
     let idb_enabled = navigator.userAgent.match(/(Mobile|Tablet)/) ||
                       navigator.userAgent.match(/Firefox\/(\d+)/) && parseInt(RegExp.$1) >= 25;
     callback(!request.result && idb_enabled);
   });
-  request.addEventListener('error', event => callback(false));
+  request.addEventListener('error', function (event) callback(false));
 };
 
-BriteGrid.util.app.install = (manifest, callback) => {
+BriteGrid.util.app.install = function (manifest, callback) {
   let request = navigator.mozApps.install(manifest);
-  request.addEventListener('success', event => callback(event));
-  request.addEventListener('error', event => callback(event));
+  request.addEventListener('success', function (event) callback(event));
+  request.addEventListener('error', function (event) callback(event));
 };
 
-BriteGrid.util.app.fullscreen_enabled = () => {
+BriteGrid.util.app.fullscreen_enabled = function () {
   return document.fullscreenEnabled || document.mozFullScreenEnabled;
-}
+};
 
-BriteGrid.util.app.toggle_fullscreen = () => {
+BriteGrid.util.app.toggle_fullscreen = function () {
   if (document.fullscreenElement === null || document.mozFullScreenElement === null) {
     if (document.body.requestFullscreen) {
       document.body.requestFullscreen();
@@ -151,11 +151,11 @@ BriteGrid.util.app.toggle_fullscreen = () => {
   }
 };
 
-BriteGrid.util.app.auth_notification = () => {
-  Notification.requestPermission(permission => {});
+BriteGrid.util.app.auth_notification = function () {
+  Notification.requestPermission(function (permission) {});
 };
 
-BriteGrid.util.app.show_notification = (title, options = {}) => {
+BriteGrid.util.app.show_notification = function (title, options = {}) {
   new Notification(title, {
     dir: options.dir || 'auto',
     lang: options.lang || 'en-US',
@@ -174,22 +174,22 @@ BriteGrid.util.theme = {};
 Object.defineProperties(BriteGrid.util.theme, {
   'list': {
     enumerable : true,
-    get: () => document.styleSheetSets
+    get: function () document.styleSheetSets
   },
   'default': {
     enumerable : true,
-    get: () => document.preferredStyleSheetSet
+    get: function () document.preferredStyleSheetSet
   },
   'selected': {
     enumerable : true,
     // A regression since Firefox 20: selectedStyleSheetSet returns empty (Bug 894874)
-    get: () => document.selectedStyleSheetSet ||
-               document.lastStyleSheetSet || document.preferredStyleSheetSet,
-    set: name => document.selectedStyleSheetSet = name
+    get: function () document.selectedStyleSheetSet ||
+                     document.lastStyleSheetSet || document.preferredStyleSheetSet,
+    set: function (name) document.selectedStyleSheetSet = name
   }
 });
 
-BriteGrid.util.theme.preload_images = callback => {
+BriteGrid.util.theme.preload_images = function (callback) {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
@@ -215,7 +215,7 @@ BriteGrid.util.theme.preload_images = callback => {
 
   for (let src of images) {
     let image = new Image();
-    image.addEventListener('load', event => {
+    image.addEventListener('load', function (event) {
       loaded++;
       if (loaded === total) {
         callback();
@@ -296,7 +296,7 @@ BriteGrid.util.i18n.format_date = function (str) {
 
 BriteGrid.util.style = {};
 
-BriteGrid.util.style.get = ($element, property) => {
+BriteGrid.util.style.get = function ($element, property) {
   return window.getComputedStyle($element, null).getPropertyValue(property);
 };
 
@@ -306,7 +306,7 @@ BriteGrid.util.style.get = ($element, property) => {
 
 BriteGrid.util.object = {};
 
-BriteGrid.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
+BriteGrid.util.object.clone = function (obj) JSON.parse(JSON.stringify(obj));
 
 /* --------------------------------------------------------------------------
  * Array
@@ -314,7 +314,7 @@ BriteGrid.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
 
 BriteGrid.util.array = {};
 
-BriteGrid.util.array.clone = array => Array.slice(array);
+BriteGrid.util.array.clone = function (array) Array.slice(array);
 
 /* --------------------------------------------------------------------------
  * String
@@ -322,7 +322,7 @@ BriteGrid.util.array.clone = array => Array.slice(array);
 
 BriteGrid.util.string = {};
 
-BriteGrid.util.string.sanitize = str => {
+BriteGrid.util.string.sanitize = function (str) {
   let chars = new Map(Iterator({
     '<': '&lt;',
     '>': '&gt;',
@@ -330,5 +330,5 @@ BriteGrid.util.string.sanitize = str => {
     '"': '&quot;'
   }));
 
-  return str.replace(/./g, match => chars.get(match) || match);
+  return str.replace(/./g, function (match) chars.get(match) || match);
 };
