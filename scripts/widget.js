@@ -2,7 +2,7 @@
  * WAI-ARIA-based accessible app widget library
  * Copyright © 2012 BriteGrid. All rights reserved.
  * Using: ECMAScript Harmony
- * Requires: Firefox 24
+ * Requires: Firefox 18
  */
 
 'use strict';
@@ -1384,7 +1384,7 @@ BriteGrid.widget.ListBox.prototype = Object.create(BriteGrid.widget.Select.proto
 
 BriteGrid.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new WeakMap(),
-      $fragment = new DocumentFragment();
+      $fragment = document.createDocumentFragment();
 
   for (let item of this.data.structure) {
     let $item = document.createElement('li'),
@@ -1665,7 +1665,7 @@ BriteGrid.widget.Menu.prototype.onblur_extend = function (event) {
 
 BriteGrid.widget.Menu.prototype.build = function (data) {
   let $container = this.view.container,
-      $fragment = new DocumentFragment(),
+      $fragment = document.createDocumentFragment(),
       structure = [],
       rebuild = false;
 
@@ -2011,7 +2011,7 @@ BriteGrid.widget.Tree.prototype.ondblclick = function (event) {
 
 BriteGrid.widget.Tree.prototype.build = function () {
   let $tree = this.view.container,
-      $fragment = new DocumentFragment(),
+      $fragment = document.createDocumentFragment(),
       structure = this.data.structure,
       map = this.data.map = new WeakMap(),
       level = 1;

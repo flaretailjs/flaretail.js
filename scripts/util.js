@@ -2,7 +2,7 @@
  * BriteGrid Utility Library
  * Copyright © 2012 BriteGrid. All rights reserved.
  * Using: ECMAScript Harmony
- * Requires: Firefox 22
+ * Requires: Firefox 18
  */
 
 'use strict';
@@ -152,10 +152,16 @@ BriteGrid.util.app.toggle_fullscreen = function () {
 };
 
 BriteGrid.util.app.auth_notification = function () {
+  if (!('Notification' in window)) {
+    return;
+  }
   Notification.requestPermission(function (permission) {});
 };
 
 BriteGrid.util.app.show_notification = function (title, options = {}) {
+  if (!('Notification' in window)) {
+    return;
+  }
   new Notification(title, {
     dir: options.dir || 'auto',
     lang: options.lang || 'en-US',
@@ -332,3 +338,16 @@ BriteGrid.util.string.sanitize = function (str) {
 
   return str.replace(/./g, function (match) chars.get(match) || match);
 };
+
+/* --------------------------------------------------------------------------
+ * Polyfills
+ * -------------------------------------------------------------------------- */
+
+// ChildNode.remove (requires Firefox 23)
+if (!('remove' in Element.prototype)) {
+  Element.prototype.remove = function () {
+    if (this.parentElement) {
+      this.parentElement.removeChild(this);
+    }
+  }
+}
