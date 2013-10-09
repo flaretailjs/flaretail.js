@@ -169,35 +169,39 @@ body {
   width: 0 !important;
 }
 
-[role="grid"] th[aria-hidden="true"],
-[role="grid"] td[aria-hidden="true"] {
+[aria-hidden="true"]:-moz-any([role="columnheader"], [role="rowheader"], [role="gridcell"]) {
   display: table-cell !important;
 }
 
-[role="grid"] th,
-[role="grid"] td {
+[role="columnheader"],
+[role="rowheader"],
+[role="gridcell"] {
   margin: 0;
   border: 0;
   padding: 0;
   height: 1.8rem;
   line-height: 1.8rem;
+  font-weight: normal;
+  text-align: left;
 }
 
-[role="grid"] th label,
-[role="grid"] th time,
-[role="grid"] td label,
-[role="grid"] td time {
+[role="rowheader"],
+[role="gridcell"] {
+  pointer-events: none;
+}
+
+[aria-readonly="false"]:-moz-any([role="rowheader"], [role="gridcell"]) {
+  pointer-events: auto;
+}
+
+:-moz-any([role="columnheader"], [role="rowheader"], [role="gridcell"]) label,
+:-moz-any([role="columnheader"], [role="rowheader"], [role="gridcell"]) time {
   display: block;
   overflow: hidden;
   padding: 0 .4rem;
   white-space: nowrap;
   text-overflow: ellipsis;
   pointer-events: none;
-}
-
-[role="grid"] th {
-  font-weight: normal;
-  text-align: left;
 }
 
 [role="grid"] hgroup {
@@ -246,15 +250,7 @@ body.touch [role="grid"] .grid-body {
   display: none; /* for sorting performance */
 }
 
-[role="grid"] tbody td {
-  pointer-events: none;
-}
-
-[role="grid"] tbody td[aria-readonly="false"] {
-  pointer-events: auto;
-}
-
-[role="grid"] tbody td [role="checkbox"] {
+[role="gridcell"] [role="checkbox"] {
   display: block;
   margin: 0;
   width: 100%;
@@ -301,8 +297,7 @@ canvas[id^="column-drag-image-"].follower {
   pointer-events: auto;
 }
 
-[role="menubar"] > li,
-[role="menu"] > li {
+:-moz-any([role="menubar"], [role="menu"]) > li {
   display: block;
   position: relative;
   margin: 0;
@@ -407,13 +402,11 @@ a[role="menuitem"] {
   width: 36rem;
 }
 
-[role="dialog"] h2,
-[role="alertdialog"] h2 {
+:-moz-any([role="dialog"], [role="alertdialog"]) h2 {
   margin: 0;
 }
 
-[role="dialog"] button,
-[role="alertdialog"] button {
+:-moz-any([role="dialog"], [role="alertdialog"]) button {
   display: inline-block;
 }
 
@@ -509,16 +502,14 @@ body.touch [role="scrollbar"] {
  * -------------------------------------------------------------------------- */
 
 [role="radio"],
-[role="radio"] + label,
 [role="checkbox"],
-[role="checkbox"] + label {
+:-moz-any([role="radio"], [role="checkbox"]) + label {
   display: inline-block;
   vertical-align: top;
   pointer-events: auto;
 }
 
-[role="radio"][aria-hidden="true"] + label,
-[role="checkbox"][aria-hidden="true"] + label {
+[aria-hidden="true"]:-moz-any([role="radio"], [role="checkbox"]) + label {
   display: none;
 }
 
@@ -530,8 +521,7 @@ body.touch [role="scrollbar"] {
   line-height: 1.2rem;
 }
 
-[role="radio"] + label,
-[role="checkbox"] + label {
+:-moz-any([role="radio"], [role="checkbox"]) + label {
   height: 1.6rem;
   line-height: 1.6rem;
 }
