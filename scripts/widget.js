@@ -11,22 +11,6 @@ let BriteGrid = BriteGrid || {};
 BriteGrid.widget = {};
 
 /* --------------------------------------------------------------------------
- * Mobile Support
- * -------------------------------------------------------------------------- */
-
-// TODO: tablet support
-BriteGrid.widget.mode = {
-  layout: window.matchMedia('(max-width: 640px)').matches ? 'mobile' : 'desktop',
-  touch: 'ontouchstart' in window
-}
-
-window.addEventListener('DOMContentLoaded', function (event) {
-  if (BriteGrid.widget.mode.touch) {
-    document.body.classList.add('touch');
-  }
-});
-
-/* --------------------------------------------------------------------------
  * RoleType (top level abstract role)
  * -------------------------------------------------------------------------- */
 
@@ -743,10 +727,12 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
     }
   });
 
-  // Use custom scrollbar on desktop
-  if (BriteGrid.widget.mode.layout === 'desktop') {
-    new BriteGrid.widget.ScrollBar($grid_body, true);
-  }
+  // Custom scrollbar
+  let mobile_mql = BriteGrid.util.device.mobile.mql,
+      scrollbar = this.view.scrollbar
+                = new BriteGrid.widget.ScrollBar($grid_body, !mobile_mql.matches);
+
+  mobile_mql.addListener(function (mql) scrollbar.options.adjusted = !mql.matches);
 };
 
 BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
@@ -2423,7 +2409,7 @@ BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
       $controller = this.view.controller;
 
   // Scroll by row
-  if (BriteGrid.widget.mode.layout === 'desktop' && this.options.adjusted) {
+  if (!BriteGrid.util.device.touch.enabled && this.options.adjusted) {
     let rect = $owner.getBoundingClientRect(),
         $elm = document.elementFromPoint(rect.left, rect.top),
         top = 0;

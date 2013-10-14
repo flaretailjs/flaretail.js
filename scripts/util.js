@@ -103,6 +103,36 @@ BriteGrid.util.Storage = function () {
 };
 
 /* --------------------------------------------------------------------------
+ * Device
+ * -------------------------------------------------------------------------- */
+
+BriteGrid.util.device = {
+  mobile: {
+    mql: window.matchMedia('(max-width: 640px)')
+  },
+  touch: {
+    enabled: window.matchMedia('(-moz-touch-enabled: 1)').matches
+  }
+};
+
+{
+  let ua = navigator.userAgent,
+      device = BriteGrid.util.device;
+
+  // A device form factor
+  // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
+  if (ua.contains('Tablet')) {
+    device.type = 'tablet';
+  } else if (ua.contains('Mobile')) {
+    device.type = 'mobile';
+  } else {
+    device.type = 'desktop';
+  }
+
+  document.documentElement.setAttribute('data-device-type', device.type);
+}
+
+/* --------------------------------------------------------------------------
  * App
  * -------------------------------------------------------------------------- */
 

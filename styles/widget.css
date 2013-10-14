@@ -242,10 +242,6 @@ body {
   overflow: hidden;
 }
 
-body.touch [role="grid"] .grid-body {
-  overflow: scroll;
-}
-
 [role="grid"] .grid-body tbody[aria-busy="true"] {
   display: none; /* for sorting performance */
 }
@@ -493,10 +489,6 @@ a[role="menuitem"] {
   opacity: 0;
 }
 
-body.touch [role="scrollbar"] {
-  display: none;
-}
-
 /* --------------------------------------------------------------------------
  * RadioGroup & CheckBox
  * -------------------------------------------------------------------------- */
@@ -566,8 +558,20 @@ body.touch [role="scrollbar"] {
    between an app and an in-browser page. Use the width feature instead. */
 @media (max-width: 640px) {
 
-html {
-  font-size: 12px;
+  html {
+    font-size: 12px;
+  }
+
 }
 
-} /* end @media */
+@media (-moz-touch-enabled: 1) {
+
+  [role="grid"] .grid-body {
+    overflow: scroll;
+  }
+
+  [role="scrollbar"] {
+    display: none;
+  }
+
+}
