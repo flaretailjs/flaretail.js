@@ -1098,7 +1098,8 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   // Fire an event
   $grid.dispatchEvent(new CustomEvent('Sorted', {
-    detail: { conditions: cond }
+    // Clone cond as it's a proxyfied object
+    detail: { conditions: BriteGrid.util.object.clone(cond) }
   }));
 };
 
