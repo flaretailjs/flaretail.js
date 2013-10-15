@@ -494,28 +494,23 @@ a[role="menuitem"] {
  * -------------------------------------------------------------------------- */
 
 [role="radio"],
-[role="checkbox"],
-:-moz-any([role="radio"], [role="checkbox"]) + label {
+[role="checkbox"] {
   display: inline-block;
+  margin: .2rem;
+  line-height: 1.2rem;
   vertical-align: top;
   pointer-events: auto;
 }
 
-[aria-hidden="true"]:-moz-any([role="radio"], [role="checkbox"]) + label {
-  display: none;
-}
-
-[role="radio"],
-[role="checkbox"] {
-  margin: .2rem;
+[role="radio"]:before,
+[role="checkbox"]:before {
+  display: inline-block;
+  margin-right: .4rem;
   width: 1.2rem;
   height: 1.2rem;
-  line-height: 1.2rem;
-}
-
-:-moz-any([role="radio"], [role="checkbox"]) + label {
-  height: 1.6rem;
-  line-height: 1.6rem;
+  background-position: center;
+  vertical-align: top;
+  content: '';
 }
 
 /* --------------------------------------------------------------------------

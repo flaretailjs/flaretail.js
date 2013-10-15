@@ -1890,23 +1890,6 @@ BriteGrid.widget.RadioGroup = function ($container, data) {
 
 BriteGrid.widget.RadioGroup.prototype = Object.create(BriteGrid.widget.Select.prototype);
 
-BriteGrid.widget.RadioGroup.prototype.onmousedown_extend = function (event) {
-  if (event.target.mozMatchesSelector('label')) {
-    BriteGrid.util.event.ignore(event);
-  }  
-
-  this.onmousedown(event);
-};
-
-BriteGrid.widget.RadioGroup.prototype.onclick = function (event) {
-  if (event.target.mozMatchesSelector('label')) {
-    let $target = document.querySelector('[aria-labelledby="' + event.target.id + '"]');
-    this.view.selected = this.view.focused = $target;
-  }
-
-  BriteGrid.util.event.ignore(event);
-};
-
 /* --------------------------------------------------------------------------
  * Tree extends Select
  *
@@ -2287,8 +2270,7 @@ BriteGrid.widget.Input.prototype = Object.create(BriteGrid.widget.Widget.prototy
 
 BriteGrid.widget.Checkbox = function ($checkbox) {
   this.view = {
-    checkbox: $checkbox,
-    label: document.getElementById($checkbox.getAttribute('aria-labelledby'))
+    checkbox: $checkbox
   };
 
   this.data = new Proxy({
@@ -2306,11 +2288,6 @@ BriteGrid.widget.Checkbox = function ($checkbox) {
 
   let BGueb = BriteGrid.util.event.bind;
   BGueb(this, $checkbox, ['keydown', 'click', 'contextmenu']);
-
-  if (this.view.label) {
-    this.data.label = this.view.label.textContent;
-    BGueb(this, this.view.label, ['click', 'contextmenu']);
-  }
 };
 
 BriteGrid.widget.Checkbox.prototype = Object.create(BriteGrid.widget.Input.prototype);
