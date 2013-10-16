@@ -1017,27 +1017,25 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
 };
 
 BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
-  if (prop !== 'key') {
-    // The default behavior of Proxy
-    cond[prop] = value;
-    return;
-  };
-
   let $grid = this.view.container,
       $tbody = this.view.body.querySelector('tbody'),
-      $sorter = this.view.header.querySelector('[role="columnheader"][data-id="' + value + '"]'),
-      type = $sorter.dataset.type;
+      $header = this.view.header;
 
   if (data_only) {
     cond.order = cond.order || 'ascending';
-  } else if (cond.key === value) {
+  } else if (prop === 'order') {
+    cond.order = value;
+  } else if (prop === 'key' && cond.key === value) {
     // The same column is selected; change the order
     cond.order = cond.order === 'ascending' ? 'descending' : 'ascending';
   } else {
     cond.key = value;
     cond.order = 'ascending';
-    this.view.header.querySelector('[aria-sort]').removeAttribute('aria-sort');
+    $header.querySelector('[aria-sort]').removeAttribute('aria-sort');
   }
+
+  let $sorter = $header.querySelector('[role="columnheader"][data-id="' + cond.key + '"]'),
+      type = $sorter.dataset.type;
 
   $tbody.setAttribute('aria-busy', 'true'); // display: none
 
