@@ -754,7 +754,7 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
         id = $target.parentElement.dataset.id,
         value = !$target.mozMatchesSelector('[aria-checked="true"]');
     this.data.rows[index].data[id] = value;
-    return;
+    return BriteGrid.util.event.ignore(event);
   }
 
   // The default behavior
