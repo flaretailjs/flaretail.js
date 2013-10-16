@@ -2692,48 +2692,143 @@ BriteGrid.widget.Splitter = function ($splitter) {
     controls: {}
   };
 
-  let $outer = this.view.outer;
+  let style = function ($element, prop) parseInt(BriteGrid.util.style.get($element, prop)),
+      $outer = this.view.outer,
+      orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
+      outer_rect = $outer.getBoundingClientRect(),
+      outer_size = orientation === 'horizontal' ? outer_rect.height : outer_rect.width,
+      flex = $splitter.dataset.flex !== 'false',
+      position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
 
-  this.data = {
-    outer: {
+  this.data = new Proxy({
+    outer: new Proxy({
       id: $outer.id,
-      top: $outer.clientTop,
-      left: $outer.clientLeft,
-      width: $outer.clientWidth,
-      height: $outer.clientHeight
-    },
+      top: outer_rect.top,
+      left: outer_rect.left,
+    }, {
+      get: function (obj, prop) {
+        if (prop === 'size') {
+          // The dimension of the element can be changed when the window is resized.
+          // Return the current width or height
+          let rect = $outer.getBoundingClientRect();
+          return this.data.orientation === 'horizontal' ? rect.height : rect.width;
+        }
+        return obj[prop];
+      }.bind(this)
+    }),
+    orientation: orientation,
+    flex: flex,
+    position: flex ? (position / outer_size * 100).toFixed(2) + '%' : position + 'px',
     controls: {},
     grabbed: false
-  };
+  }, {
+    set: function (obj, prop, value) {
+      if (prop === 'orientation') {
+        this.data.position = 'default';
+        $splitter.setAttribute('aria-orientation', value);
+      }
 
-  this.options = {
-    orientation: $splitter.getAttribute('aria-orientation') || 'horizontal'
-  };
+      if (prop === 'position') {
+        let outer = this.data.outer,
+            before = this.data.controls.before,
+            after = this.data.controls.after,
+            $before = this.view.controls.before,
+            $after = this.view.controls.after;
+
+        if (isNaN(value) && value.match(/^(\d+)px$/)) {
+          value = parseInt(RegExp.$1);
+        }
+
+        if (value === 'default') {
+          value = null; // Reset the position
+        } else if (value <= 0) {
+          if (parseInt(obj.position) === 0) {
+            return;
+          }
+          value = (!before.min || before.collapsible) ? 0 : before.min;
+        } else if (value >= outer.size || value === '100%') {
+          if (obj.position === '100%') {
+            return;
+          }
+          value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
+        } else if (before.min && value < before.min) {
+          // Reached min-height of the before element
+          if (!before.expanded) {
+            return;
+          }
+          if (before.collapsible) {
+            before.expanded = false;
+            value = 0;
+          } else {
+            value = before.min;
+          }
+        } else if (!before.expanded) {
+          before.expanded = true;
+          value = before.min;
+        } else if (before.max && value > before.max) {
+          value = before.max;
+        } else if (after.min && outer.size - value < after.min) {
+          // Reached min-height of the after element
+          if (!after.expanded) {
+            return;
+          }
+          if (after.collapsible) {
+            after.expanded = false;
+            value = '100%';
+          } else {
+            value = outer.size - after.min;
+          }
+        } else if (!after.expanded) {
+          after.expanded = true;
+          value = outer.size - after.min;
+        } else if (after.max && outer.size - value > after.max) {
+          value = outer.size - after.max;
+        }
+
+        if (!isNaN(value) && value !== null) {
+          value = this.data.flex ? (value / outer.size * 100).toFixed(2) + '%' : value + 'px';
+        }
+
+        if (this.data.orientation === 'horizontal') {
+          $before.style.height = $splitter.style.top = $after.style.top = value;
+        } else {
+          $before.style.width = $splitter.style.left = $after.style.left = value;
+        }
+
+        $splitter.dispatchEvent(new CustomEvent('Resized', {
+          detail: { position: value }
+        }));
+
+        // Force to resize scrollbars
+        window.dispatchEvent(new UIEvent('resize'));
+      }
+
+      obj[prop] = value;
+    }.bind(this)
+  });
 
   // Add event listeners
-  BriteGrid.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'dblclick']);
+  BriteGrid.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
-  let prop = this.options.orientation === 'horizontal' ? 'height' : 'width',
-      ids = $splitter.getAttribute('aria-controls').split(/\s+/);
-
-  for (let [i, id] of Iterator(ids)) {
+  for (let [i, id] of Iterator($splitter.getAttribute('aria-controls').split(/\s+/))) {
     let $target = document.getElementById(id),
         position = i === 0 ? 'before' : 'after';
     this.data.controls[position] = new Proxy({
       id: id,
       collapsible: $target.hasAttribute('aria-expanded'),
-      expanded: $target.getAttribute('aria-expanded') || true,
-      current: parseInt(BriteGrid.util.style.get($target, prop)),
-      min: parseInt(BriteGrid.util.style.get($target, 'min-' + prop))
+      expanded: $target.getAttribute('aria-expanded') !== 'false'
     },
     {
-      set: function (obj, prop, value) {
-        if (prop === 'expanded' && obj.collapsible) {
-          document.getElementById(obj.id).setAttribute('aria-expanded', value);
+      get: function (obj, prop) {
+        if (prop === 'min' || prop === 'max') {
+          let horizontal = this.data.orientation === 'horizontal';
+          return style($target, prop + '-' + (horizontal ? 'height' : 'width'));
         }
-        if (prop === 'width' || prop === 'height') {
-          document.getElementById(obj.id).style[prop] = value + 'px';
-          prop = 'current';
+        return obj[prop];
+      }.bind(this),
+      set: function (obj, prop, value) {
+        if (prop === 'expanded') {
+          document.getElementById(obj.id).setAttribute('aria-expanded', value);
         }
         obj[prop] = value;
       }
@@ -2745,7 +2840,7 @@ BriteGrid.widget.Splitter = function ($splitter) {
 BriteGrid.widget.Splitter.prototype = Object.create(BriteGrid.widget.Separator.prototype);
 
 BriteGrid.widget.Splitter.prototype.onmousedown = function (event) {
-  if (event.button !== 1) {
+  if (event.button !== 0) {
     event.preventDefault();
     return;
   }
@@ -2753,7 +2848,7 @@ BriteGrid.widget.Splitter.prototype.onmousedown = function (event) {
   this.view.splitter.setAttribute('aria-grabbed', 'true');
   this.data.grabbed = true;
 
-  this.view.outer.dataset.splitter = this.options.orientation;
+  this.view.outer.dataset.splitter = this.data.orientation;
 
   // Add event listeners
   BriteGrid.util.event.bind(this, window, ['mousemove', 'mouseup']);
@@ -2764,31 +2859,10 @@ BriteGrid.widget.Splitter.prototype.onmousemove = function (event) {
     return;
   }
 
-  let outer = this.data.outer,
-      controls = this.data.controls,
-      before = controls.before,
-      after = controls.after;
-
-  // TODO: "after" support
-
-  if (this.options.orientation === 'horizontal') {
-    if (before.min > 0 && before.min > event.clientY - outer.top) {
-      // Reached min-height of the before element
-      before.expanded = false;
-    } else if (!before.expanded) {
-      before.expanded = true;
-    } else {
-      before.height = event.clientY - outer.top;
-    }
+  if (this.data.orientation === 'horizontal') {
+    this.data.position = event.clientY - this.data.outer.top;
   } else {
-    if (before.min > 0 && before.min > event.clientX - outer.left) {
-      // Reached min-width of the before element
-      before.expanded = false;
-    } else if (!before.expanded) {
-      before.expanded = true;
-    } else {
-      before.width = event.clientX - outer.left;
-    }
+    this.data.position = event.clientX - this.data.outer.left;
   }
 };
 
@@ -2805,9 +2879,49 @@ BriteGrid.widget.Splitter.prototype.onmouseup = function (event) {
   delete this.view.outer.dataset.splitter;
 };
 
-BriteGrid.widget.Splitter.prototype.ondblclick = function (event) {
-  let before = this.data.controls.before;
-  before.expanded = !before.expanded;
+BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
+  let value = null,
+      position = this.data.position,
+      outer = this.data.outer,
+      before = this.data.controls.before,
+      after = this.data.controls.after;
+
+  switch (event.keyCode) {
+    case event.DOM_VK_HOME: {
+      value = (!before.min || before.collapsible) ? 0 : before.min;
+      break;
+    }
+    case event.DOM_VK_END: {
+      value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
+      break;
+    }
+    case event.DOM_VK_PAGE_UP:
+    case event.DOM_VK_UP:
+    case event.DOM_VK_LEFT: {
+      let delta = (event.keyCode === event.DOM_VK_PAGE_UP || event.shiftKey) ? 50 : 10;
+      if (position === '100%') {
+        value = outer.size - (this.data.controls.after.min || delta);
+      } else if (parseInt(position) !== 0) {
+        value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) - delta;
+      }
+      break;
+    }
+    case event.DOM_VK_PAGE_DOWN:
+    case event.DOM_VK_DOWN:
+    case event.DOM_VK_RIGHT: {
+      let delta = (event.keyCode === event.DOM_VK_PAGE_DOWN || event.shiftKey) ? 50 : 10;
+      if (parseInt(position) === 0) {
+        value = this.data.controls.before.min || delta;
+      } else if (position !== '100%') {
+        value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) + delta;
+      }
+      break;
+    }
+  }
+
+  if (value !== null) {
+    this.data.position = value;
+  }
 };
 
 /* --------------------------------------------------------------------------

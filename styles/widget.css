@@ -411,8 +411,9 @@ a[role="menuitem"] {
  * -------------------------------------------------------------------------- */
 
 .splitter {
-  position: relative;
-  z-index: 100;
+  position: absolute;
+  z-index: 200;
+  margin: -.2rem 0 0 0;
   width: 100%;
   height: .4rem;
   cursor: ns-resize;
@@ -420,9 +421,10 @@ a[role="menuitem"] {
 }
 
 .splitter[aria-orientation="vertical"] {
-  cursor: ew-resize;
+  margin: 0 0 0 -.2rem;
   width: .4rem;
   height: 100%;
+  cursor: ew-resize;
 }
 
 [data-splitter] * {
