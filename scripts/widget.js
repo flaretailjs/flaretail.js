@@ -1161,8 +1161,13 @@ BriteGrid.widget.Grid.prototype.hide_column = function (col) {
 };
 
 BriteGrid.widget.Grid.prototype.ensure_row_visibility = function ($row) {
-  let $outer = this.view.container.querySelector('.grid-body'),
-      ost = $outer.scrollTop,
+  let $outer = this.view.container.querySelector('.grid-body');
+
+  if (!$outer) {
+    return;
+  }
+
+  let ost = $outer.scrollTop,
       ooh = $outer.offsetHeight,
       rot = $row.offsetTop,
       roh = $row.offsetHeight;
