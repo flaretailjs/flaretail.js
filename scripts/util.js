@@ -373,6 +373,13 @@ BriteGrid.util.string.sanitize = function (str) {
  * Polyfills
  * -------------------------------------------------------------------------- */
 
+// String.contains (requires Firefox 19)
+if (!('contains' in String.prototype)) {
+  String.prototype.contains = function (str, position) {
+    return -1 !== String.prototype.indexOf.call(this, str, position);
+  }
+}
+
 // ChildNode.remove (requires Firefox 23)
 if (!('remove' in Element.prototype)) {
   Element.prototype.remove = function () {
