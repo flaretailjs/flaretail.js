@@ -388,3 +388,10 @@ if (!('remove' in Element.prototype)) {
     }
   }
 }
+
+// Table.createTBody (requires Firefox 25)
+if (!('createTBody' in HTMLTableElement.prototype)) {
+  HTMLTableElement.prototype.createTBody = function () {
+    return this.appendChild(document.createElement('tbody'));
+  }
+}

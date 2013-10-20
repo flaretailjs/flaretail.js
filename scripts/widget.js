@@ -842,7 +842,7 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
   let $grid_header = this.view.header = document.createElement('header'),
       $table = $grid_header.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild(document.createElement('colgroup')),
-      $row = $table.appendChild(document.createElement('tbody')).insertRow(-1),
+      $row = $table.createTBody().insertRow(-1),
       $_col = document.createElement('col'),
       $_cell = document.createElement('th');
 
@@ -886,7 +886,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   let $grid_body = this.view.body = document.createElement('div'),
       $table = $grid_body.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode()),
-      $tbody = $table.appendChild(document.createElement('tbody')),
+      $tbody = $table.createTBody(),
       cond = this.options.sort_conditions,
       row_prefix = $grid.id + '-row-';
 
