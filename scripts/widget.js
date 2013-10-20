@@ -10,14 +10,15 @@
 let BriteGrid = BriteGrid || {};
 BriteGrid.widget = {};
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * RoleType (top level abstract role)
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.RoleType = function () {};
 
 BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
   let $container = this.view.$container;
+
   if (!$container) {
     throw new Error('The container element is not defined');
   }
@@ -29,10 +30,11 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
 
   let get_items = function (selector) {
     // Convert NodeList to Array for convenience in operation
-    return Array.slice($container.querySelectorAll(selector));
+    return [...$container.querySelectorAll(selector)];
   };
 
-  let selector = this.options.item_selector,
+  let BGue = BriteGrid.util.event,
+      selector = this.options.item_selector,
       not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       members  = this.view.members
                = get_items(selector + not_selector),
@@ -40,12 +42,10 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
                = get_items(selector + '[' + this.options.selected_attr + '="true"]');
 
   // Focus Management
-  for (let $item of members) {
-    $item.tabIndex = -1;
+  for (let [i, $item] of Iterator(members)) {
+    $item.tabIndex = (i === 0) ? 0 : -1;
   }
-  if (members.length) {
-    members[0].tabIndex = 0;
-  }
+
   $container.removeAttribute('tabindex');
 
   this.data = this.data || {};
@@ -61,7 +61,6 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
   }
 
   // Add event listeners
-  let BGue = BriteGrid.util.event;
   BGue.bind(this, $container, [
     // MouseEvent
     'mousedown', 'contextmenu', 'mouseup', 'click', 'dblclick',
@@ -78,17 +77,20 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
     'focus', 'blur',
   ], true); // Set use_capture true to catch events on descendants
 
-  let observer = new MutationObserver(function (mutations) {
+  (new MutationObserver(function (mutations) {
     for (let mutation of mutations) {
       let $item = mutation.target;
 
       if (mutation.type === 'attributes') {
         this.view.members = get_items(selector + not_selector);
+
         let index = this.view.selected.indexOf($item);
+
         if ($item.getAttribute(mutation.attributeName) === 'true' && index > -1) {
           // Remove the hidden/disabled item from selection
-          this.view.selected = Array.slice(this.view.selected).splice(index, 1);
+          this.view.selected = [...this.view.selected].splice(index, 1);
         }
+
         this.view.$focused = null;
       }
 
@@ -96,8 +98,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
         // TODO: Update the member list when an element is added or removed
       }
     }
-  }.bind(this));
-  observer.observe($container, {
+  }.bind(this))).observe($container, {
     subtree: true,
     childList: true,
     attributes: true,
@@ -109,8 +110,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
 
 // Catch-all event handler
 BriteGrid.widget.RoleType.prototype.handleEvent = function (event) {
-  let handler = this['on' + event.type + '_extend'] || this['on' + event.type];
-  handler.call(this, event);
+  (this['on' + event.type + '_extend'] || this['on' + event.type]).call(this, event);
 };
 
 BriteGrid.widget.RoleType.prototype.oncontextmenu = function (event) {
@@ -118,37 +118,37 @@ BriteGrid.widget.RoleType.prototype.oncontextmenu = function (event) {
   return BriteGrid.util.event.ignore(event);
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Structure (abstract role) extends RoleType
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Structure = function () {};
 BriteGrid.widget.Structure.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Section (abstract role) extends Structure
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Section = function () {};
 BriteGrid.widget.Section.prototype = Object.create(BriteGrid.widget.Structure.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Widget (abstract role) extends RoleType
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Widget = function () {};
 BriteGrid.widget.Widget.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Command (abstract role) extends Widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Command = function () {};
 BriteGrid.widget.Command.prototype = Object.create(BriteGrid.widget.Widget.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Button extends Command
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Button = function ($button) {
   this.view = {
@@ -164,6 +164,7 @@ BriteGrid.widget.Button = function ($button) {
       if (prop === 'disabled' || prop === 'pressed') {
         $button.setAttribute('aria-' + prop, value);
       }
+
       obj[prop] = value;
     }
   });
@@ -197,9 +198,9 @@ BriteGrid.widget.Button.prototype.onkeydown = function (event) {
   }
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Composite (abstract role) extends Widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Composite = function () {};
 BriteGrid.widget.Composite.prototype = Object.create(BriteGrid.widget.Widget.prototype);
@@ -234,17 +235,17 @@ BriteGrid.widget.Composite.prototype.select_with_mouse = function (event) {
   let $target = event.target,
       $container = this.view.$container,
       items = this.view.members,
-      selected = Array.slice(this.view.selected),
+      selected = [...this.view.selected],
       multi = this.options.multiselectable;
 
   if (event.shiftKey && multi) {
     let start = items.indexOf(selected[0]),
         end = items.indexOf($target);
+
     if (start < end) {
       selected = items.slice(start, end + 1);
     } else {
-      selected = items.slice(end, start + 1);
-      selected.reverse();
+      selected = items.slice(end, start + 1).reverse();
     }
   } else if (event.ctrlKey || event.metaKey) {
     if (multi && selected.indexOf($target) === -1) {
@@ -276,7 +277,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
   }
 
   let items = this.view.members,
-      selected = Array.slice(this.view.selected), // Clone the array
+      selected = [...this.view.selected], // Clone the array
       selected_idx = items.indexOf(selected[0]),
       $focused = this.view.$focused,
       focused_idx = items.indexOf($focused),
@@ -291,10 +292,12 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       if (ctrl) {
         break; // Move focus only
       }
+
       if (!multi) {
         this.view.selected = $focused;
         break;
       }
+
       if (selected.indexOf($focused) === -1) {
         // Add item
         selected.push($focused);
@@ -304,6 +307,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         selected.splice(selected.indexOf($focused), 1);
         this.view.selected = selected;
       }
+
       break;
     }
 
@@ -312,28 +316,38 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
     case event.DOM_VK_HOME:
     case event.DOM_VK_PAGE_UP: {
       this.view.$focused = items[0];
+
       if (ctrl) {
         break; // Move focus only
       }
+
       if (!expanding) {
         this.view.selected = items[0];
+
         break;
       }
+
       this.view.selected = items.slice(0, selected_idx + 1).reverse();
+
       break;
     }
 
     case event.DOM_VK_END:
     case event.DOM_VK_PAGE_DOWN: {
       this.view.$focused = items[items.length - 1];
+
       if (ctrl) {
         break; // Move focus only
       }
+
       if (!expanding) {
         this.view.selected = items[items.length - 1];
+
         break;
       }
+
       this.view.selected = items.slice(selected_idx);
+
       break;
     }
 
@@ -344,13 +358,17 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       } else if (cycle) {
         this.view.$focused = items[items.length - 1];
       }
+
       if (ctrl) {
         break; // Move focus only
       }
+
       if (!expanding) {
         this.view.selected = this.view.$focused;
+
         break;
       }
+
       if (selected.indexOf($focused) === -1) {
         // Create new range
         this.view.selected = items.slice(focused_idx - 1, focused_idx + 1).reverse();
@@ -363,6 +381,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         selected.pop();
         this.view.selected = selected;
       }
+
       break;
     }
 
@@ -373,13 +392,17 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       } else if (cycle) {
         this.view.$focused = items[0];
       }
+
       if (ctrl) {
         break; // Move focus only
       }
+
       if (!expanding) {
         this.view.selected = this.view.$focused;
+
         break;
       }
+
       if (selected.indexOf($focused) === -1) {
         // Create new range
         this.view.selected = items.slice(focused_idx, focused_idx + 2);
@@ -392,6 +415,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         selected.pop();
         this.view.selected = selected;
       }
+
       break;
     }
 
@@ -400,6 +424,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
       if (ctrl && kcode === event.DOM_VK_A) {
         this.view.selected = items;
         this.view.$focused = items[0];
+
         break;
       }
 
@@ -412,18 +437,23 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
           char = this.data.search_key || '';
       char = char === input ? input : char + input;
       let pattern = new RegExp('^' + char, 'i');
+
       let get_label = function ($item) {
         let $element;
+
         if ($item.hasAttribute('aria-labelledby')) {
           $element = document.getElementById($item.getAttribute('aria-labelledby'));
           if ($element) {
             return $element.textContent;
           }
         }
+
         $element = $item.querySelector('label');
+
         if ($element) {
           return $element.textContent;
         }
+
         return $item.textContent;
       };
 
@@ -431,27 +461,30 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
         if (i === items.length) {
           i = 0; // Continue from top
         }
+
         if (i === focused_idx) {
           break; // No match
         }
+
         let $item = items[i];
+
         if (!get_label($item).match(pattern)) {
           continue;
         }
+
         this.view.$focused = $item;
+
         if (!expanding) {
           this.view.selected = $item;
+
           break;
         }
+
         let start = focused_idx,
             end = i;
-        if (start < end) {
-          selected = items.slice(start, end + 1);
-        } else {
-          selected = items.slice(end, start + 1);
-          selected.reverse();
-        }
-        this.view.selected = selected;
+
+        this.view.selected = (start < end) ? items.slice(start, end + 1)
+                                           : items.slice(end, start + 1).reverse();
       }
 
       // Remember the searched character(s) for later
@@ -471,18 +504,18 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
   let attr = this.options.selected_attr,
       oldval = obj[prop];
 
-  // console.dir({ prop: prop, oldval: oldval, newval: newval });
-
   if (prop === 'selected') {
     if (oldval) {
       for (let $element of oldval) {
         $element.setAttribute(attr, 'false');
       }
     }
+
     if (newval) {
       if (!Array.isArray(newval)) {
         newval = [newval];
       }
+
       for (let $element of newval) {
         $element.setAttribute(attr, 'true');
       }
@@ -491,18 +524,20 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
     this.view.$container.dispatchEvent(new CustomEvent('Selected', {
       detail: {
         items: newval,
-        ids: newval ? newval.map(function ($item) $item.dataset.id) : []
+        ids: newval ? [$item.dataset.id for ($item of newval)] : []
       }
     }));
   }
 
   if (prop === '$focused') {
     let $element;
+
     if (newval) {
       $element = newval;
       $element.tabIndex = 0;
       $element.focus();
     }
+
     if (oldval) {
       $element = oldval;
       $element.tabIndex = -1;
@@ -512,7 +547,7 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
   obj[prop] = newval; // The default behavior
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Grid extends Composite
  *
  * @param   {Element} $container <table role="grid">
@@ -531,7 +566,7 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
  *           * aria-selected: if the attribute is set on the cells, the grid
  *                            will be like a spreadsheet application
  * @returns {Object} the widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Grid = function ($container, data, options) {
   // What can be selected on the grid
@@ -581,6 +616,7 @@ BriteGrid.widget.Grid = function ($container, data, options) {
       if (prop === 'adjust_scrollbar') {
         this.view.scrollbar.options.adjusted = value;
       }
+
       obj[prop] = value;
     }.bind(this)
   });
@@ -603,18 +639,21 @@ BriteGrid.widget.Grid.prototype.activate_extend = function () {
           if (!Array.isArray(value)) {
             value = [value];
           }
+
           // Current selection
           for (let $item of obj[prop]) {
             $item.draggable = false;
             $item.removeAttribute('aria-grabbed');
             $item.setAttribute('aria-selected', 'false');
           }
+
           // New selection
           for (let $item of value) {
             $item.draggable = true;
             $item.setAttribute('aria-grabbed', 'false');
             $item.setAttribute('aria-selected', 'true');
           }
+
           break;
         }
       }
@@ -641,12 +680,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
       }
 
       // Extension: Find column by id
-      let col;
-      for (let o of obj) if (o.id === prop) {
-        col = o;
-        break;
-      }
-      return col;
+      return [col for (col of obj) if (col.id === prop)][0];
     }
   });
 
@@ -660,14 +694,17 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
           value = obj.$element.cellIndex;
           break;
         }
+
         case 'width': {
           value = parseInt(BriteGrid.util.style.get(obj.$element, 'width'));
           break;
         }
+
         case 'left': {
           value = obj.$element.offsetLeft;
           break;
         }
+
         default: {
           value = obj[prop];
         }
@@ -684,10 +721,12 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
           } else {
             this.show_column(obj);
           }
+
           // Fire an event
           this.view.$container.dispatchEvent(new CustomEvent('ColumnModified', {
             detail: { columns: columns }
           }));
+
           break;
         }
       }
@@ -705,13 +744,15 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   let handler = {
     set: function (obj, prop, value) {
       // Reflect Data change into View
-      let row = this.data.rows.filter(function (row) row.data.id === obj.id)[0],
+      let row = [row for (row of this.data.rows) if (row.data.id === obj.id)][0],
           $elm = row.$element.querySelector('[data-id="' + prop + '"] > *');
+
       if (this.data.columns[prop].type === 'boolean') {
         $elm.setAttribute('aria-checked', value);
       } else {
         $elm.textContent = value;
       }
+
       obj[prop] = value;
     }.bind(this)
   };
@@ -735,6 +776,7 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
       if (!isNaN(prop) && value.$element) {
         $tbody.appendChild(value.$element);
       }
+
       obj[prop] = value;
     }
   });
@@ -758,9 +800,11 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
     if (event.button === 0 && this.options.reorderable) {
       BriteGrid.util.event.bind(this, window, ['mousemove', 'mouseup']);
     }
+
     if (event.button === 2) {
       this.build_columnpicker();
     }
+
     return;
   }
 
@@ -769,7 +813,9 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
     let index = $target.parentElement.parentElement.sectionRowIndex,
         id = $target.parentElement.dataset.id,
         value = !$target.mozMatchesSelector('[aria-checked="true"]');
+
     this.data.rows[index].data[id] = value;
+
     return BriteGrid.util.event.ignore(event);
   }
 
@@ -795,6 +841,7 @@ BriteGrid.widget.Grid.prototype.onmouseup = function (event) {
 
   if (this.data.drag) {
     this.stop_column_reordering(event);
+
     return;
   }
 
@@ -824,24 +871,30 @@ BriteGrid.widget.Grid.prototype.onkeydown_extend = function (event) {
       // Do nothing
       break;
     }
+
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_PAGE_DOWN:
     case event.DOM_VK_SPACE: {
       // Handled by the ScrollBar widget
       return true;
     }
+
     case event.DOM_VK_B: {
       if (!modifiers && focused_idx > 0) {
         this.view.selected = this.view.$focused = items[focused_idx - 1];
       }
+
       break;
     }
+
     case event.DOM_VK_F: {
       if (!modifiers && focused_idx < items.length - 1) {
         this.view.selected = this.view.$focused = items[focused_idx + 1];
       }
+
       break;
     }
+
     default: {
       // The default behavior
       this.onkeydown(event);
@@ -853,17 +906,16 @@ BriteGrid.widget.Grid.prototype.onkeydown_extend = function (event) {
 
 BriteGrid.widget.Grid.prototype.build_header = function () {
   let $grid = this.view.$container,
-      cond = this.options.sort_conditions;
-
-  let $grid_header = this.view.$header = document.createElement('header'),
+      $grid_header = this.view.$header = document.createElement('header'),
       $table = $grid_header.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild(document.createElement('colgroup')),
       $row = $table.createTBody().insertRow(-1),
       $_col = document.createElement('col'),
-      $_cell = document.createElement('th');
+      $_cell = document.createElement('th'),
+      cond = this.options.sort_conditions;
 
   $_cell.scope = 'col';
-  $_cell.setAttribute('role', 'columnheader'); 
+  $_cell.setAttribute('role', 'columnheader');
   $_cell.appendChild(document.createElement('label'));
 
   for (let column of this.data.columns) {
@@ -874,11 +926,14 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
     let $cell = column.$element = $row.appendChild($_cell.cloneNode());
     $cell.firstElementChild.textContent = column.label;
     $cell.title = column.title || 'Click to sort by ' + column.label; // l10n
+
     if (cond && column.id === cond.key) {
       $cell.setAttribute('aria-sort', cond.order);
     }
+
     $cell.dataset.id = column.id;
     $cell.dataset.type = column.type || 'string';
+
     if (column.key === true) {
       $cell.dataset.key = 'true';
     }
@@ -891,15 +946,14 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
 };
 
 BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
-  let $grid = this.view.$container;
-
   if (row_data) {
     // Refresh the tbody with the passed data
     this.data.rows = row_data;
     this.view.$body.remove();
   }
 
-  let $grid_body = this.view.$body = document.createElement('div'),
+  let $grid = this.view.$container,
+      $grid_body = this.view.$body = document.createElement('div'),
       $table = $grid_body.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode()),
       $tbody = $table.createTBody(),
@@ -914,8 +968,10 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   $_row.draggable = false;
   $_row.setAttribute('role', 'row');
   $_row.setAttribute('aria-selected', 'false');
+
   for (let column of this.data.columns) {
     let $cell;
+
     if (column.key) {
       $cell = $_row.appendChild(document.createElement('th'));
       $cell.scope = 'row';
@@ -924,6 +980,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
       $cell = $_row.insertCell(-1);
       $cell.setAttribute('role', 'gridcell');
     }
+
     if (column.type === 'boolean') {
       let $checkbox = $cell.appendChild(document.createElement('span'));
       $checkbox.setAttribute('role', 'checkbox');
@@ -931,6 +988,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
     } else {
       $cell.appendChild(document.createElement((column.type === 'time') ? 'time' : 'label'));
     }
+
     $cell.dataset.id = column.id;
     $cell.dataset.type = column.type;
   }
@@ -939,6 +997,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
     let $row = row.$element = $tbody.appendChild($_row.cloneNode());
     $row.id = row_prefix + row.data.id;
     $row.dataset.id = row.data.id;
+
     // Custom data
     if (row.dataset && Object.keys(row.dataset).length) {
       for (let [prop, value] of Iterator(row.dataset)) {
@@ -949,6 +1008,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
     for (let [i, column] of Iterator(this.data.columns)) {
       let $child = $row.cells[i].firstElementChild,
           value = row.data[column.id];
+
       if (column.type === 'boolean') {
         $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
@@ -959,7 +1019,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
         $child.textContent = value;
       }
     }
-  }    
+  }
 
   $grid_body.id = $grid.id + '-body';
   $grid_body.className = 'grid-body';
@@ -967,7 +1027,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   $grid.appendChild($grid_body);
 
   if (row_data) {
-    this.view.members = Array.slice($grid.querySelectorAll(this.options.item_selector));
+    this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
     this.activate_rows();
     $grid.dispatchEvent(new CustomEvent('Rebuilt'));
   }
@@ -975,10 +1035,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
 
 BriteGrid.widget.Grid.prototype.get_data = function () {
   let $header = this.view.$header,
-      $tbody = this.view.$body.querySelector('tbody'),
-      $sorter = $header.querySelector('[role="columnheader"][aria-sort]'),
-      cells = [],
-      rows = [];
+      $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
 
   // Sort conditions
   if (this.options.sortable && $sorter) {
@@ -989,20 +1046,19 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  for (let $cell of $header.querySelector('[role="row"]').cells) {
-    cells.push({
+  this.data.columns = Array.map($header.querySelector('[role="row"]').cells, function ($cell) {
+    return {
       id: $cell.dataset.id,
       type: $cell.dataset.type || 'string',
       label: $cell.textContent,
       hidden: false,
       key: $cell.dataset.key ? true : false,
       $element: $cell
-    });
-  }
-  this.data.columns = cells;
+    };
+  });
 
   // Fill the row database
-  for (let $row of this.view.$body.querySelectorAll('[role="row"]')) {
+  this.data.rows = Array.map(this.view.$body.querySelectorAll('[role="row"]'), function ($row) {
     let row = {
       id: $row.id,
       $element: $row,
@@ -1013,26 +1069,28 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
       let column = this.data.columns[index],
           value,
           normalized_value;
+
       switch (column.type) {
         case 'integer': {
           value = parseInt($cell.textContent);
           break;
         }
+
         case 'boolean': { // checkbox
           value = $cell.querySelector('[role="checkbox"]').mozMatchesSelector('[aria-checked="true"]');
           break;
         }
+
         default: { // string
           value = $cell.textContent;
         }
       }
+
       row.data[column.id] = value;
     };
 
-    rows.push(row);
-  }
-
-  this.data.rows = rows;
+    return row;
+  }.bind(this));
 };
 
 BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
@@ -1062,10 +1120,12 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   let nomalized_values = new Map(),
       nomalize = function (str) {
         let value = nomalized_values.get(str);
+
         if (!value) {
           value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
           nomalized_values.set(str, value);
         }
+
         return value;
       };
 
@@ -1073,15 +1133,19 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
     if (cond.order === 'descending') {
       [a, b] = [b, a]; // reverse()
     }
+
     let a_val = a.data[cond.key],
         b_val = b.data[cond.key];
+
     switch (type) {
       case 'integer': {
         return a_val > b_val;
       }
+
       case 'boolean': {
         return a_val < b_val;
       }
+
       default: {
         return nomalize(a_val) > nomalize(b_val);
       }
@@ -1092,9 +1156,10 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   $sorter.setAttribute('aria-sort', cond.order);
 
   // Reorder the member list
-  this.view.members = Array.slice($grid.querySelectorAll(this.options.item_selector));
+  this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
   let selected = this.view.selected;
+
   if (!data_only && selected && selected.length) {
     this.ensure_row_visibility(selected[selected.length - 1]);
   }
@@ -1124,12 +1189,9 @@ BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
 };
 
 BriteGrid.widget.Grid.prototype.build_columnpicker = function () {
-  let data = [],
-      id_prefix = this.view.$container.id + '-columnpicker-';
-
-  for (let col of this.data.columns) {
-    data.push({
-      id: id_prefix + col.id,
+  this.data.columnpicker.build(this.data.columns.map(function (col) {
+    return {
+      id: this.view.$container.id + '-columnpicker-' + col.id,
       label: col.label,
       type: 'menuitemcheckbox',
       disabled: col.key === true,
@@ -1137,10 +1199,8 @@ BriteGrid.widget.Grid.prototype.build_columnpicker = function () {
       data: {
         id: col.id
       }
-    });
-  }
-
-  this.data.columnpicker.build(data);
+    };
+  }.bind(this)));
 };
 
 BriteGrid.widget.Grid.prototype.toggle_column = function (id) {
@@ -1210,24 +1270,11 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
       style = $container.style;
 
   event.target.dataset.grabbed = 'true';
-
   $container.id = 'column-drag-image-container';
   style.top = rect.top + 'px';
   style.left = rect.left + 'px';
   style.width = $grid.offsetWidth + 'px';
   style.height = $grid.offsetHeight + 'px';
-
-  let handler = {
-    set: function (obj, prop, value) {
-      if (prop === 'left') {
-        let $image = document.getElementById('column-drag-image-' + obj.index);
-        if ($image.className !== 'follower') {
-          $image.style.left = value + 'px';
-        }
-      }
-      obj[prop] = value;
-    }
-  };
 
   for (let $chead of this.view.$header.querySelectorAll('[role="columnheader"]')) {
     let $image = $container.appendChild($_image.cloneNode()),
@@ -1262,8 +1309,19 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
       index: index,
       left: left,
       width: width
-    }, handler));
-  }    
+    }, {
+      set: function (obj, prop, value) {
+        if (prop === 'left') {
+          let $image = document.querySelector('#column-drag-image-' + obj.index);
+
+          if ($image.className !== 'follower') {
+            $image.style.left = value + 'px';
+          }
+        }
+        obj[prop] = value;
+      }
+    }));
+  }
 
   this.data.drag.headers = headers;
   document.body.appendChild($container);
@@ -1285,6 +1343,7 @@ BriteGrid.widget.Grid.prototype.continue_column_reordering = function (event) {
     [prev.width, current.width] = [current.width, prev.width];
     current.left = prev.left + prev.width;
     drag.current_index--;
+
     return;
   }
 
@@ -1295,6 +1354,7 @@ BriteGrid.widget.Grid.prototype.continue_column_reordering = function (event) {
     current.left = prev ? prev.left + prev.width : 0;
     next.left = current.left + current.width;
     drag.current_index++;
+
     return;
   }
 
@@ -1322,6 +1382,7 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
       $colgroup.insertBefore(items[start_idx],
                              items[start_idx > current_idx ? current_idx : current_idx + 1]);
     }
+
     for (let $row of $grid.querySelectorAll('[role="row"]')) {
       let items = $row.children;
       $row.insertBefore(items[start_idx],
@@ -1333,6 +1394,7 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
   drag.$header.removeAttribute('data-grabbed');
   drag.$container.remove();
   $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
+
   delete this.data.drag;
 
   // Fire an event
@@ -1341,29 +1403,29 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
   }));
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Select (abstract role) extends Composite
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Select = function () {};
 BriteGrid.widget.Select.prototype = Object.create(BriteGrid.widget.Composite.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * ComboBox extends Select
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Combobox = function () {};
 BriteGrid.widget.Combobox.prototype = Object.create(BriteGrid.widget.Select.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * ListBox extends Select
  *
  * @param   element <menu role="listbox">
  * @param   optional array data
  * @options attributes on the listbox element:
  *           * aria-multiselectable
- * @returns object widget 
- * -------------------------------------------------------------------------- */
+ * @returns object widget
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.ListBox = function ($container, data) {
   this.view = {
@@ -1421,10 +1483,9 @@ BriteGrid.widget.ListBox.prototype.build = function () {
 };
 
 BriteGrid.widget.ListBox.prototype.get_data = function () {
-  let map = this.data.map = new WeakMap(),
-      structure = this.data.structure = [];
+  let map = this.data.map = new WeakMap();
 
-  for (let $item of this.view.members) {
+  this.data.structure = this.view.members.map(function ($item) {
     let item = {
       $element: $item,
       id: $item.id,
@@ -1433,6 +1494,7 @@ BriteGrid.widget.ListBox.prototype.get_data = function () {
 
     if (Object.keys($item.dataset).length) {
       item.data = {};
+
       for (let [prop, value] of Iterator($item.dataset)) {
         item.data[prop] = value;
       }
@@ -1440,13 +1502,14 @@ BriteGrid.widget.ListBox.prototype.get_data = function () {
 
     // Save the item/obj reference
     map.set($item, item);
-    structure.push(item);
-  }
+
+    return item;
+  });
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Menu extends Select
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Menu = function ($container, data = []) {
   this.view = {
@@ -1471,6 +1534,7 @@ BriteGrid.widget.Menu = function ($container, data = []) {
 
   // Context menu
   let $owner = document.querySelector('[aria-owns="' + $container.id + '"]');
+
   if ($owner && !$owner.mozMatchesSelector('[role="menuitem"]')) {
     this.view.$owner = $owner;
     BriteGrid.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
@@ -1484,7 +1548,7 @@ BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       selector = '#' + this.view.$container.id + ' > li > '
                      + this.options.item_selector + not_selector,
-      items = this.view.members = Array.slice(document.querySelectorAll(selector)),
+      items = this.view.members = [...document.querySelectorAll(selector)],
       menus = this.data.menus = new WeakMap();
 
   for (let $item of items) {
@@ -1508,6 +1572,7 @@ BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
         if (oldval && menus.has(oldval)) {
           menus.get(oldval).close();
         }
+
         if (newval && menus.has(newval)) {
           menus.get(newval).open();
         }
@@ -1523,15 +1588,18 @@ BriteGrid.widget.Menu.prototype.onmousedown = function (event) {
   if (event.target.href && event.button === 0) {
     event.stopPropagation();
     event.target.target = '_blank';
+
     return;
   }
 
   if (event.button !== 0) {
     BriteGrid.util.event.ignore(event);
+
     return;
   }
 
   let parent = this.data.parent;
+
   if (parent && event.target === parent.view.selected[0]) {
     // Just opening the menu
     return;
@@ -1588,6 +1656,7 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
   if (event.target.href && event.keyCode === event.DOM_VK_RETURN) {
     event.stopPropagation();
     event.target.target = '_blank';
+
     return;
   }
 
@@ -1595,24 +1664,28 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
   if ($owner && event.currentTarget === $owner) {
     let view = this.view,
         items = view.members;
+
     switch (kcode) {
       case event.DOM_VK_UP:
       case event.DOM_VK_END: {
         view.selected = view.$focused = items[items.length - 1];
         break;
       }
+
       case event.DOM_VK_DOWN:
       case event.DOM_VK_RIGHT:
       case event.DOM_VK_HOME: {
         view.selected = view.$focused = items[0];
         break;
       }
+
       case event.DOM_VK_ESCAPE:
       case event.DOM_VK_TAB: {
         this.close();
         break;
       }
     }
+
     return;
   }
 
@@ -1631,8 +1704,10 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
             $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
         view.selected = view.$focused = $target;
       }
+
       break;
     }
+
     case event.DOM_VK_LEFT: {
       if (parent) {
         let view = parent.view,
@@ -1642,20 +1717,26 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
                     : view.selected[0];
         view.selected = view.$focused = $target;
       }
+
       break;
     }
+
     case event.DOM_VK_ESCAPE: {
       this.close();
+
       break;
     }
+
     case event.DOM_VK_RETURN:
     case event.DOM_VK_SPACE: {
       if (!has_submenu) {
         this.select(event);
         this.close(true);
       }
+
       break;
     }
+
     default: {
       // The default behavior
       this.onkeydown(event);
@@ -1677,7 +1758,6 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
       $fragment = document.createDocumentFragment(),
       $_separator = document.createElement('li'),
       $_outer = document.createElement('li'),
-      structure = [],
       rebuild = false;
 
   if (data) {
@@ -1691,10 +1771,11 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
   $_separator.setAttribute('role', 'separator');
   $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
 
-  for (let item of data) {
+  this.data.structure = data.map(function (item) {
     if (item.type === 'separator') {
       $fragment.appendChild($_separator.cloneNode());
-      continue;
+
+      return null;
     }
 
     let $item = item.$element = $fragment.appendChild($_outer.cloneNode()).firstElementChild;
@@ -1710,11 +1791,9 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
       }
     }
 
-    // Save the item/obj reference
-    structure.push(item)
-  }
+    return item;
+  }).filter(function (item) item !== null);
 
-  this.data.structure = structure;
   $container.appendChild($fragment);
 
   if (rebuild) {
@@ -1729,9 +1808,10 @@ BriteGrid.widget.Menu.prototype.open = function () {
   $container.removeAttribute('aria-activedescendant');
   $container.dispatchEvent(new CustomEvent('MenuOpened'));
 
-  // Show the submenu on the left if there is not enough space
   let rect = $container.getBoundingClientRect(),
       parent = this.data.parent;
+
+  // Show the submenu on the left if there is not enough space
   if (rect.right > window.innerWidth ||
       parent && parent.view.$container.classList.contains('dir-left')) {
     $container.classList.add('dir-left');
@@ -1765,21 +1845,23 @@ BriteGrid.widget.Menu.prototype.close = function (propagation) {
     if (parent.view.$focused) {
       parent.view.$focused.focus();
     }
+
     if (propagation) {
       parent.close(true);
     }
   } else {
     // Context menu
     let $owner = this.view.$owner;
+
     if ($owner) {
       $owner.focus();
     }
   }
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * MenuBar extends Menu
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.MenuBar = function ($container, data) {
   this.view = {
@@ -1836,16 +1918,21 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
     case event.DOM_VK_TAB: {
       return true; // Focus management
     }
+
     case event.DOM_VK_HOME:
     case event.DOM_VK_DOWN: {
       menu.selected = menu.$focused = menuitems[0];
+
       break;
     }
+
     case event.DOM_VK_END:
     case event.DOM_VK_UP: {
       menu.selected = menu.$focused = menuitems[menuitems.length - 1];
+
       break;
     }
+
     case event.DOM_VK_SPACE: {
       if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
         menu.$container.setAttribute('aria-expanded', 'false');
@@ -1854,15 +1941,19 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
         menu.$container.setAttribute('aria-expanded', 'true');
         this.view.selected = event.target;
       }
+
       break;
     }
+
     case event.DOM_VK_ESCAPE: {
       if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
         menu.$container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       }
+
       break;
     }
+
     default: {
       // The default behavior
       this.onkeydown(event);
@@ -1882,9 +1973,9 @@ BriteGrid.widget.MenuBar.prototype.close = function () {
   this.view.selected = [];
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * RadioGroup extends Select
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.RadioGroup = function ($container, data) {
   this.view = {
@@ -1903,13 +1994,13 @@ BriteGrid.widget.RadioGroup = function ($container, data) {
 
 BriteGrid.widget.RadioGroup.prototype = Object.create(BriteGrid.widget.Select.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Tree extends Select
  *
  * @param   $container <menu role="tree">
  * @param   optional array data
- * @returns object widget 
- * -------------------------------------------------------------------------- */
+ * @returns object widget
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Tree = function ($container, data) {
   this.view = {
@@ -1959,16 +2050,21 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
         // Select the parent item
         let level = Number($item.getAttribute('aria-level')),
             $selected = items[0];
+
         for (let i = items.indexOf($item) - 1; i >= 0; i--) {
           if (Number(items[i].getAttribute('aria-level')) === level - 1) {
             $selected = items[i];
+
             break;
           }
         }
+
         this.view.selected = this.view.$focused = $selected;
       }
+
       break;
     }
+
     case event.DOM_VK_RIGHT: {
       if ($item.mozMatchesSelector('[aria-expanded="false"]')) {
         this.expand($item); // Expand the subgroup
@@ -1977,8 +2073,10 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
         let $selected = items[items.indexOf($item) + 1];
         this.view.selected = this.view.$focused = $selected;
       }
+
       break;
     }
+
     default: {
       // The default behavior
       this.onkeydown(event);
@@ -2038,12 +2136,16 @@ BriteGrid.widget.Tree.prototype.build = function () {
       $_outer.appendChild($expander.cloneNode(false));
       $item.setAttribute('aria-expanded', obj.selected !== false);
       $item.setAttribute('aria-owns', item_id + '-group');
+
       let $_group = $_outer.appendChild($group.cloneNode(false));
       $_group.id = item_id + '-group';
+
       level++;
+
       for (let sub of obj.sub) {
         $_group.appendChild(get_item(sub));
       }
+
       level--;
     }
 
@@ -2054,6 +2156,7 @@ BriteGrid.widget.Tree.prototype.build = function () {
   for (let obj of structure) {
     $fragment.appendChild(get_item(obj));
   }
+
   $tree.appendChild($fragment);
 };
 
@@ -2075,6 +2178,7 @@ BriteGrid.widget.Tree.prototype.get_data = function () {
 
     if (Object.keys($item.dataset).length) {
       item.data = {};
+
       for (let [prop, value] of Iterator($item.dataset)) {
         item.data[prop] = value;
       }
@@ -2087,14 +2191,14 @@ BriteGrid.widget.Tree.prototype.get_data = function () {
 
 BriteGrid.widget.Tree.prototype.expand = function ($item) {
   let expanded = $item.mozMatchesSelector('[aria-expanded="true"]'),
-      items = this.view.$container.querySelectorAll('[role="treeitem"]'),
+      items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
       selector = '#' + $item.getAttribute('aria-owns') + ' [aria-selected="true"]',
-      children = Array.slice(document.querySelectorAll(selector));
+      children = [...document.querySelectorAll(selector)];
 
   $item.setAttribute('aria-expanded', !expanded);
 
   // Update data with visible items
-  this.view.members = Array.filter(items, function ($item) $item.offsetParent !== null);
+  this.view.members = [$item for ($item of items) if ($item.offsetParent !== null)];
 
   if (!children.length) {
     return;
@@ -2104,25 +2208,26 @@ BriteGrid.widget.Tree.prototype.expand = function ($item) {
 
   if (!this.options.multiselectable) {
     this.view.selected = $item;
+
     return;
   }
 
   // Remove the item's children from selection
-  let selected = this.view.selected.filter(function ($item) children.indexOf($item) === -1);
+  let selected = [$item for ($item of this.view.selected) if (children.indexOf($item) === -1)];
 
   // Add the item to selection
   selected.push($item);
   this.view.selected = selected;
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * TreeGrid extends Tree and Grid
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.TreeGrid = function () {};
 BriteGrid.widget.TreeGrid.prototype = Object.create(BriteGrid.widget.Grid.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * TabList extends Composite
  *
  * @param   $container <ul role="tablist">
@@ -2135,7 +2240,7 @@ BriteGrid.widget.TreeGrid.prototype = Object.create(BriteGrid.widget.Grid.protot
  *           * aria-selected: if true, the tab will be selected first
  *           * draggable and aria-grabbed: tabs can be dragged (to reorder)
  * @returns object widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.TabList = function ($container) {
   // TODO: aria-multiselectable support for accordion UI
@@ -2170,8 +2275,8 @@ BriteGrid.widget.TabList = function ($container) {
   });
 
   if (this.options.removable) {
-    for (let tab of this.view.members) {
-      this.set_close_button(tab);
+    for (let $tab of this.view.members) {
+      this.set_close_button($tab);
     }
   }
 };
@@ -2210,11 +2315,11 @@ BriteGrid.widget.TabList.prototype.set_close_button = function ($tab) {
 
 BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
   let items = this.view.members,
+      $tab = items[0].cloneNode(),
       $selected = this.view.selected[0],
       index = items.indexOf($selected),
       $next_tab = items[index + 1];
 
-  let $tab = items[0].cloneNode();
   $tab.id = 'tab-' + name;
   $tab.title = label || title;
   $tab.tabIndex = -1;
@@ -2270,16 +2375,16 @@ BriteGrid.widget.TabList.prototype.close_tab = function ($tab) {
   $tab.remove(); // Update view
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Input (abstract role) extends Widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Input = function () {};
 BriteGrid.widget.Input.prototype = Object.create(BriteGrid.widget.Widget.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Checkbox extends Input
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Checkbox = function ($checkbox) {
   this.view = {
@@ -2295,12 +2400,12 @@ BriteGrid.widget.Checkbox = function ($checkbox) {
         $checkbox.setAttribute('aria-checked', value);
         $checkbox.dispatchEvent(new CustomEvent('Changed'));
       }
+
       obj[prop] = value; // The default behavior
     }
   });
 
-  let BGueb = BriteGrid.util.event.bind;
-  BGueb(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+  BriteGrid.util.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
 };
 
 BriteGrid.widget.Checkbox.prototype = Object.create(BriteGrid.widget.Input.prototype);
@@ -2314,18 +2419,21 @@ BriteGrid.widget.Checkbox.prototype.onkeydown = function (event) {
 BriteGrid.widget.Checkbox.prototype.onclick = function (event) {
   this.data.checked = !this.data.checked;
   this.view.$checkbox.focus();
+
   return false;
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * ScrollBar extends Input
  *
  * @param   $owner    An element to be scrolled
  * @param   adjusted  Adjust the scrolling increment for Grid, Tree, ListBox
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
-  let $controller = document.createElement('div');
+  let $controller = document.createElement('div'),
+      BGue = BriteGrid.util.event;
+
   $controller.tabIndex = 0;
   $controller.style.top = '2px';
   $controller.setAttribute('role', 'scrollbar');
@@ -2346,16 +2454,14 @@ BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
     adjusted: adjusted
   };
 
-  let BGue = BriteGrid.util.event;
   BGue.bind(this, window, ['resize']);
   BGue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
   BGue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
   // Recalculate the height of scrollbar when elements are added or removed
-  let observer = new MutationObserver(function () {
+  (new MutationObserver(function () {
     this.set_height();
-  }.bind(this));
-  observer.observe($owner, {
+  }.bind(this))).observe($owner, {
     subtree: true,
     childList: true,
     attributes: true,
@@ -2386,9 +2492,11 @@ BriteGrid.widget.ScrollBar.prototype.onwheel = function (event) {
   if (top < 0) {
     top = 0;
   }
+
   if (top > $owner.scrollTopMax) {
     top = $owner.scrollTopMax;
   }
+
   if ($owner.scrollTop !== top) {
     $owner.scrollTop = top;
   }
@@ -2408,6 +2516,7 @@ BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
       if ($elm.mozMatchesSelector('[role="row"], [role="option"], [role="treeitem"]')) {
         break;
       }
+
       $elm = $elm.parentElement;
     }
 
@@ -2471,6 +2580,7 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
       ch: $owner.clientHeight,
       cy: event.clientY
     };
+
     BGue.bind(this, window, ['mousemove', 'mouseup']);
   }
 
@@ -2478,12 +2588,15 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
     let rect = this.data.rect,
         delta = rect.st + event.clientY - rect.cy,
         top = Math.floor(delta * rect.sh / rect.ch);
+
     if (top < 0) {
       top = 0;
     }
+
     if (top > $owner.scrollTopMax) {
       top = $owner.scrollTopMax;
     }
+
     if ($owner.scrollTop !== top) {
       $owner.scrollTop = top;
     }
@@ -2491,6 +2604,7 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
 
   if (event.type === 'mouseup') {
     delete this.data.rect;
+
     BGue.unbind(this, window, ['mousemove', 'mouseup']);
   }
 };
@@ -2503,56 +2617,76 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     case event.DOM_VK_TAB: {
       return true; // Focus management
     }
+
     case event.DOM_VK_HOME: {
       if (this.options.adjusted) {
         return false;
       }
+
       $owner.scrollTop = 0;
+
       break;
     }
+
     case event.DOM_VK_END: {
       if (this.options.adjusted) {
         return false;
       }
+
       $owner.scrollTop = $owner.scrollTopMax;
+
       break;
     }
+
     case event.DOM_VK_PAGE_UP: {
       $owner.scrollTop -= ch;
+
       break;
     }
+
     case event.DOM_VK_PAGE_DOWN: {
       $owner.scrollTop += ch;
+
       break;
     }
+
     case event.DOM_VK_UP: {
       if (this.options.adjusted) {
         return false;
       }
+
       $owner.scrollTop -= 40;
+
       break;
     }
+
     case event.DOM_VK_DOWN: {
       if (this.options.adjusted) {
         return false;
       }
+
       $owner.scrollTop += 40;
+
       break;
     }
+
     case event.DOM_VK_SPACE: {
       if (this.options.adjusted) {
         return false;
       }
+
       if (event.shiftKey) {
         $owner.scrollTop -= ch;
       } else {
         $owner.scrollTop += ch;
       }
+
       break;
     }
   }
 
   BriteGrid.util.event.ignore(event);
+
   return true;
 };
 
@@ -2563,34 +2697,34 @@ BriteGrid.widget.ScrollBar.prototype.set_height = function () {
       ch = $owner.clientHeight,
       ctrl_height = Math.floor(ch * ch / sh) - 4;
 
-  $controller.style.height = ((ctrl_height < 0) ? 0 : ctrl_height) + 'px'; 
+  $controller.style.height = ((ctrl_height < 0) ? 0 : ctrl_height) + 'px';
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Window (abstract role) extends RoleType
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Window = function () {};
 BriteGrid.widget.Window.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Dialog extends Window
  *
- * @param   object options 
+ * @param   object options
  *            id (optional)
  *            type: alert, confirm or prompt
  *            title
  *            message
  *            btn_ok_label (optional)
  *            btn_cancel_label (optional)
- *            value (for prompt, optional) 
+ *            value (for prompt, optional)
  * @returns object widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Dialog = function (options) {
   this.options = {
-    id: options.id || (new Date()).getTime(),
+    id: options.id || Date.now(),
     type: options.type,
     title: options.title,
     message: options.message,
@@ -2662,6 +2796,7 @@ BriteGrid.widget.Dialog.prototype.onkeypress = function (event) {
     case event.DOM_VK_RETURN: {
       break;
     }
+
     case event.DOM_VK_ESCAPE: {
       break;
     }
@@ -2674,26 +2809,26 @@ BriteGrid.widget.Dialog.prototype.hide = function () {
   this.view.$dialog.dispatchEvent(new CustomEvent('Hidden'));
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * AlertDialog (abstract role) extends Dialog
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.AlertDialog = function () {};
 BriteGrid.widget.AlertDialog.prototype = Object.create(BriteGrid.widget.Dialog.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Separator extends Structure
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Separator = function () {};
 BriteGrid.widget.Separator.prototype = Object.create(BriteGrid.widget.Structure.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Splitter (custom widget) extends Separator
  *
  * @param   element <div class="splitter" role="separator">
  * @returns object widget
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Splitter = function ($splitter) {
   this.view = {
@@ -2721,8 +2856,10 @@ BriteGrid.widget.Splitter = function ($splitter) {
           // The dimension of the element can be changed when the window is resized.
           // Return the current width or height
           let rect = $outer.getBoundingClientRect();
+
           return this.data.orientation === 'horizontal' ? rect.height : rect.width;
         }
+
         return obj[prop];
       }.bind(this)
     }),
@@ -2755,17 +2892,20 @@ BriteGrid.widget.Splitter = function ($splitter) {
           if (parseInt(obj.position) === 0) {
             return;
           }
+
           value = (!before.min || before.collapsible) ? 0 : before.min;
         } else if (value >= outer.size || value === '100%') {
           if (obj.position === '100%') {
             return;
           }
+
           value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
         } else if (before.min && value < before.min) {
           // Reached min-height of the before element
           if (!before.expanded) {
             return;
           }
+
           if (before.collapsible) {
             before.expanded = false;
             value = 0;
@@ -2782,6 +2922,7 @@ BriteGrid.widget.Splitter = function ($splitter) {
           if (!after.expanded) {
             return;
           }
+
           if (after.collapsible) {
             after.expanded = false;
             value = '100%';
@@ -2823,6 +2964,7 @@ BriteGrid.widget.Splitter = function ($splitter) {
   for (let [i, id] of Iterator($splitter.getAttribute('aria-controls').split(/\s+/))) {
     let $target = document.getElementById(id),
         position = i === 0 ? 'before' : 'after';
+
     this.data.controls[position] = new Proxy({
       id: id,
       collapsible: $target.hasAttribute('aria-expanded'),
@@ -2832,17 +2974,21 @@ BriteGrid.widget.Splitter = function ($splitter) {
       get: function (obj, prop) {
         if (prop === 'min' || prop === 'max') {
           let horizontal = this.data.orientation === 'horizontal';
+
           return style($target, prop + '-' + (horizontal ? 'height' : 'width'));
         }
+
         return obj[prop];
       }.bind(this),
       set: function (obj, prop, value) {
         if (prop === 'expanded') {
           document.getElementById(obj.id).setAttribute('aria-expanded', value);
         }
+
         obj[prop] = value;
       }
     });
+
     this.view.controls['$' + position] = $target;
   };
 };
@@ -2852,6 +2998,7 @@ BriteGrid.widget.Splitter.prototype = Object.create(BriteGrid.widget.Separator.p
 BriteGrid.widget.Splitter.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
     event.preventDefault();
+
     return;
   }
 
@@ -2886,6 +3033,7 @@ BriteGrid.widget.Splitter.prototype.onmouseup = function (event) {
 
   // Cleanup
   BriteGrid.util.event.unbind(this, document.body, ['mousemove', 'mouseup']);
+
   delete this.view.$outer.dataset.splitter;
 };
 
@@ -2901,30 +3049,37 @@ BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
       value = (!before.min || before.collapsible) ? 0 : before.min;
       break;
     }
+
     case event.DOM_VK_END: {
       value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
       break;
     }
+
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_UP:
     case event.DOM_VK_LEFT: {
       let delta = (event.keyCode === event.DOM_VK_PAGE_UP || event.shiftKey) ? 50 : 10;
+
       if (position === '100%') {
         value = outer.size - (this.data.controls.after.min || delta);
       } else if (parseInt(position) !== 0) {
         value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) - delta;
       }
+
       break;
     }
+
     case event.DOM_VK_PAGE_DOWN:
     case event.DOM_VK_DOWN:
     case event.DOM_VK_RIGHT: {
       let delta = (event.keyCode === event.DOM_VK_PAGE_DOWN || event.shiftKey) ? 50 : 10;
+
       if (parseInt(position) === 0) {
         value = this.data.controls.before.min || delta;
       } else if (position !== '100%') {
         value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) + delta;
       }
+
       break;
     }
   }
@@ -2934,51 +3089,51 @@ BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
   }
 };
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Region extends Section
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Region = function () {};
 BriteGrid.widget.Region.prototype = Object.create(BriteGrid.widget.Section.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Status extends Region
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Status = function () {};
 BriteGrid.widget.Status.prototype = Object.create(BriteGrid.widget.Region.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Landmark (abstract role) extends Region
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Landmark = function () {};
 BriteGrid.widget.Landmark.prototype = Object.create(BriteGrid.widget.Region.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Application extends Landmark
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Application = function () {};
 BriteGrid.widget.Application.prototype = Object.create(BriteGrid.widget.Landmark.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Tooltip extends Section
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Tooltip = function () {};
 BriteGrid.widget.Tooltip.prototype = Object.create(BriteGrid.widget.Section.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Group extends Section
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.Group = function () {};
 BriteGrid.widget.Group.prototype = Object.create(BriteGrid.widget.Section.prototype);
 
-/* --------------------------------------------------------------------------
+/* ----------------------------------------------------------------------------------------------
  * Toolbar extends Group
- * -------------------------------------------------------------------------- */
+ * ---------------------------------------------------------------------------------------------- */
 
 BriteGrid.widget.ToolBar = function () {};
 BriteGrid.widget.ToolBar.prototype = Object.create(BriteGrid.widget.Group.prototype);
