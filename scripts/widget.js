@@ -842,19 +842,22 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
   let $grid_header = this.view.header = document.createElement('header'),
       $table = $grid_header.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild(document.createElement('colgroup')),
-      $row = $table.appendChild(document.createElement('tbody')).insertRow(-1);
+      $row = $table.appendChild(document.createElement('tbody')).insertRow(-1),
+      $_col = document.createElement('col'),
+      $_cell = document.createElement('th');
+
+  $_cell.scope = 'col';
+  $_cell.setAttribute('role', 'columnheader'); 
+  $_cell.appendChild(document.createElement('label'));
 
   for (let column of this.data.columns) {
-    let $col = $colgroup.appendChild(document.createElement('col'));
+    let $col = $colgroup.appendChild($_col.cloneNode());
     $col.dataset.id = column.id || '';
     $col.dataset.hidden = column.hidden === true;
 
-    let $cell = column.element = $row.appendChild(document.createElement('th'));
-    let $label = $cell.appendChild(document.createElement('label'));
-    $label.textContent = column.label;
+    let $cell = column.element = $row.appendChild($_cell.cloneNode());
+    $cell.firstElementChild.textContent = column.label;
     $cell.title = column.title || 'Click to sort by ' + column.label; // l10n
-    $cell.scope = 'col';
-    $cell.setAttribute('role', 'columnheader'); 
     if (cond && column.id === cond.key) {
       $cell.setAttribute('aria-sort', cond.order);
     }
@@ -1184,6 +1187,7 @@ BriteGrid.widget.Grid.prototype.ensure_row_visibility = function ($row) {
 BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
   let $grid = this.view.container,
       $container = document.createElement('div'),
+      $_image = document.createElement('canvas'),
       $follower,
       headers = [],
       rect = $grid.getBoundingClientRect(),
@@ -1210,7 +1214,7 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
   };
 
   for (let $chead of this.view.header.querySelectorAll('[role="columnheader"]')) {
-    let $image = $container.appendChild(document.createElement('canvas')),
+    let $image = $container.appendChild($_image.cloneNode()),
         left = $chead.offsetLeft,
         width = $chead.offsetWidth,
         index = $chead.cellIndex,
@@ -1374,16 +1378,18 @@ BriteGrid.widget.ListBox.prototype = Object.create(BriteGrid.widget.Select.proto
 
 BriteGrid.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new WeakMap(),
-      $fragment = document.createDocumentFragment();
+      $fragment = document.createDocumentFragment(),
+      $_item = document.createElement('li');
+
+  $_item.tabIndex = -1;
+  $_item.setAttribute('role', 'option');
+  $_item.appendChild(document.createElement('label'));
 
   for (let item of this.data.structure) {
-    let $item = document.createElement('li'),
-        $label = $item.appendChild(document.createElement('label'));
+    let $item = item.element = $fragment.appendChild($_item.cloneNode());
     $item.id = item.id;
-    $item.tabIndex = -1;
-    $item.setAttribute('role', 'option');
     $item.setAttribute('aria-selected', item.selected ? 'true' : 'false');
-    $label.textContent = item.label;
+    $item.firstElementChild.textContent = item.label;
 
     if (item.data) {
       for (let [prop, value] of Iterator(item.data)) {
@@ -1391,11 +1397,8 @@ BriteGrid.widget.ListBox.prototype.build = function () {
       }
     }
 
-    $fragment.appendChild($item);
-
     // Save the item/obj reference
     map.set($item, item);
-    item.element = $item;
   }
 
   this.view.container.appendChild($fragment);
@@ -1656,6 +1659,8 @@ BriteGrid.widget.Menu.prototype.onblur_extend = function (event) {
 BriteGrid.widget.Menu.prototype.build = function (data) {
   let $container = this.view.container,
       $fragment = document.createDocumentFragment(),
+      $_separator = document.createElement('li'),
+      $_outer = document.createElement('li'),
       structure = [],
       rebuild = false;
 
@@ -1667,29 +1672,21 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
     data = this.data.structure;
   }
 
-  // TODO: support submenu
+  $_separator.setAttribute('role', 'separator');
+  $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
 
   for (let item of data) {
-    let $outer = document.createElement('li');
-
     if (item.type === 'separator') {
-      $outer.setAttribute('role', 'separator');
-      $fragment.appendChild($outer);
+      $fragment.appendChild($_separator.cloneNode());
       continue;
     }
 
-    let $item = $outer.appendChild(document.createElement('span')),
-        $label = $item.appendChild(document.createElement('label'));
-
+    let $item = item.element = $fragment.appendChild($_outer.cloneNode()).firstElementChild;
     $item.id = item.id;
     $item.setAttribute('role', item.type || 'menuitem');
-    if (item.disabled) {
-      $item.setAttribute('aria-disabled', item.disabled);
-    }
-    if (item.checked) {
-      $item.setAttribute('aria-checked', item.checked);
-    }
-    $label.textContent = item.label;
+    $item.setAttribute('aria-disabled', item.disabled === true);
+    $item.setAttribute('aria-checked', item.checked === true);
+    $item.firstElementChild.textContent = item.label;
 
     if (item.data) {
       for (let [prop, value] of Iterator(item.data)) {
@@ -1697,10 +1694,7 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
       }
     }
 
-    $fragment.appendChild($outer);
-
     // Save the item/obj reference
-    item.element = $item;
     structure.push(item)
   }
 
