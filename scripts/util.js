@@ -292,7 +292,7 @@ BriteGrid.util.i18n.options = {
   }
 };
 
-BriteGrid.util.i18n.format_date = function (str) {
+BriteGrid.util.i18n.format_date = function (str, simple = false) {
   let timezone = this.options.date.timezone,
       format = this.options.date.format,
       now = new Date(),
@@ -315,15 +315,15 @@ BriteGrid.util.i18n.format_date = function (str) {
   if (format === 'relative') {
     if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
       if (date.getDate() === now.getDate()) {
-        return (shifted_date || date).toLocaleFormat('Today %l:%M %p'); // l10n
+        return (shifted_date || date).toLocaleFormat(simple ? '%R' : 'Today %R');
       }
       if (date.getDate() === now.getDate() - 1) {
-        return (shifted_date || date).toLocaleFormat('Yesterday %l:%M %p'); // l10n
+        return (shifted_date || date).toLocaleFormat(simple ? 'Yesterday' : 'Yesterday %R');
       }
     }
   }
 
-  return (shifted_date || date).toLocaleFormat('%Y-%m-%d %l:%M %p');
+  return (shifted_date || date).toLocaleFormat(simple ? '%b %e' : '%Y-%m-%d %R');
 };
 
 /* --------------------------------------------------------------------------
