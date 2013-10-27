@@ -118,6 +118,12 @@ BriteGrid.widget.RoleType.prototype.oncontextmenu = function (event) {
   return BriteGrid.util.event.ignore(event);
 };
 
+BriteGrid.widget.RoleType.prototype.bind = function () {
+  this.view.$container.addEventListener.apply(this.view.$container, arguments);
+  // On Firefox 27 and above, this can be:
+  // this.view.$container.addEventListener(...arguments);
+};
+
 /* ----------------------------------------------------------------------------------------------
  * Structure (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
@@ -196,6 +202,10 @@ BriteGrid.widget.Button.prototype.onkeydown = function (event) {
   if (event.keyCode === event.DOM_VK_SPACE) {
     this.onclick(event);
   }
+};
+
+BriteGrid.widget.Button.prototype.bind = function () {
+  this.view.$button.addEventListener.apply(this.view.$button, arguments);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -1172,20 +1182,19 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 };
 
 BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
-  let $picker = document.createElement('ul');
+  let $picker = this.view.$columnpicker = document.createElement('ul');
   $picker.id = this.view.$container.id + '-columnpicker';
   $picker.setAttribute('role', 'menu');
   $picker.setAttribute('aria-expanded', 'false');
-  $picker.addEventListener('MenuItemSelected', function (event) {
-    this.toggle_column(event.explicitOriginalTarget.dataset.id);
-  }.bind(this), false);
 
   let $header = this.view.$header;
   $header.appendChild($picker);
-  $header.setAttribute('aria-owns', $picker.id);
+  $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
-  this.view.$columnpicker = $picker;
-  this.data.columnpicker = new BriteGrid.widget.Menu($picker);
+  let picker = this.data.columnpicker = new BriteGrid.widget.Menu($picker);
+  picker.bind('MenuItemSelected', function (event) {
+    this.toggle_column(event.explicitOriginalTarget.dataset.id);
+  }.bind(this));
 };
 
 BriteGrid.widget.Grid.prototype.build_columnpicker = function () {
@@ -2423,6 +2432,10 @@ BriteGrid.widget.Checkbox.prototype.onclick = function (event) {
   return false;
 };
 
+BriteGrid.widget.Checkbox.prototype.bind = function () {
+  this.view.$checkbox.addEventListener.apply(this.view.$checkbox, arguments);
+};
+
 /* ----------------------------------------------------------------------------------------------
  * ScrollBar extends Input
  *
@@ -2699,6 +2712,10 @@ BriteGrid.widget.ScrollBar.prototype.set_height = function () {
 
   $controller.style.height = ((ctrl_height < 0) ? 0 : ctrl_height) + 'px';
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
+};
+
+BriteGrid.widget.ScrollBar.prototype.bind = function () {
+  this.view.$controller.addEventListener.apply(this.view.$controller, arguments);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -3087,6 +3104,10 @@ BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
   if (value !== null) {
     this.data.position = value;
   }
+};
+
+BriteGrid.widget.Splitter.prototype.bind = function () {
+  this.view.$splitter.addEventListener.apply(this.view.$splitter, arguments);
 };
 
 /* ----------------------------------------------------------------------------------------------
