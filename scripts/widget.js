@@ -929,11 +929,11 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
   $_cell.appendChild(document.createElement('label'));
 
   for (let column of this.data.columns) {
-    let $col = $colgroup.appendChild($_col.cloneNode());
+    let $col = $colgroup.appendChild($_col.cloneNode(true));
     $col.dataset.id = column.id || '';
     $col.dataset.hidden = column.hidden === true;
 
-    let $cell = column.$element = $row.appendChild($_cell.cloneNode());
+    let $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
     $cell.firstElementChild.textContent = column.label;
     $cell.title = column.title || 'Click to sort by ' + column.label; // l10n
 
@@ -965,7 +965,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   let $grid = this.view.$container,
       $grid_body = this.view.$body = document.createElement('div'),
       $table = $grid_body.appendChild(document.createElement('table')),
-      $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode()),
+      $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
       $tbody = $table.createTBody(),
       cond = this.options.sort_conditions,
       row_prefix = $grid.id + '-row-';
@@ -1004,7 +1004,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   }
 
   for (let row of this.data.rows) {
-    let $row = row.$element = $tbody.appendChild($_row.cloneNode());
+    let $row = row.$element = $tbody.appendChild($_row.cloneNode(true));
     $row.id = row_prefix + row.data.id;
     $row.dataset.id = row.data.id;
 
@@ -1286,7 +1286,7 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
   style.height = $grid.offsetHeight + 'px';
 
   for (let $chead of this.view.$header.querySelectorAll('[role="columnheader"]')) {
-    let $image = $container.appendChild($_image.cloneNode()),
+    let $image = $container.appendChild($_image.cloneNode(true)),
         left = $chead.offsetLeft,
         width = $chead.offsetWidth,
         index = $chead.cellIndex,
@@ -1473,7 +1473,7 @@ BriteGrid.widget.ListBox.prototype.build = function () {
   $_item.appendChild(document.createElement('label'));
 
   for (let item of this.data.structure) {
-    let $item = item.$element = $fragment.appendChild($_item.cloneNode());
+    let $item = item.$element = $fragment.appendChild($_item.cloneNode(true));
     $item.id = item.id;
     $item.setAttribute('aria-selected', item.selected ? 'true' : 'false');
     $item.firstElementChild.textContent = item.label;
@@ -1782,12 +1782,12 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
 
   this.data.structure = data.map(function (item) {
     if (item.type === 'separator') {
-      $fragment.appendChild($_separator.cloneNode());
+      $fragment.appendChild($_separator.cloneNode(true));
 
       return null;
     }
 
-    let $item = item.$element = $fragment.appendChild($_outer.cloneNode()).firstElementChild;
+    let $item = item.$element = $fragment.appendChild($_outer.cloneNode(true)).firstElementChild;
     $item.id = item.id;
     $item.setAttribute('role', item.type || 'menuitem');
     $item.setAttribute('aria-disabled', item.disabled === true);
@@ -2121,7 +2121,7 @@ BriteGrid.widget.Tree.prototype.build = function () {
   $group.setAttribute('role', 'group');
 
   let get_item = function (obj) {
-    let $item = $treeitem.cloneNode(),
+    let $item = $treeitem.cloneNode(true),
         item_id = $tree.id + '-' + obj.id;
     $item.firstChild.textContent = obj.label;
     $item.id = item_id;
@@ -2324,7 +2324,7 @@ BriteGrid.widget.TabList.prototype.set_close_button = function ($tab) {
 
 BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
   let items = this.view.members,
-      $tab = items[0].cloneNode(),
+      $tab = items[0].cloneNode(true),
       $selected = this.view.selected[0],
       index = items.indexOf($selected),
       $next_tab = items[index + 1];
