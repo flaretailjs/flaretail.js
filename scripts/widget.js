@@ -1218,7 +1218,7 @@ BriteGrid.widget.Grid.prototype.show_column = function (col) {
   }
 
   for (let $col of $grid.querySelectorAll('col' + attr)) {
-    delete $col.dataset.hidden;
+    $col.dataset.hidden = 'false';
   }
 };
 
