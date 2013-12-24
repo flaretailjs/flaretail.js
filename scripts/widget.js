@@ -621,16 +621,6 @@ BriteGrid.widget.Grid = function ($container, data, options) {
     this.get_data();
   }
 
-  this.options = new Proxy(this.options, {
-    set: function (obj, prop, value) {
-      if (prop === 'adjust_scrollbar') {
-        this.view.scrollbar.options.adjusted = value;
-      }
-
-      obj[prop] = value;
-    }.bind(this)
-  });
-
   // Columnpicker
   this.init_columnpicker();
 
@@ -795,8 +785,7 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   let scrollbar = this.view.scrollbar = new BriteGrid.widget.ScrollBar($grid_body),
       mobile_mql = BriteGrid.util.device.mobile.mql,
       mobile_mql_listener = function (mql) {
-        let option = this.options.adjust_scrollbar;
-        scrollbar.options.adjusted = (option === undefined) ? !mql.matches : option;
+        scrollbar.options.adjusted = !mql.matches;
       }.bind(this);
 
   mobile_mql.addListener(mobile_mql_listener);
@@ -2632,21 +2621,17 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     }
 
     case event.DOM_VK_HOME: {
-      if (this.options.adjusted) {
-        return false;
+      if (!this.options.adjusted) {
+        $owner.scrollTop = 0;
       }
-
-      $owner.scrollTop = 0;
 
       break;
     }
 
     case event.DOM_VK_END: {
-      if (this.options.adjusted) {
-        return false;
+      if (!this.options.adjusted) {
+        $owner.scrollTop = $owner.scrollTopMax;
       }
-
-      $owner.scrollTop = $owner.scrollTopMax;
 
       break;
     }
@@ -2664,41 +2649,37 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     }
 
     case event.DOM_VK_UP: {
-      if (this.options.adjusted) {
-        return false;
+      if (!this.options.adjusted) {
+        $owner.scrollTop -= 40;
       }
-
-      $owner.scrollTop -= 40;
 
       break;
     }
 
     case event.DOM_VK_DOWN: {
-      if (this.options.adjusted) {
-        return false;
+      if (!this.options.adjusted) {
+        $owner.scrollTop += 40;
       }
-
-      $owner.scrollTop += 40;
 
       break;
     }
 
     case event.DOM_VK_SPACE: {
-      if (this.options.adjusted) {
-        return false;
-      }
-
-      if (event.shiftKey) {
-        $owner.scrollTop -= ch;
-      } else {
-        $owner.scrollTop += ch;
+      if (!this.options.adjusted) {
+        if (event.shiftKey) {
+          $owner.scrollTop -= ch;
+        } else {
+          $owner.scrollTop += ch;
+        }
       }
 
       break;
     }
   }
 
-  BriteGrid.util.event.ignore(event);
+  if (event.target === this.view.$controller) {
+    return BriteGrid.util.event.ignore(event);
+  }
 
   return true;
 };
