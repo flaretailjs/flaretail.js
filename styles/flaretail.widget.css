@@ -560,6 +560,7 @@ a[role="menuitem"] {
   pointer-events: auto;
   background-color: transparent;
   background-image: none; /* Suppress the default style on Firefox for mobile */
+  font-family: inherit; /* Suppress the default style on Firefox for mobile */
   -moz-user-select: text;
 }
 
