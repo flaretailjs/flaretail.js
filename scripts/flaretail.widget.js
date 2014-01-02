@@ -617,6 +617,16 @@ FlareTail.widget.Grid = function ($container, data, options) {
     this.get_data();
   }
 
+  this.options = new Proxy(this.options, {
+    set: function (obj, prop, value) {
+      if (prop === 'adjust_scrollbar') {
+        this.view.scrollbar.options.adjusted = value;
+      }
+
+      obj[prop] = value;
+    }.bind(this)
+  });
+
   // Columnpicker
   this.init_columnpicker();
 
@@ -781,7 +791,8 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body),
       mobile_mql = FlareTail.util.device.mobile.mql,
       mobile_mql_listener = function (mql) {
-        scrollbar.options.adjusted = !mql.matches;
+        let option = this.options.adjust_scrollbar;
+        scrollbar.options.adjusted = (option === undefined) ? !mql.matches : option;
       }.bind(this);
 
   mobile_mql.addListener(mobile_mql_listener);
