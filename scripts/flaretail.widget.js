@@ -193,7 +193,7 @@ FlareTail.widget.Button.prototype.onclick = function (event) {
     this.data.pressed = !this.data.pressed;
   }
 
-  this.view.$button.dispatchEvent(new CustomEvent('Pressed'));
+  FlareTail.util.event.dispatch(this.view.$button, 'Pressed');
 };
 
 FlareTail.widget.Button.prototype.onkeydown = function (event) {
@@ -529,12 +529,10 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
       }
     }
 
-    this.view.$container.dispatchEvent(new CustomEvent('Selected', {
-      detail: {
-        items: newval,
-        ids: newval ? [$item.dataset.id for ($item of newval)] : []
-      }
-    }));
+    FlareTail.util.event.dispatch(this.view.$container, 'Selected', { detail: {
+      items: newval,
+      ids: newval ? [$item.dataset.id for ($item of newval)] : []
+    }});
   }
 
   if (prop === '$focused') {
@@ -713,17 +711,17 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
     set: function (obj, prop, value) {
       switch (prop) {
         case 'hidden': {
+          // Fire an event
+          FlareTail.util.event.dispatch(this.view.$container, 'ColumnModified', { detail: {
+            columns: columns
+          }});
+
           // Reflect the change of row's visibility to UI
           if (value === true) {
             this.hide_column(obj);
           } else {
             this.show_column(obj);
           }
-
-          // Fire an event
-          this.view.$container.dispatchEvent(new CustomEvent('ColumnModified', {
-            detail: { columns: columns }
-          }));
 
           break;
         }
@@ -1026,7 +1024,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
     this.activate_rows();
-    $grid.dispatchEvent(new CustomEvent('Rebuilt'));
+    FlareTail.util.event.dispatch($grid, 'Rebuilt');
   }
 };
 
@@ -1155,17 +1153,16 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   // Reorder the member list
   this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
+  // Fire an event
+  FlareTail.util.event.dispatch($grid, 'Sorted', { detail: {
+    conditions: FlareTail.util.object.clone(cond) // Clone cond as it's a proxyfied object
+  }});
+
   let selected = this.view.selected;
 
   if (!data_only && selected && selected.length) {
     this.ensure_row_visibility(selected[selected.length - 1]);
   }
-
-  // Fire an event
-  $grid.dispatchEvent(new CustomEvent('Sorted', {
-    // Clone cond as it's a proxyfied object
-    detail: { conditions: FlareTail.util.object.clone(cond) }
-  }));
 };
 
 FlareTail.widget.Grid.prototype.init_columnpicker = function () {
@@ -1386,17 +1383,17 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
     }
   }
 
+  // Fire an event
+  FlareTail.util.event.dispatch($grid, 'ColumnModified', { detail: {
+    columns: columns
+  }});
+
   // Cleanup
   drag.$header.removeAttribute('data-grabbed');
   drag.$container.remove();
   $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
 
   delete this.data.drag;
-
-  // Fire an event
-  $grid.dispatchEvent(new CustomEvent('ColumnModified', {
-    detail: { columns: columns }
-  }));
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -1800,9 +1797,10 @@ FlareTail.widget.Menu.prototype.build = function (data) {
 
 FlareTail.widget.Menu.prototype.open = function () {
   let $container = this.view.$container;
+
   $container.setAttribute('aria-expanded', 'true');
   $container.removeAttribute('aria-activedescendant');
-  $container.dispatchEvent(new CustomEvent('MenuOpened'));
+  FlareTail.util.event.dispatch($container, 'MenuOpened');
 
   let rect = $container.getBoundingClientRect(),
       parent = this.data.parent;
@@ -1817,13 +1815,13 @@ FlareTail.widget.Menu.prototype.open = function () {
 };
 
 FlareTail.widget.Menu.prototype.select = function (event) {
-  this.view.$container.dispatchEvent(new CustomEvent('MenuItemSelected', {
+  FlareTail.util.event.dispatch(this.view.$container, 'MenuItemSelected', {
     bubbles: true,
     cancelable: false,
     detail: {
       command: event.target.dataset.command || event.target.id
     }
-  }));
+  });
 }
 
 FlareTail.widget.Menu.prototype.close = function (propagation) {
@@ -1834,7 +1832,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
 
   $container.setAttribute('aria-expanded', 'false');
   $container.removeAttribute('aria-activedescendant');
-  $container.dispatchEvent(new CustomEvent('MenuClosed'));
+  FlareTail.util.event.dispatch($container, 'MenuClosed');
   this.view.selected = [];
 
   if (parent) {
@@ -2393,8 +2391,8 @@ FlareTail.widget.Checkbox = function ($checkbox) {
   {
     set: function (obj, prop, value) {
       if (prop === 'checked') {
+        FlareTail.util.event.dispatch($checkbox, 'Changed');
         $checkbox.setAttribute('aria-checked', value);
-        $checkbox.dispatchEvent(new CustomEvent('Changed'));
       }
 
       obj[prop] = value; // The default behavior
@@ -2802,7 +2800,7 @@ FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
 FlareTail.widget.Dialog.prototype.show = function () {};
 
 FlareTail.widget.Dialog.prototype.hide = function () {
-  this.view.$dialog.dispatchEvent(new CustomEvent('Hidden'));
+  FlareTail.util.event.dispatch(this.view.$dialog, 'Hidden');
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -2942,12 +2940,12 @@ FlareTail.widget.Splitter = function ($splitter) {
           $before.style.width = $splitter.style.left = $after.style.left = value;
         }
 
-        $splitter.dispatchEvent(new CustomEvent('Resized', {
-          detail: { position: value }
-        }));
+        FlareTail.util.event.dispatch($splitter, 'Resized', { detail: {
+          position: value
+        }});
 
         // Force to resize scrollbars
-        window.dispatchEvent(new UIEvent('resize'));
+        FlareTail.util.event.dispatch(window, 'resize');
       }
 
       obj[prop] = value;

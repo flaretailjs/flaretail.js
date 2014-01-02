@@ -68,6 +68,35 @@ FlareTail.util.event.unbind = function (that, $target, types, use_capture = fals
   this.bind(that, $target, types, use_capture, true);
 };
 
+// Async event handling using postMessage
+FlareTail.util.event.async = function (callback) {
+  if (this.queue === undefined) {
+    this.queue = [];
+
+    window.addEventListener('message', function (event) {
+      if (event.source === window && event.data === 'AsyncEvent' && this.queue.length) {
+        this.queue.shift().call();
+      }
+    }.bind(this));
+  }
+
+  this.queue.push(callback);
+  window.postMessage('AsyncEvent', location.origin || location.protocol + '//' + location.host);
+};
+
+// Custom event dispatcher. The async option is enabled by default
+FlareTail.util.event.dispatch = function ($target, type, options = {}, async = true) {
+  let callback = function () {
+    $target.dispatchEvent(new CustomEvent(type, options));
+  };
+
+  if (async) {
+    this.async(callback);
+  } else {
+    callback();
+  }
+};
+
 /* ----------------------------------------------------------------------------------------------
  * Request
  * ---------------------------------------------------------------------------------------------- */
