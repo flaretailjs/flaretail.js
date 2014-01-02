@@ -1,22 +1,20 @@
 /**
- * WAI-ARIA-based accessible app widget library
- * Copyright © 2012 BriteGrid. All rights reserved.
- * Using: ECMAScript Harmony
- * Requires: Firefox 18
+ * FlareTail Application Widgets
+ * Copyright © 2014 Kohei Yoshino. All rights reserved.
  */
 
 'use strict';
 
-let BriteGrid = BriteGrid || {};
-BriteGrid.widget = {};
+let FlareTail = FlareTail || {};
+FlareTail.widget = {};
 
 /* ----------------------------------------------------------------------------------------------
  * RoleType (top level abstract role)
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.RoleType = function () {};
+FlareTail.widget.RoleType = function () {};
 
-BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
+FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   let $container = this.view.$container;
 
   if (!$container) {
@@ -33,7 +31,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
     return [...$container.querySelectorAll(selector)];
   };
 
-  let BGue = BriteGrid.util.event,
+  let FTue = FlareTail.util.event,
       selector = this.options.item_selector,
       not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       members  = this.view.members
@@ -61,7 +59,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
   }
 
   // Add event listeners
-  BGue.bind(this, $container, [
+  FTue.bind(this, $container, [
     // MouseEvent
     'mousedown', 'contextmenu', 'mouseup', 'click', 'dblclick',
     'mouseover',
@@ -72,7 +70,7 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
     // DragEvent
     'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend'
   ], false);
-  BGue.bind(this, $container, [
+  FTue.bind(this, $container, [
     // FocusEvent
     'focus', 'blur',
   ], true); // Set use_capture true to catch events on descendants
@@ -109,16 +107,16 @@ BriteGrid.widget.RoleType.prototype.activate = function (rebuild) {
 };
 
 // Catch-all event handler
-BriteGrid.widget.RoleType.prototype.handleEvent = function (event) {
+FlareTail.widget.RoleType.prototype.handleEvent = function (event) {
   (this['on' + event.type + '_extend'] || this['on' + event.type]).call(this, event);
 };
 
-BriteGrid.widget.RoleType.prototype.oncontextmenu = function (event) {
+FlareTail.widget.RoleType.prototype.oncontextmenu = function (event) {
   // Disable browser's context menu
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.RoleType.prototype.bind = function () {
+FlareTail.widget.RoleType.prototype.bind = function () {
   this.view.$container.addEventListener.apply(this.view.$container, arguments);
   // On Firefox 27 and above, this can be:
   // this.view.$container.addEventListener(...arguments);
@@ -128,35 +126,35 @@ BriteGrid.widget.RoleType.prototype.bind = function () {
  * Structure (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Structure = function () {};
-BriteGrid.widget.Structure.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
+FlareTail.widget.Structure = function () {};
+FlareTail.widget.Structure.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Section (abstract role) extends Structure
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Section = function () {};
-BriteGrid.widget.Section.prototype = Object.create(BriteGrid.widget.Structure.prototype);
+FlareTail.widget.Section = function () {};
+FlareTail.widget.Section.prototype = Object.create(FlareTail.widget.Structure.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Widget (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Widget = function () {};
-BriteGrid.widget.Widget.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
+FlareTail.widget.Widget = function () {};
+FlareTail.widget.Widget.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Command (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Command = function () {};
-BriteGrid.widget.Command.prototype = Object.create(BriteGrid.widget.Widget.prototype);
+FlareTail.widget.Command = function () {};
+FlareTail.widget.Command.prototype = Object.create(FlareTail.widget.Widget.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Button extends Command
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Button = function ($button) {
+FlareTail.widget.Button = function ($button) {
   this.view = {
     $button: $button
   };
@@ -179,13 +177,13 @@ BriteGrid.widget.Button = function ($button) {
     toggle: $button.hasAttribute('aria-pressed')
   };
 
-  BriteGrid.util.event.bind(this, $button, ['click', 'keydown']);
+  FlareTail.util.event.bind(this, $button, ['click', 'keydown']);
 };
 
-BriteGrid.widget.Button.prototype = Object.create(BriteGrid.widget.Command.prototype);
+FlareTail.widget.Button.prototype = Object.create(FlareTail.widget.Command.prototype);
 
-BriteGrid.widget.Button.prototype.onclick = function (event) {
-  BriteGrid.util.event.ignore(event);
+FlareTail.widget.Button.prototype.onclick = function (event) {
+  FlareTail.util.event.ignore(event);
 
   if (this.data.disabled) {
     return;
@@ -198,13 +196,13 @@ BriteGrid.widget.Button.prototype.onclick = function (event) {
   this.view.$button.dispatchEvent(new CustomEvent('Pressed'));
 };
 
-BriteGrid.widget.Button.prototype.onkeydown = function (event) {
+FlareTail.widget.Button.prototype.onkeydown = function (event) {
   if (event.keyCode === event.DOM_VK_SPACE) {
     this.onclick(event);
   }
 };
 
-BriteGrid.widget.Button.prototype.bind = function () {
+FlareTail.widget.Button.prototype.bind = function () {
   this.view.$button.addEventListener.apply(this.view.$button, arguments);
 };
 
@@ -212,10 +210,10 @@ BriteGrid.widget.Button.prototype.bind = function () {
  * Composite (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Composite = function () {};
-BriteGrid.widget.Composite.prototype = Object.create(BriteGrid.widget.Widget.prototype);
+FlareTail.widget.Composite = function () {};
+FlareTail.widget.Composite.prototype = Object.create(FlareTail.widget.Widget.prototype);
 
-BriteGrid.widget.Composite.prototype.onfocus = function (event) {
+FlareTail.widget.Composite.prototype.onfocus = function (event) {
   if (this.view.members.indexOf(event.target) > -1 && event.target.id) {
     this.view.$container.setAttribute('aria-activedescendant', event.target.id);
   } else {
@@ -223,13 +221,13 @@ BriteGrid.widget.Composite.prototype.onfocus = function (event) {
   }
 };
 
-BriteGrid.widget.Composite.prototype.onblur = function (event) {
+FlareTail.widget.Composite.prototype.onblur = function (event) {
   this.view.$container.removeAttribute('aria-activedescendant');
 
-  BriteGrid.util.event.ignore(event);
+  FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.Composite.prototype.onmousedown = function (event) {
+FlareTail.widget.Composite.prototype.onmousedown = function (event) {
   if (this.view.members.indexOf(event.target) === -1 || event.button !== 0) {
     return;
   }
@@ -237,11 +235,11 @@ BriteGrid.widget.Composite.prototype.onmousedown = function (event) {
   this.select_with_mouse(event);
 };
 
-BriteGrid.widget.Composite.prototype.onkeydown = function (event) {
+FlareTail.widget.Composite.prototype.onkeydown = function (event) {
   this.select_with_keyboard(event);
 };
 
-BriteGrid.widget.Composite.prototype.select_with_mouse = function (event) {
+FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
   let $target = event.target,
       $container = this.view.$container,
       items = this.view.members,
@@ -273,7 +271,7 @@ BriteGrid.widget.Composite.prototype.select_with_mouse = function (event) {
   this.view.$focused = selected[selected.length - 1];
 };
 
-BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
+FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
   let kcode = event.keyCode;
 
   // Focus shift with tab key
@@ -283,7 +281,7 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
 
   // Do nothing if Alt key is pressed
   if (event.altKey) {
-    return BriteGrid.util.event.ignore(event);
+    return FlareTail.util.event.ignore(event);
   }
 
   let items = this.view.members,
@@ -507,10 +505,10 @@ BriteGrid.widget.Composite.prototype.select_with_keyboard = function (event) {
     }
   }
 
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) {
+FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) {
   let attr = this.options.selected_attr,
       oldval = obj[prop];
 
@@ -578,7 +576,7 @@ BriteGrid.widget.Composite.prototype.update_view = function (obj, prop, newval) 
  * @returns {Object} the widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Grid = function ($container, data, options) {
+FlareTail.widget.Grid = function ($container, data, options) {
   // What can be selected on the grid
   let dataset = $container.dataset,
       role = data ? 'row'
@@ -628,9 +626,9 @@ BriteGrid.widget.Grid = function ($container, data, options) {
   this.activate_extend();
 };
 
-BriteGrid.widget.Grid.prototype = Object.create(BriteGrid.widget.Composite.prototype);
+FlareTail.widget.Grid.prototype = Object.create(FlareTail.widget.Composite.prototype);
 
-BriteGrid.widget.Grid.prototype.activate_extend = function () {
+FlareTail.widget.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
     set: function (obj, prop, value) {
       switch (prop) {
@@ -671,7 +669,7 @@ BriteGrid.widget.Grid.prototype.activate_extend = function () {
   this.activate_rows();
 };
 
-BriteGrid.widget.Grid.prototype.activate_columns = function () {
+FlareTail.widget.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
     get: function (obj, prop) {
       // The default behavior
@@ -696,7 +694,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
         }
 
         case 'width': {
-          value = parseInt(BriteGrid.util.style.get(obj.$element, 'width'));
+          value = parseInt(FlareTail.util.style.get(obj.$element, 'width'));
           break;
         }
 
@@ -740,7 +738,7 @@ BriteGrid.widget.Grid.prototype.activate_columns = function () {
   }
 };
 
-BriteGrid.widget.Grid.prototype.activate_rows = function () {
+FlareTail.widget.Grid.prototype.activate_rows = function () {
   let handler = {
     set: function (obj, prop, value) {
       // Reflect Data change into View
@@ -782,8 +780,8 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   });
 
   // Custom scrollbar
-  let scrollbar = this.view.scrollbar = new BriteGrid.widget.ScrollBar($grid_body),
-      mobile_mql = BriteGrid.util.device.mobile.mql,
+  let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body),
+      mobile_mql = FlareTail.util.device.mobile.mql,
       mobile_mql_listener = function (mql) {
         scrollbar.options.adjusted = !mql.matches;
       }.bind(this);
@@ -792,12 +790,12 @@ BriteGrid.widget.Grid.prototype.activate_rows = function () {
   mobile_mql_listener(mobile_mql);
 };
 
-BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
+FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
   let $target = event.target;
 
   if ($target.mozMatchesSelector('[role="columnheader"]')) {
     if (event.button === 0 && this.options.reorderable) {
-      BriteGrid.util.event.bind(this, window, ['mousemove', 'mouseup']);
+      FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
     }
 
     if (event.button === 2) {
@@ -815,14 +813,14 @@ BriteGrid.widget.Grid.prototype.onmousedown_extend = function (event) {
 
     this.data.rows[index].data[id] = value;
 
-    return BriteGrid.util.event.ignore(event);
+    return FlareTail.util.event.ignore(event);
   }
 
   // The default behavior
   this.onmousedown(event);
 };
 
-BriteGrid.widget.Grid.prototype.onmousemove = function (event) {
+FlareTail.widget.Grid.prototype.onmousemove = function (event) {
   if (!this.data.drag) {
     this.start_column_reordering(event);
   } else {
@@ -830,9 +828,9 @@ BriteGrid.widget.Grid.prototype.onmousemove = function (event) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.onmouseup = function (event) {
-  BriteGrid.util.event.ignore(event);
-  BriteGrid.util.event.unbind(this, window, ['mousemove', 'mouseup']);
+FlareTail.widget.Grid.prototype.onmouseup = function (event) {
+  FlareTail.util.event.ignore(event);
+  FlareTail.util.event.unbind(this, window, ['mousemove', 'mouseup']);
 
   if (event.button !== 0) {
     return;
@@ -852,7 +850,7 @@ BriteGrid.widget.Grid.prototype.onmouseup = function (event) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.onkeydown_extend = function (event) {
+FlareTail.widget.Grid.prototype.onkeydown_extend = function (event) {
   let kcode = event.keyCode;
 
   // Focus shift with tab key
@@ -900,10 +898,10 @@ BriteGrid.widget.Grid.prototype.onkeydown_extend = function (event) {
     }
   }
 
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.Grid.prototype.build_header = function () {
+FlareTail.widget.Grid.prototype.build_header = function () {
   let $grid = this.view.$container,
       $grid_header = this.view.$header = document.createElement('header'),
       $table = $grid_header.appendChild(document.createElement('table')),
@@ -944,7 +942,7 @@ BriteGrid.widget.Grid.prototype.build_header = function () {
   $grid.appendChild($grid_header);
 };
 
-BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
+FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     // Refresh the tbody with the passed data
     this.data.rows = row_data;
@@ -1012,7 +1010,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
         $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
         $child.dataset.simple = 'true';
-        $child.textContent = BriteGrid.util.i18n.format_date(value, true);
+        $child.textContent = FlareTail.util.i18n.format_date(value, true);
         $child.dateTime = value;
       } else {
         $child.textContent = value;
@@ -1032,7 +1030,7 @@ BriteGrid.widget.Grid.prototype.build_body = function (row_data) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.get_data = function () {
+FlareTail.widget.Grid.prototype.get_data = function () {
   let $header = this.view.$header,
       $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
 
@@ -1092,7 +1090,7 @@ BriteGrid.widget.Grid.prototype.get_data = function () {
   }.bind(this));
 };
 
-BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
+FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
   let $grid = this.view.$container,
       $tbody = this.view.$body.querySelector('tbody'),
       $header = this.view.$header;
@@ -1166,11 +1164,11 @@ BriteGrid.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   // Fire an event
   $grid.dispatchEvent(new CustomEvent('Sorted', {
     // Clone cond as it's a proxyfied object
-    detail: { conditions: BriteGrid.util.object.clone(cond) }
+    detail: { conditions: FlareTail.util.object.clone(cond) }
   }));
 };
 
-BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
+FlareTail.widget.Grid.prototype.init_columnpicker = function () {
   let $picker = this.view.$columnpicker = document.createElement('ul');
   $picker.id = this.view.$container.id + '-columnpicker';
   $picker.setAttribute('role', 'menu');
@@ -1180,13 +1178,13 @@ BriteGrid.widget.Grid.prototype.init_columnpicker = function () {
   $header.appendChild($picker);
   $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
-  let picker = this.data.columnpicker = new BriteGrid.widget.Menu($picker);
+  let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
   picker.bind('MenuItemSelected', function (event) {
     this.toggle_column(event.explicitOriginalTarget.dataset.id);
   }.bind(this));
 };
 
-BriteGrid.widget.Grid.prototype.build_columnpicker = function () {
+FlareTail.widget.Grid.prototype.build_columnpicker = function () {
   this.data.columnpicker.build(this.data.columns.map(function (col) {
     return {
       id: this.view.$container.id + '-columnpicker-' + col.id,
@@ -1201,13 +1199,13 @@ BriteGrid.widget.Grid.prototype.build_columnpicker = function () {
   }.bind(this)));
 };
 
-BriteGrid.widget.Grid.prototype.toggle_column = function (id) {
+FlareTail.widget.Grid.prototype.toggle_column = function (id) {
   // Find column by id, thanks to Proxy
   let col = this.data.columns[id];
   col.hidden = !col.hidden;
 };
 
-BriteGrid.widget.Grid.prototype.show_column = function (col) {
+FlareTail.widget.Grid.prototype.show_column = function (col) {
   let $grid = this.view.$container,
       attr = '[data-id="' + col.id + '"]';
 
@@ -1222,7 +1220,7 @@ BriteGrid.widget.Grid.prototype.show_column = function (col) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.hide_column = function (col) {
+FlareTail.widget.Grid.prototype.hide_column = function (col) {
   let $grid = this.view.$container,
       attr = '[data-id="' + col.id + '"]';
 
@@ -1237,7 +1235,7 @@ BriteGrid.widget.Grid.prototype.hide_column = function (col) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.ensure_row_visibility = function ($row) {
+FlareTail.widget.Grid.prototype.ensure_row_visibility = function ($row) {
   let $outer = this.view.$container.querySelector('.grid-body');
 
   if (!$outer) {
@@ -1258,7 +1256,7 @@ BriteGrid.widget.Grid.prototype.ensure_row_visibility = function ($row) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
+FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
   let $grid = this.view.$container,
       $container = document.createElement('div'),
       $_image = document.createElement('canvas'),
@@ -1326,7 +1324,7 @@ BriteGrid.widget.Grid.prototype.start_column_reordering = function (event) {
   $grid.querySelector('[role="scrollbar"]').setAttribute('aria-hidden', 'true')
 };
 
-BriteGrid.widget.Grid.prototype.continue_column_reordering = function (event) {
+FlareTail.widget.Grid.prototype.continue_column_reordering = function (event) {
   let drag = this.data.drag,
       pos = event.clientX - drag.start_left,
       index = drag.current_index,
@@ -1362,7 +1360,7 @@ BriteGrid.widget.Grid.prototype.continue_column_reordering = function (event) {
   }
 };
 
-BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
+FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   let drag = this.data.drag,
       start_idx = drag.start_index,
       current_idx = drag.current_index,
@@ -1405,15 +1403,15 @@ BriteGrid.widget.Grid.prototype.stop_column_reordering = function (event) {
  * Select (abstract role) extends Composite
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Select = function () {};
-BriteGrid.widget.Select.prototype = Object.create(BriteGrid.widget.Composite.prototype);
+FlareTail.widget.Select = function () {};
+FlareTail.widget.Select.prototype = Object.create(FlareTail.widget.Composite.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * ComboBox extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Combobox = function () {};
-BriteGrid.widget.Combobox.prototype = Object.create(BriteGrid.widget.Select.prototype);
+FlareTail.widget.Combobox = function () {};
+FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * ListBox extends Select
@@ -1425,7 +1423,7 @@ BriteGrid.widget.Combobox.prototype = Object.create(BriteGrid.widget.Select.prot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.ListBox = function ($container, data) {
+FlareTail.widget.ListBox = function ($container, data) {
   this.view = {
     $container: $container
   };
@@ -1450,9 +1448,9 @@ BriteGrid.widget.ListBox = function ($container, data) {
   }
 };
 
-BriteGrid.widget.ListBox.prototype = Object.create(BriteGrid.widget.Select.prototype);
+FlareTail.widget.ListBox.prototype = Object.create(FlareTail.widget.Select.prototype);
 
-BriteGrid.widget.ListBox.prototype.build = function () {
+FlareTail.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new WeakMap(),
       $fragment = document.createDocumentFragment(),
       $_item = document.createElement('li');
@@ -1480,7 +1478,7 @@ BriteGrid.widget.ListBox.prototype.build = function () {
   this.view.$container.appendChild($fragment);
 };
 
-BriteGrid.widget.ListBox.prototype.get_data = function () {
+FlareTail.widget.ListBox.prototype.get_data = function () {
   let map = this.data.map = new WeakMap();
 
   this.data.structure = this.view.members.map(function ($item) {
@@ -1509,7 +1507,7 @@ BriteGrid.widget.ListBox.prototype.get_data = function () {
  * Menu extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Menu = function ($container, data = []) {
+FlareTail.widget.Menu = function ($container, data = []) {
   this.view = {
     $container: $container
   };
@@ -1535,13 +1533,13 @@ BriteGrid.widget.Menu = function ($container, data = []) {
 
   if ($owner && !$owner.mozMatchesSelector('[role="menuitem"]')) {
     this.view.$owner = $owner;
-    BriteGrid.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
+    FlareTail.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
   }
 };
 
-BriteGrid.widget.Menu.prototype = Object.create(BriteGrid.widget.Select.prototype);
+FlareTail.widget.Menu.prototype = Object.create(FlareTail.widget.Select.prototype);
 
-BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
+FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   // Redefine items
   let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       selector = '#' + this.view.$container.id + ' > li > '
@@ -1552,7 +1550,7 @@ BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   for (let $item of items) {
     if ($item.hasAttribute('aria-owns')) {
       let $menu = document.getElementById($item.getAttribute('aria-owns')),
-          menu = new BriteGrid.widget.Menu($menu);
+          menu = new FlareTail.widget.Menu($menu);
       menu.data.parent = this;
       menus.set($item, menu);
     }
@@ -1581,7 +1579,7 @@ BriteGrid.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   });
 }
 
-BriteGrid.widget.Menu.prototype.onmousedown = function (event) {
+FlareTail.widget.Menu.prototype.onmousedown = function (event) {
   // Open link in a new tab
   if (event.target.href && event.button === 0) {
     event.stopPropagation();
@@ -1591,7 +1589,7 @@ BriteGrid.widget.Menu.prototype.onmousedown = function (event) {
   }
 
   if (event.button !== 0) {
-    BriteGrid.util.event.ignore(event);
+    FlareTail.util.event.ignore(event);
 
     return;
   }
@@ -1610,18 +1608,18 @@ BriteGrid.widget.Menu.prototype.onmousedown = function (event) {
     this.close(true);
   }
 
-  BriteGrid.util.event.ignore(event);
+  FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.Menu.prototype.onmouseover = function (event) {
+FlareTail.widget.Menu.prototype.onmouseover = function (event) {
   if (this.view.members.indexOf(event.target) > -1) {
     this.view.selected = this.view.$focused = event.target;
   }
 
-  BriteGrid.util.event.ignore(event);
+  FlareTail.util.event.ignore(event);
 }
 
-BriteGrid.widget.Menu.prototype.oncontextmenu = function (event) {
+FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
   let $owner = this.view.$owner,
       $container = this.view.$container;
 
@@ -1640,10 +1638,10 @@ BriteGrid.widget.Menu.prototype.oncontextmenu = function (event) {
     }
   }
 
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
+FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
   let parent = this.data.parent,
       menus = this.data.menus,
       has_submenu = menus.has(event.target),
@@ -1687,7 +1685,7 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
     return;
   }
 
-  BriteGrid.util.event.ignore(event);
+  FlareTail.util.event.ignore(event);
 
   switch (kcode) {
     case event.DOM_VK_RIGHT: {
@@ -1742,7 +1740,7 @@ BriteGrid.widget.Menu.prototype.onkeydown_extend = function (event) {
   }
 };
 
-BriteGrid.widget.Menu.prototype.onblur_extend = function (event) {
+FlareTail.widget.Menu.prototype.onblur_extend = function (event) {
   if (event.currentTarget === window) {
     this.close(true);
   }
@@ -1751,7 +1749,7 @@ BriteGrid.widget.Menu.prototype.onblur_extend = function (event) {
   this.onblur(event);
 };
 
-BriteGrid.widget.Menu.prototype.build = function (data) {
+FlareTail.widget.Menu.prototype.build = function (data) {
   let $container = this.view.$container,
       $fragment = document.createDocumentFragment(),
       $_separator = document.createElement('li'),
@@ -1800,7 +1798,7 @@ BriteGrid.widget.Menu.prototype.build = function (data) {
   }
 };
 
-BriteGrid.widget.Menu.prototype.open = function () {
+FlareTail.widget.Menu.prototype.open = function () {
   let $container = this.view.$container;
   $container.setAttribute('aria-expanded', 'true');
   $container.removeAttribute('aria-activedescendant');
@@ -1815,10 +1813,10 @@ BriteGrid.widget.Menu.prototype.open = function () {
     $container.classList.add('dir-left');
   }
 
-  BriteGrid.util.event.bind(this, window, ['mousedown', 'blur']);
+  FlareTail.util.event.bind(this, window, ['mousedown', 'blur']);
 };
 
-BriteGrid.widget.Menu.prototype.select = function (event) {
+FlareTail.widget.Menu.prototype.select = function (event) {
   this.view.$container.dispatchEvent(new CustomEvent('MenuItemSelected', {
     bubbles: true,
     cancelable: false,
@@ -1828,8 +1826,8 @@ BriteGrid.widget.Menu.prototype.select = function (event) {
   }));
 }
 
-BriteGrid.widget.Menu.prototype.close = function (propagation) {
-  BriteGrid.util.event.unbind(this, window, ['mousedown', 'blur']);
+FlareTail.widget.Menu.prototype.close = function (propagation) {
+  FlareTail.util.event.unbind(this, window, ['mousedown', 'blur']);
 
   let $container = this.view.$container,
       parent = this.data.parent;
@@ -1861,7 +1859,7 @@ BriteGrid.widget.Menu.prototype.close = function (propagation) {
  * MenuBar extends Menu
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.MenuBar = function ($container, data) {
+FlareTail.widget.MenuBar = function ($container, data) {
   this.view = {
     $container: $container
   };
@@ -1878,11 +1876,11 @@ BriteGrid.widget.MenuBar = function ($container, data) {
   let menus = menus = this.data.menus;
 };
 
-BriteGrid.widget.MenuBar.prototype = Object.create(BriteGrid.widget.Menu.prototype);
+FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototype);
 
-BriteGrid.widget.MenuBar.prototype.onmousedown = function (event) {
+FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
-    BriteGrid.util.event.ignore(event);
+    FlareTail.util.event.ignore(event);
     return;
   }
 
@@ -1895,20 +1893,20 @@ BriteGrid.widget.MenuBar.prototype.onmousedown = function (event) {
   } else if (this.view.selected.length) {
     this.close();
   } else {
-    BriteGrid.util.event.ignore(event);
+    FlareTail.util.event.ignore(event);
   }
 };
 
-BriteGrid.widget.MenuBar.prototype.onmouseover = function (event) {
+FlareTail.widget.MenuBar.prototype.onmouseover = function (event) {
   if (this.view.selected.length &&
       this.view.members.indexOf(event.target) > -1) {
     this.view.selected = this.view.$focused = event.target;
   }
 
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
+FlareTail.widget.MenuBar.prototype.onkeydown_extend = function (event) {
   let menu = this.data.menus.get(event.target).view,
       menuitems = menu.members;
 
@@ -1958,15 +1956,15 @@ BriteGrid.widget.MenuBar.prototype.onkeydown_extend = function (event) {
     }
   }
 
-  return BriteGrid.util.event.ignore(event);
+  return FlareTail.util.event.ignore(event);
 };
 
-BriteGrid.widget.MenuBar.prototype.open = function (event) {
+FlareTail.widget.MenuBar.prototype.open = function (event) {
   this.select_with_mouse(event);
 };
 
-BriteGrid.widget.MenuBar.prototype.close = function () {
-  BriteGrid.util.event.unbind(this, window, ['mousedown', 'blur']);
+FlareTail.widget.MenuBar.prototype.close = function () {
+  FlareTail.util.event.unbind(this, window, ['mousedown', 'blur']);
 
   this.view.selected = [];
 };
@@ -1975,7 +1973,7 @@ BriteGrid.widget.MenuBar.prototype.close = function () {
  * RadioGroup extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.RadioGroup = function ($container, data) {
+FlareTail.widget.RadioGroup = function ($container, data) {
   this.view = {
     $container: $container
   };
@@ -1990,7 +1988,7 @@ BriteGrid.widget.RadioGroup = function ($container, data) {
   this.activate();
 };
 
-BriteGrid.widget.RadioGroup.prototype = Object.create(BriteGrid.widget.Select.prototype);
+FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Tree extends Select
@@ -2000,7 +1998,7 @@ BriteGrid.widget.RadioGroup.prototype = Object.create(BriteGrid.widget.Select.pr
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Tree = function ($container, data) {
+FlareTail.widget.Tree = function ($container, data) {
   this.view = {
     $container: $container
   };
@@ -2025,9 +2023,9 @@ BriteGrid.widget.Tree = function ($container, data) {
   }
 };
 
-BriteGrid.widget.Tree.prototype = Object.create(BriteGrid.widget.Select.prototype);
+FlareTail.widget.Tree.prototype = Object.create(FlareTail.widget.Select.prototype);
 
-BriteGrid.widget.Tree.prototype.onmousedown_extend = function (event) {
+FlareTail.widget.Tree.prototype.onmousedown_extend = function (event) {
   if (event.target.mozMatchesSelector('.expander')) {
     this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
   } else {
@@ -2036,7 +2034,7 @@ BriteGrid.widget.Tree.prototype.onmousedown_extend = function (event) {
   }
 };
 
-BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
+FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
   let $item = event.target,
       items = this.view.members;
 
@@ -2082,13 +2080,13 @@ BriteGrid.widget.Tree.prototype.onkeydown_extend = function (event) {
   }
 };
 
-BriteGrid.widget.Tree.prototype.ondblclick = function (event) {
+FlareTail.widget.Tree.prototype.ondblclick = function (event) {
   if (event.target.hasAttribute('aria-expanded')) {
     this.expand(event.target);
   }
 };
 
-BriteGrid.widget.Tree.prototype.build = function () {
+FlareTail.widget.Tree.prototype.build = function () {
   let $tree = this.view.$container,
       $fragment = document.createDocumentFragment(),
       structure = this.data.structure,
@@ -2158,7 +2156,7 @@ BriteGrid.widget.Tree.prototype.build = function () {
   $tree.appendChild($fragment);
 };
 
-BriteGrid.widget.Tree.prototype.get_data = function () {
+FlareTail.widget.Tree.prototype.get_data = function () {
   let map = this.data.map = new WeakMap(),
       structure = this.data.structure = [];
 
@@ -2187,7 +2185,7 @@ BriteGrid.widget.Tree.prototype.get_data = function () {
   };
 };
 
-BriteGrid.widget.Tree.prototype.expand = function ($item) {
+FlareTail.widget.Tree.prototype.expand = function ($item) {
   let expanded = $item.mozMatchesSelector('[aria-expanded="true"]'),
       items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
       selector = '#' + $item.getAttribute('aria-owns') + ' [aria-selected="true"]',
@@ -2222,8 +2220,8 @@ BriteGrid.widget.Tree.prototype.expand = function ($item) {
  * TreeGrid extends Tree and Grid
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.TreeGrid = function () {};
-BriteGrid.widget.TreeGrid.prototype = Object.create(BriteGrid.widget.Grid.prototype);
+FlareTail.widget.TreeGrid = function () {};
+FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * TabList extends Composite
@@ -2240,7 +2238,7 @@ BriteGrid.widget.TreeGrid.prototype = Object.create(BriteGrid.widget.Grid.protot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.TabList = function ($container) {
+FlareTail.widget.TabList = function ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
   if ($container.mozMatchesSelector('[aria-multiselectable="true"]')) {
@@ -2279,16 +2277,16 @@ BriteGrid.widget.TabList = function ($container) {
   }
 };
 
-BriteGrid.widget.TabList.prototype = Object.create(BriteGrid.widget.Composite.prototype);
+FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.prototype);
 
-BriteGrid.widget.TabList.prototype.onclick = function (event) {
+FlareTail.widget.TabList.prototype.onclick = function (event) {
   if (event.currentTarget === this.view.$container &&
       event.target.mozMatchesSelector('.close')) {
     this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
   }
 };
 
-BriteGrid.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $new_tab) {
+FlareTail.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $new_tab) {
   let $panel;
 
   // Current tabpanel
@@ -2302,7 +2300,7 @@ BriteGrid.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $ne
   $panel.setAttribute('aria-hidden', 'false');
 };
 
-BriteGrid.widget.TabList.prototype.set_close_button = function ($tab) {
+FlareTail.widget.TabList.prototype.set_close_button = function ($tab) {
   let $button = document.createElement('span');
   $button.className = 'close';
   $button.title = 'Close Tab'; // l10n
@@ -2311,7 +2309,7 @@ BriteGrid.widget.TabList.prototype.set_close_button = function ($tab) {
   $tab.appendChild($button);
 };
 
-BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
+FlareTail.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
   let items = this.view.members,
       $tab = items[0].cloneNode(true),
       $selected = this.view.selected[0],
@@ -2355,7 +2353,7 @@ BriteGrid.widget.TabList.prototype.add_tab = function (name, title, label, $pane
   return $tab;
 };
 
-BriteGrid.widget.TabList.prototype.close_tab = function ($tab) {
+FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
   let items = this.view.members,
       index = items.indexOf($tab);
 
@@ -2377,14 +2375,14 @@ BriteGrid.widget.TabList.prototype.close_tab = function ($tab) {
  * Input (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Input = function () {};
-BriteGrid.widget.Input.prototype = Object.create(BriteGrid.widget.Widget.prototype);
+FlareTail.widget.Input = function () {};
+FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Checkbox extends Input
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Checkbox = function ($checkbox) {
+FlareTail.widget.Checkbox = function ($checkbox) {
   this.view = {
     $checkbox: $checkbox
   };
@@ -2403,25 +2401,25 @@ BriteGrid.widget.Checkbox = function ($checkbox) {
     }
   });
 
-  BriteGrid.util.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+  FlareTail.util.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
 };
 
-BriteGrid.widget.Checkbox.prototype = Object.create(BriteGrid.widget.Input.prototype);
+FlareTail.widget.Checkbox.prototype = Object.create(FlareTail.widget.Input.prototype);
 
-BriteGrid.widget.Checkbox.prototype.onkeydown = function (event) {
+FlareTail.widget.Checkbox.prototype.onkeydown = function (event) {
   if (event.keyCode === event.DOM_VK_SPACE) {
     this.data.checked = !this.data.checked;
   }
 }
 
-BriteGrid.widget.Checkbox.prototype.onclick = function (event) {
+FlareTail.widget.Checkbox.prototype.onclick = function (event) {
   this.data.checked = !this.data.checked;
   this.view.$checkbox.focus();
 
   return false;
 };
 
-BriteGrid.widget.Checkbox.prototype.bind = function () {
+FlareTail.widget.Checkbox.prototype.bind = function () {
   this.view.$checkbox.addEventListener.apply(this.view.$checkbox, arguments);
 };
 
@@ -2432,9 +2430,9 @@ BriteGrid.widget.Checkbox.prototype.bind = function () {
  * @param   adjusted  Adjust the scrolling increment for Grid, Tree, ListBox
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
+FlareTail.widget.ScrollBar = function ($owner, adjusted = false) {
   let $controller = document.createElement('div'),
-      BGue = BriteGrid.util.event;
+      FTue = FlareTail.util.event;
 
   $controller.tabIndex = 0;
   $controller.style.top = '2px';
@@ -2456,9 +2454,9 @@ BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
     adjusted: adjusted
   };
 
-  BGue.bind(this, window, ['resize']);
-  BGue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
-  BGue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
+  FTue.bind(this, window, ['resize']);
+  FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
+  FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
   // Recalculate the height of scrollbar when elements are added or removed
   (new MutationObserver(function () {
@@ -2471,21 +2469,21 @@ BriteGrid.widget.ScrollBar = function ($owner, adjusted = false) {
   });
 };
 
-BriteGrid.widget.ScrollBar.prototype = Object.create(BriteGrid.widget.Input.prototype);
+FlareTail.widget.ScrollBar.prototype = Object.create(FlareTail.widget.Input.prototype);
 
-BriteGrid.widget.ScrollBar.prototype.onmousedown = function (event) {
+FlareTail.widget.ScrollBar.prototype.onmousedown = function (event) {
   this.scroll_with_mouse(event);
 };
 
-BriteGrid.widget.ScrollBar.prototype.onmousemove = function (event) {
+FlareTail.widget.ScrollBar.prototype.onmousemove = function (event) {
   this.scroll_with_mouse(event);
 };
 
-BriteGrid.widget.ScrollBar.prototype.onmouseup = function (event) {
+FlareTail.widget.ScrollBar.prototype.onmouseup = function (event) {
   this.scroll_with_mouse(event);
 };
 
-BriteGrid.widget.ScrollBar.prototype.onwheel = function (event) {
+FlareTail.widget.ScrollBar.prototype.onwheel = function (event) {
   event.preventDefault();
 
   let $owner = this.view.$owner,
@@ -2504,12 +2502,12 @@ BriteGrid.widget.ScrollBar.prototype.onwheel = function (event) {
   }
 };
 
-BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
+FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
   let $owner = this.view.$owner,
       $controller = this.view.$controller;
 
   // Scroll by row
-  if (!BriteGrid.util.device.touch.enabled && this.options.adjusted) {
+  if (!FlareTail.util.device.touch.enabled && this.options.adjusted) {
     let rect = $owner.getBoundingClientRect(),
         $elm = document.elementFromPoint(rect.left, rect.top),
         top = 0;
@@ -2550,30 +2548,30 @@ BriteGrid.widget.ScrollBar.prototype.onscroll = function (event) {
   $controller.style.top = st + 2 + Math.floor((ch - ctrl_adj) * (st / sh)) + 'px';
 };
 
-BriteGrid.widget.ScrollBar.prototype.onkeydown = function (event) {
+FlareTail.widget.ScrollBar.prototype.onkeydown = function (event) {
   this.scroll_with_keyboard(event);
 };
 
-BriteGrid.widget.ScrollBar.prototype.onoverflow = function (event) {
+FlareTail.widget.ScrollBar.prototype.onoverflow = function (event) {
   if (event.target === event.currentTarget) {
     this.set_height();
     this.view.$controller.setAttribute('aria-disabled', 'false');
   }
 };
 
-BriteGrid.widget.ScrollBar.prototype.onunderflow = function (event) {
+FlareTail.widget.ScrollBar.prototype.onunderflow = function (event) {
   if (event.target === event.currentTarget) {
     this.view.$controller.setAttribute('aria-disabled', 'true');
   }
 };
 
-BriteGrid.widget.ScrollBar.prototype.onresize = function (event) {
+FlareTail.widget.ScrollBar.prototype.onresize = function (event) {
   this.set_height();
 }
 
-BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
+FlareTail.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
   let $owner = this.view.$owner,
-      BGue = BriteGrid.util.event;
+      FTue = FlareTail.util.event;
 
   if (event.type === 'mousedown') {
     this.data.rect = {
@@ -2583,7 +2581,7 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
       cy: event.clientY
     };
 
-    BGue.bind(this, window, ['mousemove', 'mouseup']);
+    FTue.bind(this, window, ['mousemove', 'mouseup']);
   }
 
   if (event.type === 'mousemove') {
@@ -2607,11 +2605,11 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
   if (event.type === 'mouseup') {
     delete this.data.rect;
 
-    BGue.unbind(this, window, ['mousemove', 'mouseup']);
+    FTue.unbind(this, window, ['mousemove', 'mouseup']);
   }
 };
 
-BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
+FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
   let $owner = this.view.$owner,
       ch = $owner.clientHeight;
 
@@ -2678,13 +2676,13 @@ BriteGrid.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
   }
 
   if (event.target === this.view.$controller) {
-    return BriteGrid.util.event.ignore(event);
+    return FlareTail.util.event.ignore(event);
   }
 
   return true;
 };
 
-BriteGrid.widget.ScrollBar.prototype.set_height = function () {
+FlareTail.widget.ScrollBar.prototype.set_height = function () {
   let $owner = this.view.$owner,
       $controller = this.view.$controller,
       sh = $owner.scrollHeight,
@@ -2695,7 +2693,7 @@ BriteGrid.widget.ScrollBar.prototype.set_height = function () {
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
 };
 
-BriteGrid.widget.ScrollBar.prototype.bind = function () {
+FlareTail.widget.ScrollBar.prototype.bind = function () {
   this.view.$controller.addEventListener.apply(this.view.$controller, arguments);
 };
 
@@ -2703,8 +2701,8 @@ BriteGrid.widget.ScrollBar.prototype.bind = function () {
  * Window (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Window = function () {};
-BriteGrid.widget.Window.prototype = Object.create(BriteGrid.widget.RoleType.prototype);
+FlareTail.widget.Window = function () {};
+FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Dialog extends Window
@@ -2720,7 +2718,7 @@ BriteGrid.widget.Window.prototype = Object.create(BriteGrid.widget.RoleType.prot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Dialog = function (options) {
+FlareTail.widget.Dialog = function (options) {
   this.options = {
     id: options.id || Date.now(),
     type: options.type,
@@ -2737,9 +2735,9 @@ BriteGrid.widget.Dialog = function (options) {
   this.activate();
 };
 
-BriteGrid.widget.Dialog.prototype = Object.create(BriteGrid.widget.Window.prototype);
+FlareTail.widget.Dialog.prototype = Object.create(FlareTail.widget.Window.prototype);
 
-BriteGrid.widget.Dialog.prototype.build = function () {
+FlareTail.widget.Dialog.prototype.build = function () {
   let options = this.options;
 
   let $dialog = this.view.$dialog = document.createElement('aside');
@@ -2779,17 +2777,17 @@ BriteGrid.widget.Dialog.prototype.build = function () {
   wrapper.appendChild($dialog)
 };
 
-BriteGrid.widget.Dialog.prototype.activate = function () {
+FlareTail.widget.Dialog.prototype.activate = function () {
   // Add event listeners
-  BriteGrid.util.event.bind(this, this.view.$dialog, ['click', 'keypress']);
+  FlareTail.util.event.bind(this, this.view.$dialog, ['click', 'keypress']);
 };
 
-BriteGrid.widget.Dialog.prototype.onclick = function (event) {
+FlareTail.widget.Dialog.prototype.onclick = function (event) {
   if (event.target.mozMatchesSelector('[role="button"]')) {
   }
 };
 
-BriteGrid.widget.Dialog.prototype.onkeypress = function (event) {
+FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
   switch (event.keyCode) {
     case event.DOM_VK_RETURN: {
       break;
@@ -2801,9 +2799,9 @@ BriteGrid.widget.Dialog.prototype.onkeypress = function (event) {
   }
 };
 
-BriteGrid.widget.Dialog.prototype.show = function () {};
+FlareTail.widget.Dialog.prototype.show = function () {};
 
-BriteGrid.widget.Dialog.prototype.hide = function () {
+FlareTail.widget.Dialog.prototype.hide = function () {
   this.view.$dialog.dispatchEvent(new CustomEvent('Hidden'));
 };
 
@@ -2811,15 +2809,15 @@ BriteGrid.widget.Dialog.prototype.hide = function () {
  * AlertDialog (abstract role) extends Dialog
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.AlertDialog = function () {};
-BriteGrid.widget.AlertDialog.prototype = Object.create(BriteGrid.widget.Dialog.prototype);
+FlareTail.widget.AlertDialog = function () {};
+FlareTail.widget.AlertDialog.prototype = Object.create(FlareTail.widget.Dialog.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Separator extends Structure
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Separator = function () {};
-BriteGrid.widget.Separator.prototype = Object.create(BriteGrid.widget.Structure.prototype);
+FlareTail.widget.Separator = function () {};
+FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Splitter (custom widget) extends Separator
@@ -2828,14 +2826,14 @@ BriteGrid.widget.Separator.prototype = Object.create(BriteGrid.widget.Structure.
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Splitter = function ($splitter) {
+FlareTail.widget.Splitter = function ($splitter) {
   this.view = {
     $splitter: $splitter,
     $outer: $splitter.parentElement,
     controls: {}
   };
 
-  let style = function ($element, prop) parseInt(BriteGrid.util.style.get($element, prop)),
+  let style = function ($element, prop) parseInt(FlareTail.util.style.get($element, prop)),
       $outer = this.view.$outer,
       orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
       outer_rect = $outer.getBoundingClientRect(),
@@ -2957,7 +2955,7 @@ BriteGrid.widget.Splitter = function ($splitter) {
   });
 
   // Add event listeners
-  BriteGrid.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
+  FlareTail.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
   for (let [i, id] of Iterator($splitter.getAttribute('aria-controls').split(/\s+/))) {
     let $target = document.getElementById(id),
@@ -2991,9 +2989,9 @@ BriteGrid.widget.Splitter = function ($splitter) {
   };
 };
 
-BriteGrid.widget.Splitter.prototype = Object.create(BriteGrid.widget.Separator.prototype);
+FlareTail.widget.Splitter.prototype = Object.create(FlareTail.widget.Separator.prototype);
 
-BriteGrid.widget.Splitter.prototype.onmousedown = function (event) {
+FlareTail.widget.Splitter.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
     event.preventDefault();
 
@@ -3006,10 +3004,10 @@ BriteGrid.widget.Splitter.prototype.onmousedown = function (event) {
   this.view.$outer.dataset.splitter = this.data.orientation;
 
   // Add event listeners
-  BriteGrid.util.event.bind(this, window, ['mousemove', 'mouseup']);
+  FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
 };
 
-BriteGrid.widget.Splitter.prototype.onmousemove = function (event) {
+FlareTail.widget.Splitter.prototype.onmousemove = function (event) {
   if (!this.data.grabbed) {
     return;
   }
@@ -3021,7 +3019,7 @@ BriteGrid.widget.Splitter.prototype.onmousemove = function (event) {
   }
 };
 
-BriteGrid.widget.Splitter.prototype.onmouseup = function (event) {
+FlareTail.widget.Splitter.prototype.onmouseup = function (event) {
   if (!this.data.grabbed) {
     return;
   }
@@ -3030,12 +3028,12 @@ BriteGrid.widget.Splitter.prototype.onmouseup = function (event) {
   this.view.$splitter.setAttribute('aria-grabbed', 'false');
 
   // Cleanup
-  BriteGrid.util.event.unbind(this, document.body, ['mousemove', 'mouseup']);
+  FlareTail.util.event.unbind(this, document.body, ['mousemove', 'mouseup']);
 
   delete this.view.$outer.dataset.splitter;
 };
 
-BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
+FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
   let value = null,
       position = this.data.position,
       outer = this.data.outer,
@@ -3087,7 +3085,7 @@ BriteGrid.widget.Splitter.prototype.onkeydown = function (event) {
   }
 };
 
-BriteGrid.widget.Splitter.prototype.bind = function () {
+FlareTail.widget.Splitter.prototype.bind = function () {
   this.view.$splitter.addEventListener.apply(this.view.$splitter, arguments);
 };
 
@@ -3095,47 +3093,47 @@ BriteGrid.widget.Splitter.prototype.bind = function () {
  * Region extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Region = function () {};
-BriteGrid.widget.Region.prototype = Object.create(BriteGrid.widget.Section.prototype);
+FlareTail.widget.Region = function () {};
+FlareTail.widget.Region.prototype = Object.create(FlareTail.widget.Section.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Status extends Region
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Status = function () {};
-BriteGrid.widget.Status.prototype = Object.create(BriteGrid.widget.Region.prototype);
+FlareTail.widget.Status = function () {};
+FlareTail.widget.Status.prototype = Object.create(FlareTail.widget.Region.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Landmark (abstract role) extends Region
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Landmark = function () {};
-BriteGrid.widget.Landmark.prototype = Object.create(BriteGrid.widget.Region.prototype);
+FlareTail.widget.Landmark = function () {};
+FlareTail.widget.Landmark.prototype = Object.create(FlareTail.widget.Region.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Application extends Landmark
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Application = function () {};
-BriteGrid.widget.Application.prototype = Object.create(BriteGrid.widget.Landmark.prototype);
+FlareTail.widget.Application = function () {};
+FlareTail.widget.Application.prototype = Object.create(FlareTail.widget.Landmark.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Tooltip extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Tooltip = function () {};
-BriteGrid.widget.Tooltip.prototype = Object.create(BriteGrid.widget.Section.prototype);
+FlareTail.widget.Tooltip = function () {};
+FlareTail.widget.Tooltip.prototype = Object.create(FlareTail.widget.Section.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Group extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.Group = function () {};
-BriteGrid.widget.Group.prototype = Object.create(BriteGrid.widget.Section.prototype);
+FlareTail.widget.Group = function () {};
+FlareTail.widget.Group.prototype = Object.create(FlareTail.widget.Section.prototype);
 
 /* ----------------------------------------------------------------------------------------------
  * Toolbar extends Group
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.widget.ToolBar = function () {};
-BriteGrid.widget.ToolBar.prototype = Object.create(BriteGrid.widget.Group.prototype);
+FlareTail.widget.ToolBar = function () {};
+FlareTail.widget.ToolBar.prototype = Object.create(FlareTail.widget.Group.prototype);

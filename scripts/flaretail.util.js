@@ -1,22 +1,20 @@
 /**
- * BriteGrid Utility Library
- * Copyright © 2012 BriteGrid. All rights reserved.
- * Using: ECMAScript Harmony
- * Requires: Firefox 18
+ * FlareTail Utility Functions
+ * Copyright © 2014 Kohei Yoshino. All rights reserved.
  */
 
 'use strict';
 
-let BriteGrid = BriteGrid || {};
-BriteGrid.util = {};
+let FlareTail = FlareTail || {};
+FlareTail.util = {};
 
 /* ----------------------------------------------------------------------------------------------
  * Event
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.event = {};
+FlareTail.util.event = {};
 
-BriteGrid.util.event.set_keybind = function ($target, key, modifiers, command) {
+FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
   $target.addEventListener('keydown', function (event) {
     // Check the key code
     if (event.keyCode !== event['DOM_VK_' + key]) {
@@ -38,7 +36,7 @@ BriteGrid.util.event.set_keybind = function ($target, key, modifiers, command) {
   });
 };
 
-BriteGrid.util.event.ignore = function (event) {
+FlareTail.util.event.ignore = function (event) {
   event.preventDefault();
   event.stopPropagation();
 
@@ -46,7 +44,7 @@ BriteGrid.util.event.ignore = function (event) {
 };
 
 // This function allows to set multiple event listeners as once
-BriteGrid.util.event.bind = function (that, $target, types, use_capture = false, unbind = false) {
+FlareTail.util.event.bind = function (that, $target, types, use_capture = false, unbind = false) {
   if (!$target) {
     return false;
   }
@@ -66,7 +64,7 @@ BriteGrid.util.event.bind = function (that, $target, types, use_capture = false,
   return true;
 };
 
-BriteGrid.util.event.unbind = function (that, $target, types, use_capture = false) {
+FlareTail.util.event.unbind = function (that, $target, types, use_capture = false) {
   this.bind(that, $target, types, use_capture, true);
 };
 
@@ -74,9 +72,9 @@ BriteGrid.util.event.unbind = function (that, $target, types, use_capture = fals
  * Request
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.request = {};
+FlareTail.util.request = {};
 
-BriteGrid.util.request.build_query = function (query) {
+FlareTail.util.request.build_query = function (query) {
   let fields = new Set();
 
   for (let [key, value] of Iterator(query)) {
@@ -92,13 +90,13 @@ BriteGrid.util.request.build_query = function (query) {
  * Preferences
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.prefs = {};
+FlareTail.util.prefs = {};
 
 /* ----------------------------------------------------------------------------------------------
  * Storage
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.Storage = function () {
+FlareTail.util.Storage = function () {
   let req = this.request = indexedDB.open('MyTestDatabase', 1),
       db = this.db = null;
 
@@ -111,7 +109,7 @@ BriteGrid.util.Storage = function () {
  * Device
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.device = {
+FlareTail.util.device = {
   mobile: {
     mql: window.matchMedia('(max-width: 640px)')
   },
@@ -122,7 +120,7 @@ BriteGrid.util.device = {
 
 {
   let ua = navigator.userAgent,
-      device = BriteGrid.util.device;
+      device = FlareTail.util.device;
 
   // A device form factor
   // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
@@ -141,9 +139,9 @@ BriteGrid.util.device = {
  * App
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.app = {};
+FlareTail.util.app = {};
 
-BriteGrid.util.app.can_install = function (manifest, callback) {
+FlareTail.util.app.can_install = function (manifest, callback) {
   let apps = navigator.mozApps;
 
   if (!apps) {
@@ -161,17 +159,17 @@ BriteGrid.util.app.can_install = function (manifest, callback) {
   request.addEventListener('error', function (event) callback(false));
 };
 
-BriteGrid.util.app.install = function (manifest, callback) {
+FlareTail.util.app.install = function (manifest, callback) {
   let request = navigator.mozApps.install(manifest);
   request.addEventListener('success', function (event) callback(event));
   request.addEventListener('error', function (event) callback(event));
 };
 
-BriteGrid.util.app.fullscreen_enabled = function () {
+FlareTail.util.app.fullscreen_enabled = function () {
   return document.fullscreenEnabled || document.mozFullScreenEnabled;
 };
 
-BriteGrid.util.app.toggle_fullscreen = function () {
+FlareTail.util.app.toggle_fullscreen = function () {
   if (document.fullscreenElement === null || document.mozFullScreenElement === null) {
     if (document.body.requestFullscreen) {
       document.body.requestFullscreen();
@@ -187,7 +185,7 @@ BriteGrid.util.app.toggle_fullscreen = function () {
   }
 };
 
-BriteGrid.util.app.auth_notification = function () {
+FlareTail.util.app.auth_notification = function () {
   if (!('Notification' in window)) {
     return;
   }
@@ -195,7 +193,7 @@ BriteGrid.util.app.auth_notification = function () {
   Notification.requestPermission(function (permission) {});
 };
 
-BriteGrid.util.app.show_notification = function (title, options = {}) {
+FlareTail.util.app.show_notification = function (title, options = {}) {
   if (!('Notification' in window)) {
     return;
   }
@@ -213,9 +211,9 @@ BriteGrid.util.app.show_notification = function (title, options = {}) {
  * Theme
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.theme = {};
+FlareTail.util.theme = {};
 
-Object.defineProperties(BriteGrid.util.theme, {
+Object.defineProperties(FlareTail.util.theme, {
   'list': {
     enumerable : true,
     get: function () document.styleSheetSets
@@ -233,7 +231,7 @@ Object.defineProperties(BriteGrid.util.theme, {
   }
 });
 
-BriteGrid.util.theme.preload_images = function (callback) {
+FlareTail.util.theme.preload_images = function (callback) {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
@@ -276,34 +274,34 @@ BriteGrid.util.theme.preload_images = function (callback) {
  * Network
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.network = {};
+FlareTail.util.network = {};
 
 /* ----------------------------------------------------------------------------------------------
  * History
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.history = {};
+FlareTail.util.history = {};
 
 /* ----------------------------------------------------------------------------------------------
  * Localization
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.l10n = {};
+FlareTail.util.l10n = {};
 
 /* ----------------------------------------------------------------------------------------------
  * Internationalization
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.i18n = {};
+FlareTail.util.i18n = {};
 
-BriteGrid.util.i18n.options = {
+FlareTail.util.i18n.options = {
   date: {
     timezone: 'local',
     format: 'relative'
   }
 };
 
-BriteGrid.util.i18n.format_date = function (str, simple = false) {
+FlareTail.util.i18n.format_date = function (str, simple = false) {
   let timezone = this.options.date.timezone,
       format = this.options.date.format,
       now = new Date(),
@@ -342,9 +340,9 @@ BriteGrid.util.i18n.format_date = function (str, simple = false) {
  * Style
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.style = {};
+FlareTail.util.style = {};
 
-BriteGrid.util.style.get = function ($element, property) {
+FlareTail.util.style.get = function ($element, property) {
   return window.getComputedStyle($element, null).getPropertyValue(property);
 };
 
@@ -352,25 +350,25 @@ BriteGrid.util.style.get = function ($element, property) {
  * Object
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.object = {};
+FlareTail.util.object = {};
 
-BriteGrid.util.object.clone = function (obj) JSON.parse(JSON.stringify(obj));
+FlareTail.util.object.clone = function (obj) JSON.parse(JSON.stringify(obj));
 
 /* ----------------------------------------------------------------------------------------------
  * Array
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.array = {};
+FlareTail.util.array = {};
 
-BriteGrid.util.array.clone = function (array) [...array];
+FlareTail.util.array.clone = function (array) [...array];
 
 /* ----------------------------------------------------------------------------------------------
  * String
  * ---------------------------------------------------------------------------------------------- */
 
-BriteGrid.util.string = {};
+FlareTail.util.string = {};
 
-BriteGrid.util.string.sanitize = function (str) {
+FlareTail.util.string.sanitize = function (str) {
   let chars = new Map(Iterator({
     '<': '&lt;',
     '>': '&gt;',
