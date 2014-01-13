@@ -788,7 +788,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   });
 
   // Custom scrollbar
-  let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body),
+  let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
       mobile_mql = FlareTail.util.device.mobile.mql,
       mobile_mql_listener = function (mql) {
         let option = this.options.adjust_scrollbar;
@@ -2437,9 +2437,11 @@ FlareTail.widget.Checkbox.prototype.bind = function () {
  *
  * @param   $owner    An element to be scrolled
  * @param   adjusted  Adjust the scrolling increment for Grid, Tree, ListBox
+ * @param   arrow_keys_enabled
+ *                    Scroll with up/down arrow keys. Should be false on Grid, Tree, ListBox
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.ScrollBar = function ($owner, adjusted = false) {
+FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
       FTue = FlareTail.util.event;
 
@@ -2460,7 +2462,8 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false) {
   this.data = {};
 
   this.options = {
-    adjusted: adjusted
+    adjusted: adjusted,
+    arrow_keys_enabled: arrow_keys_enabled
   };
 
   FTue.bind(this, window, ['resize']);
@@ -2620,71 +2623,46 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
 
 FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
   let $owner = this.view.$owner,
+      $controller = this.view.$controller,
+      adjusted = this.options.adjusted,
+      arrow = this.options.arrow_keys_enabled,
+      key = event.keyCode,
       ch = $owner.clientHeight;
 
-  switch (event.keyCode) {
+  switch (key) {
     case event.DOM_VK_TAB: {
       return true; // Focus management
     }
 
-    case event.DOM_VK_HOME: {
-      if (!this.options.adjusted) {
-        $owner.scrollTop = 0;
-      }
-
-      break;
-    }
-
+    case event.DOM_VK_HOME:
     case event.DOM_VK_END: {
-      if (!this.options.adjusted) {
-        $owner.scrollTop = $owner.scrollTopMax;
+      if (!adjusted) {
+        $owner.scrollTop = (key === event.DOM_VK_HOME) ? 0 : $owner.scrollTopMax;
       }
 
       break;
     }
 
-    case event.DOM_VK_PAGE_UP: {
-      $owner.scrollTop -= ch;
-
-      break;
-    }
-
+    case event.DOM_VK_SPACE:
+    case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_PAGE_DOWN: {
-      $owner.scrollTop += ch;
+      $owner.scrollTop += (key === event.DOM_VK_PAGE_UP ||
+                           key === event.DOM_VK_SPACE && event.shiftKey) ? -ch : ch;
 
       break;
     }
 
-    case event.DOM_VK_UP: {
-      if (!this.options.adjusted) {
-        $owner.scrollTop -= 40;
-      }
-
-      break;
-    }
-
+    case event.DOM_VK_UP:
     case event.DOM_VK_DOWN: {
-      if (!this.options.adjusted) {
-        $owner.scrollTop += 40;
-      }
-
-      break;
-    }
-
-    case event.DOM_VK_SPACE: {
-      if (!this.options.adjusted) {
-        if (event.shiftKey) {
-          $owner.scrollTop -= ch;
-        } else {
-          $owner.scrollTop += ch;
-        }
+      if (!adjusted && (event.target === $controller || event.currentTarget === $owner && arrow)) {
+        $owner.scrollTop += (key === event.DOM_VK_UP) ? -40 : 40;
       }
 
       break;
     }
   }
 
-  if (event.target === this.view.$controller) {
+  if (event.target === $controller) {
     return FlareTail.util.event.ignore(event);
   }
 
