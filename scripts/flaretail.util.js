@@ -54,11 +54,8 @@ FlareTail.util.event.bind = function (that, $target, types, use_capture = false,
       continue; // No such handler
     }
 
-    if (unbind) {
-      $target.removeEventListener(type, that, use_capture);
-    } else {
-      $target.addEventListener(type, that, use_capture);
-    }
+    unbind ? $target.removeEventListener(type, that, use_capture)
+           : $target.addEventListener(type, that, use_capture);
   }
 
   return true;
@@ -90,11 +87,7 @@ FlareTail.util.event.dispatch = function ($target, type, options = {}, async = t
     $target.dispatchEvent(new CustomEvent(type, options));
   };
 
-  if (async) {
-    this.async(callback);
-  } else {
-    callback();
-  }
+  async ? this.async(callback) : callback();
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -142,10 +135,10 @@ FlareTail.util.request.parse_query_str = function (str, casting = true) {
     }
 
     if (_value) {
-      _value = (Array.isArray(_value)) ? _value : [_value];
+      _value = Array.isArray(_value) ? _value : [_value];
       _value.push(value);
     } else {
-      _value = (arr) ? [value] : value;
+      _value = arr ? [value] : value;
     }
 
     query.set(key, _value);
@@ -384,7 +377,7 @@ FlareTail.util.i18n.format_date = function (str, simple = false) {
   // Timezone conversion
   if (timezone !== 'local') {
     let utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000,
-        offset = (timezone === 'PST') ? 3600000 * (dst ? -7 : -8) : 0;
+        offset = timezone === 'PST' ? 3600000 * (dst ? -7 : -8) : 0;
     shifted_date = new Date(utc + offset);
   }
 

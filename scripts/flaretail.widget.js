@@ -41,7 +41,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
 
   // Focus Management
   for (let [i, $item] of Iterator(members)) {
-    $item.tabIndex = (i === 0) ? 0 : -1;
+    $item.tabIndex = i === 0 ? 0 : -1;
   }
 
   $container.removeAttribute('tabindex');
@@ -250,11 +250,8 @@ FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
     let start = items.indexOf(selected[0]),
         end = items.indexOf($target);
 
-    if (start < end) {
-      selected = items.slice(start, end + 1);
-    } else {
-      selected = items.slice(end, start + 1).reverse();
-    }
+    selected = start < end ? items.slice(start, end + 1)
+                           : items.slice(end, start + 1).reverse();
   } else if (event.ctrlKey || event.metaKey) {
     if (multi && selected.indexOf($target) === -1) {
       // Add the item to selection
@@ -491,8 +488,8 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         let start = focused_idx,
             end = i;
 
-        this.view.selected = (start < end) ? items.slice(start, end + 1)
-                                           : items.slice(end, start + 1).reverse();
+        this.view.selected = start < end ? items.slice(start, end + 1)
+                                         : items.slice(end, start + 1).reverse();
       }
 
       // Remember the searched character(s) for later
@@ -727,11 +724,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
           }});
 
           // Reflect the change of row's visibility to UI
-          if (value === true) {
-            this.hide_column(obj);
-          } else {
-            this.show_column(obj);
-          }
+          value === true ? this.hide_column(obj) : this.show_column(obj);
 
           break;
         }
@@ -753,11 +746,8 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
       let row = [row for (row of this.data.rows) if (row.data.id === obj.id)][0],
           $elm = row.$element.querySelector('[data-id="' + prop + '"] > *');
 
-      if (this.data.columns[prop].type === 'boolean') {
-        $elm.setAttribute('aria-checked', value);
-      } else {
-        $elm.textContent = value;
-      }
+      this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
+                                                 : $elm.textContent = value;
 
       obj[prop] = value;
     }.bind(this)
@@ -792,7 +782,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
       mobile_mql = FlareTail.util.device.mobile.mql,
       mobile_mql_listener = function (mql) {
         let option = this.options.adjust_scrollbar;
-        scrollbar.options.adjusted = (option === undefined) ? !mql.matches : option;
+        scrollbar.options.adjusted = option === undefined ? !mql.matches : option;
       }.bind(this);
 
   mobile_mql.addListener(mobile_mql_listener);
@@ -830,11 +820,7 @@ FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
 };
 
 FlareTail.widget.Grid.prototype.onmousemove = function (event) {
-  if (!this.data.drag) {
-    this.start_column_reordering(event);
-  } else {
-    this.continue_column_reordering(event);
-  }
+  !this.data.drag ? this.start_column_reordering(event) : this.continue_column_reordering(event);
 };
 
 FlareTail.widget.Grid.prototype.onmouseup = function (event) {
@@ -992,7 +978,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
       $checkbox.setAttribute('role', 'checkbox');
       $cell.setAttribute('aria-readonly', 'false');
     } else {
-      $cell.appendChild(document.createElement((column.type === 'time') ? 'time' : 'label'));
+      $cell.appendChild(document.createElement(column.type === 'time' ? 'time' : 'label'));
     }
 
     $cell.dataset.id = column.id;
@@ -1894,11 +1880,7 @@ FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
   }
 
   if (this.view.members.indexOf(event.target) > -1) {
-    if (event.target !== this.view.selected[0]) {
-      this.open(event);
-    } else {
-      this.close();
-    }
+    event.target !== this.view.selected[0] ? this.open(event) : this.close();
   } else if (this.view.selected.length) {
     this.close();
   } else {
@@ -2271,7 +2253,7 @@ FlareTail.widget.TabList = function ($container) {
   this.view = new Proxy(this.view, {
     set: function (obj, prop, value) {
       if (prop === 'selected') {
-        value = (Array.isArray(value)) ? value : [value];
+        value = Array.isArray(value) ? value : [value];
         this.switch_tabpanel(obj[prop][0], value[0]);
       }
 
@@ -2536,11 +2518,9 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
       return; // traversal failed
     }
 
-    if ($owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling) {
-      top = $elm.offsetTop;
-    } else {
-      top = $elm.nextElementSibling.offsetTop;
-    }
+    top = $owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling
+        ? $elm.offsetTop
+        : $elm.nextElementSibling.offsetTop;
 
     $owner.scrollTop = top;
   }
@@ -2637,7 +2617,7 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     case event.DOM_VK_HOME:
     case event.DOM_VK_END: {
       if (!adjusted) {
-        $owner.scrollTop = (key === event.DOM_VK_HOME) ? 0 : $owner.scrollTopMax;
+        $owner.scrollTop = key === event.DOM_VK_HOME ? 0 : $owner.scrollTopMax;
       }
 
       break;
@@ -2646,8 +2626,8 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     case event.DOM_VK_SPACE:
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_PAGE_DOWN: {
-      $owner.scrollTop += (key === event.DOM_VK_PAGE_UP ||
-                           key === event.DOM_VK_SPACE && event.shiftKey) ? -ch : ch;
+      $owner.scrollTop += key === event.DOM_VK_PAGE_UP ||
+                          key === event.DOM_VK_SPACE && event.shiftKey ? -ch : ch;
 
       break;
     }
@@ -2655,7 +2635,7 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     case event.DOM_VK_UP:
     case event.DOM_VK_DOWN: {
       if (!adjusted && (event.target === $controller || event.currentTarget === $owner && arrow)) {
-        $owner.scrollTop += (key === event.DOM_VK_UP) ? -40 : 40;
+        $owner.scrollTop += key === event.DOM_VK_UP ? -40 : 40;
       }
 
       break;
@@ -2676,7 +2656,7 @@ FlareTail.widget.ScrollBar.prototype.set_height = function () {
       ch = $owner.clientHeight,
       ctrl_height = Math.floor(ch * ch / sh) - 4;
 
-  $controller.style.height = ((ctrl_height < 0) ? 0 : ctrl_height) + 'px';
+  $controller.style.height = (ctrl_height < 0 ? 0 : ctrl_height) + 'px';
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
 };
 
@@ -2876,13 +2856,13 @@ FlareTail.widget.Splitter = function ($splitter) {
             return;
           }
 
-          value = (!before.min || before.collapsible) ? 0 : before.min;
+          value = !before.min || before.collapsible ? 0 : before.min;
         } else if (value >= outer.size || value === '100%') {
           if (obj.position === '100%') {
             return;
           }
 
-          value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
+          value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
         } else if (before.min && value < before.min) {
           // Reached min-height of the before element
           if (!before.expanded) {
@@ -2999,11 +2979,9 @@ FlareTail.widget.Splitter.prototype.onmousemove = function (event) {
     return;
   }
 
-  if (this.data.orientation === 'horizontal') {
-    this.data.position = event.clientY - this.data.outer.top;
-  } else {
-    this.data.position = event.clientX - this.data.outer.left;
-  }
+  this.data.position = this.data.orientation === 'horizontal'
+                     ? event.clientY - this.data.outer.top
+                     : event.clientX - this.data.outer.left;
 };
 
 FlareTail.widget.Splitter.prototype.onmouseup = function (event) {
@@ -3029,19 +3007,19 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
 
   switch (event.keyCode) {
     case event.DOM_VK_HOME: {
-      value = (!before.min || before.collapsible) ? 0 : before.min;
+      value = !before.min || before.collapsible ? 0 : before.min;
       break;
     }
 
     case event.DOM_VK_END: {
-      value = (!after.min || after.collapsible) ? '100%' : outer.size - after.min;
+      value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
       break;
     }
 
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_UP:
     case event.DOM_VK_LEFT: {
-      let delta = (event.keyCode === event.DOM_VK_PAGE_UP || event.shiftKey) ? 50 : 10;
+      let delta = event.keyCode === event.DOM_VK_PAGE_UP || event.shiftKey ? 50 : 10;
 
       if (position === '100%') {
         value = outer.size - (this.data.controls.after.min || delta);
@@ -3055,7 +3033,7 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
     case event.DOM_VK_PAGE_DOWN:
     case event.DOM_VK_DOWN:
     case event.DOM_VK_RIGHT: {
-      let delta = (event.keyCode === event.DOM_VK_PAGE_DOWN || event.shiftKey) ? 50 : 10;
+      let delta = event.keyCode === event.DOM_VK_PAGE_DOWN || event.shiftKey ? 50 : 10;
 
       if (parseInt(position) === 0) {
         value = this.data.controls.before.min || delta;
