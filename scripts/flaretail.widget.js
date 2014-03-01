@@ -426,7 +426,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
 
     default: {
       // Select All
-      if (ctrl && kcode === event.DOM_VK_A) {
+      if (multi && ctrl && kcode === event.DOM_VK_A) {
         this.view.selected = items;
         this.view.$focused = items[0];
 
