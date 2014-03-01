@@ -2399,13 +2399,17 @@ FlareTail.widget.Checkbox.prototype = Object.create(FlareTail.widget.Input.proto
 
 FlareTail.widget.Checkbox.prototype.onkeydown = function (event) {
   if (event.keyCode === event.DOM_VK_SPACE) {
-    this.data.checked = !this.data.checked;
+    this.view.$checkbox.click();
   }
 }
 
 FlareTail.widget.Checkbox.prototype.onclick = function (event) {
   this.data.checked = !this.data.checked;
   this.view.$checkbox.focus();
+
+  FlareTail.util.event.dispatch(this.view.$checkbox, 'Toggled', { detail: {
+    checked: this.data.checked
+  }});
 
   return false;
 };
