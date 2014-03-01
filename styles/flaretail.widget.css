@@ -8,10 +8,6 @@ html {
   line-height: 1;
 }
 
-template {
-  display: none; /* For backward compatibility */
-}
-
 body {
   margin: 0;
   position: relative;
@@ -27,12 +23,12 @@ body {
  * ---------------------------------------------------------------------------------------------- */
 
 [role="application"] {
-  -moz-user-select: -moz-none; /* Firefox 21+: none */
+  -moz-user-select: none;
   pointer-events: none;
 }
 
 [role="application"] * {
-  -moz-user-select: -moz-none; /* Firefox 21+: none */
+  -moz-user-select: none;
 }
 
 [role="region"] {

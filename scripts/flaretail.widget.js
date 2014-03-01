@@ -26,7 +26,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
   this.options.multiselectable = $container.mozMatchesSelector('[aria-multiselectable="true"]');
 
-  let get_items = function (selector) {
+  let get_items = selector => {
     // Convert NodeList to Array for convenience in operation
     return [...$container.querySelectorAll(selector)];
   };
@@ -75,7 +75,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
     'focus', 'blur',
   ], true); // Set use_capture true to catch events on descendants
 
-  (new MutationObserver(function (mutations) {
+  (new MutationObserver(mutations => {
     for (let mutation of mutations) {
       let $item = mutation.target;
 
@@ -96,7 +96,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
         // TODO: Update the member list when an element is added or removed
       }
     }
-  }.bind(this))).observe($container, {
+  })).observe($container, {
     subtree: true,
     childList: true,
     attributes: true,
@@ -164,7 +164,7 @@ FlareTail.widget.Button = function ($button) {
     pressed: $button.mozMatchesSelector('[aria-pressed="true"]')
   },
   {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (prop === 'disabled' || prop === 'pressed') {
         $button.setAttribute('aria-' + prop, value);
       }
@@ -443,7 +443,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
       char = char === input ? input : char + input;
       let pattern = new RegExp('^' + char, 'i');
 
-      let get_label = function ($item) {
+      let get_label = $item => {
         let $element;
 
         if ($item.hasAttribute('aria-labelledby')) {
@@ -496,9 +496,9 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
       this.data.search_key = char;
 
       // Forget the character(s) after 1.5s
-      window.setTimeout(function () {
+      window.setTimeout(() => {
         delete this.data.search_key;
-      }.bind(this), 1500);
+      }, 1500);
     }
   }
 
@@ -615,13 +615,13 @@ FlareTail.widget.Grid = function ($container, data, options) {
   }
 
   this.options = new Proxy(this.options, {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (prop === 'adjust_scrollbar') {
         this.view.scrollbar.options.adjusted = value;
       }
 
       obj[prop] = value;
-    }.bind(this)
+    }
   });
 
   // Columnpicker
@@ -635,7 +635,7 @@ FlareTail.widget.Grid.prototype = Object.create(FlareTail.widget.Composite.proto
 
 FlareTail.widget.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       switch (prop) {
         case 'selected': {
           // Validation: this.selectd.value is always Array
@@ -676,7 +676,7 @@ FlareTail.widget.Grid.prototype.activate_extend = function () {
 
 FlareTail.widget.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
-    get: function (obj, prop) {
+    get: (obj, prop) => {
       // The default behavior
       if (prop in obj) {
         return obj[prop];
@@ -689,7 +689,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
 
   // Handler to show/hide column
   let handler = {
-    get: function (obj, prop) {
+    get: (obj, prop) => {
       let value;
 
       switch (prop) {
@@ -715,7 +715,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
 
       return value;
     },
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       switch (prop) {
         case 'hidden': {
           // Fire an event
@@ -731,7 +731,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       }
 
       obj[prop] = value;
-    }.bind(this)
+    }
   };
 
   for (let [i, col] of Iterator(columns)) {
@@ -741,7 +741,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
 
 FlareTail.widget.Grid.prototype.activate_rows = function () {
   let handler = {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       // Reflect Data change into View
       let row = [row for (row of this.data.rows) if (row.data.id === obj.id)][0],
           $elm = row.$element.querySelector('[data-id="' + prop + '"] > *');
@@ -750,7 +750,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
                                                  : $elm.textContent = value;
 
       obj[prop] = value;
-    }.bind(this)
+    }
   };
 
   let rows = this.data.rows,
@@ -768,7 +768,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
     get: function(obj, prop) {
       return obj[prop];
     },
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (!isNaN(prop) && value.$element) {
         $tbody.appendChild(value.$element);
       }
@@ -780,10 +780,10 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   // Custom scrollbar
   let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
       mobile_mql = FlareTail.util.device.mobile.mql,
-      mobile_mql_listener = function (mql) {
+      mobile_mql_listener = mql => {
         let option = this.options.adjust_scrollbar;
         scrollbar.options.adjusted = option === undefined ? !mql.matches : option;
-      }.bind(this);
+      };
 
   mobile_mql.addListener(mobile_mql_listener);
   mobile_mql_listener(mobile_mql);
@@ -1038,7 +1038,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  this.data.columns = Array.map($header.querySelector('[role="row"]').cells, function ($cell) {
+  this.data.columns = Array.map($header.querySelector('[role="row"]').cells, $cell => {
     return {
       id: $cell.dataset.id,
       type: $cell.dataset.type || 'string',
@@ -1050,7 +1050,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   });
 
   // Fill the row database
-  this.data.rows = Array.map(this.view.$body.querySelectorAll('[role="row"]'), function ($row) {
+  this.data.rows = Array.map(this.view.$body.querySelectorAll('[role="row"]'), $row => {
     let row = {
       id: $row.id,
       $element: $row,
@@ -1082,7 +1082,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
     };
 
     return row;
-  }.bind(this));
+  });
 };
 
 FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
@@ -1110,7 +1110,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   // Normalization: ignore brackets for comparison
   let nomalized_values = new Map(),
-      nomalize = function (str) {
+      nomalize = str => {
         let value = nomalized_values.get(str);
 
         if (!value) {
@@ -1121,7 +1121,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
         return value;
       };
 
-  this.data.rows.sort(function (a, b) {
+  this.data.rows.sort((a, b) => {
     if (cond.order === 'descending') {
       [a, b] = [b, a]; // reverse()
     }
@@ -1173,13 +1173,13 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
   $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
   let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
-  picker.bind('MenuItemSelected', function (event) {
+  picker.bind('MenuItemSelected', event => {
     this.toggle_column(event.explicitOriginalTarget.dataset.id);
-  }.bind(this));
+  });
 };
 
 FlareTail.widget.Grid.prototype.build_columnpicker = function () {
-  this.data.columnpicker.build(this.data.columns.map(function (col) {
+  this.data.columnpicker.build(this.data.columns.map(col => {
     return {
       id: this.view.$container.id + '-columnpicker-' + col.id,
       label: col.label,
@@ -1190,7 +1190,7 @@ FlareTail.widget.Grid.prototype.build_columnpicker = function () {
         id: col.id
       }
     };
-  }.bind(this)));
+  }));
 };
 
 FlareTail.widget.Grid.prototype.toggle_column = function (id) {
@@ -1300,7 +1300,7 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
       left: left,
       width: width
     }, {
-      set: function (obj, prop, value) {
+      set: (obj, prop, value) => {
         if (prop === 'left') {
           let $image = document.querySelector('#column-drag-image-' + obj.index);
 
@@ -1446,7 +1446,7 @@ FlareTail.widget.ListBox.prototype = Object.create(FlareTail.widget.Select.proto
 
 FlareTail.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new WeakMap(),
-      $fragment = document.createDocumentFragment(),
+      $fragment = new DocumentFragment(),
       $_item = document.createElement('li');
 
   $_item.tabIndex = -1;
@@ -1475,7 +1475,7 @@ FlareTail.widget.ListBox.prototype.build = function () {
 FlareTail.widget.ListBox.prototype.get_data = function () {
   let map = this.data.map = new WeakMap();
 
-  this.data.structure = this.view.members.map(function ($item) {
+  this.data.structure = this.view.members.map($item => {
     let item = {
       $element: $item,
       id: $item.id,
@@ -1555,7 +1555,7 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   }
 
   this.view = new Proxy(this.view, {
-    set: function (obj, prop, newval) {
+    set: (obj, prop, newval) => {
       let oldval = obj[prop];
 
       if (prop === '$focused') {
@@ -1745,7 +1745,7 @@ FlareTail.widget.Menu.prototype.onblur_extend = function (event) {
 
 FlareTail.widget.Menu.prototype.build = function (data) {
   let $container = this.view.$container,
-      $fragment = document.createDocumentFragment(),
+      $fragment = new DocumentFragment(),
       $_separator = document.createElement('li'),
       $_outer = document.createElement('li'),
       rebuild = false;
@@ -1761,7 +1761,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
   $_separator.setAttribute('role', 'separator');
   $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
 
-  this.data.structure = data.map(function (item) {
+  this.data.structure = data.map(item => {
     if (item.type === 'separator') {
       $fragment.appendChild($_separator.cloneNode(true));
 
@@ -1782,7 +1782,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
     }
 
     return item;
-  }).filter(function (item) item !== null);
+  }).filter(item => item !== null);
 
   $container.appendChild($fragment);
 
@@ -2079,7 +2079,7 @@ FlareTail.widget.Tree.prototype.ondblclick = function (event) {
 
 FlareTail.widget.Tree.prototype.build = function () {
   let $tree = this.view.$container,
-      $fragment = document.createDocumentFragment(),
+      $fragment = new DocumentFragment(),
       structure = this.data.structure,
       map = this.data.map = new WeakMap(),
       level = 1;
@@ -2098,7 +2098,7 @@ FlareTail.widget.Tree.prototype.build = function () {
   let $group = document.createElement('ul');
   $group.setAttribute('role', 'group');
 
-  let get_item = function (obj) {
+  let get_item = obj => {
     let $item = $treeitem.cloneNode(true),
         item_id = $tree.id + '-' + obj.id;
     $item.firstChild.textContent = obj.label;
@@ -2251,14 +2251,14 @@ FlareTail.widget.TabList = function ($container) {
   this.activate();
 
   this.view = new Proxy(this.view, {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (prop === 'selected') {
         value = Array.isArray(value) ? value : [value];
         this.switch_tabpanel(obj[prop][0], value[0]);
       }
 
       obj[prop] = value;
-    }.bind(this)
+    }
   });
 
   if (this.options.removable) {
@@ -2382,7 +2382,7 @@ FlareTail.widget.Checkbox = function ($checkbox) {
     checked: $checkbox.mozMatchesSelector('[aria-checked="true"]')
   },
   {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (prop === 'checked') {
         FlareTail.util.event.dispatch($checkbox, 'Changed');
         $checkbox.setAttribute('aria-checked', value);
@@ -2453,9 +2453,9 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
   FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
   // Recalculate the height of scrollbar when elements are added or removed
-  (new MutationObserver(function () {
+  (new MutationObserver(() => {
     this.set_height();
-  }.bind(this))).observe($owner, {
+  })).observe($owner, {
     subtree: true,
     childList: true,
     attributes: true,
@@ -2800,7 +2800,7 @@ FlareTail.widget.Splitter = function ($splitter) {
     controls: {}
   };
 
-  let style = function ($element, prop) parseInt(FlareTail.util.style.get($element, prop)),
+  let style = ($element, prop) => parseInt(FlareTail.util.style.get($element, prop)),
       $outer = this.view.$outer,
       orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
       outer_rect = $outer.getBoundingClientRect(),
@@ -2814,7 +2814,7 @@ FlareTail.widget.Splitter = function ($splitter) {
       top: outer_rect.top,
       left: outer_rect.left,
     }, {
-      get: function (obj, prop) {
+      get: (obj, prop) => {
         if (prop === 'size') {
           // The dimension of the element can be changed when the window is resized.
           // Return the current width or height
@@ -2824,7 +2824,7 @@ FlareTail.widget.Splitter = function ($splitter) {
         }
 
         return obj[prop];
-      }.bind(this)
+      }
     }),
     orientation: orientation,
     flex: flex,
@@ -2832,7 +2832,7 @@ FlareTail.widget.Splitter = function ($splitter) {
     controls: {},
     grabbed: false
   }, {
-    set: function (obj, prop, value) {
+    set: (obj, prop, value) => {
       if (prop === 'orientation') {
         this.data.position = 'default';
         $splitter.setAttribute('aria-orientation', value);
@@ -2918,7 +2918,7 @@ FlareTail.widget.Splitter = function ($splitter) {
       }
 
       obj[prop] = value;
-    }.bind(this)
+    }
   });
 
   // Add event listeners
@@ -2934,7 +2934,7 @@ FlareTail.widget.Splitter = function ($splitter) {
       expanded: $target.getAttribute('aria-expanded') !== 'false'
     },
     {
-      get: function (obj, prop) {
+      get: (obj, prop) => {
         if (prop === 'min' || prop === 'max') {
           let horizontal = this.data.orientation === 'horizontal';
 
@@ -2942,8 +2942,8 @@ FlareTail.widget.Splitter = function ($splitter) {
         }
 
         return obj[prop];
-      }.bind(this),
-      set: function (obj, prop, value) {
+      },
+      set: (obj, prop, value) => {
         if (prop === 'expanded') {
           document.getElementById(obj.id).setAttribute('aria-expanded', value);
         }

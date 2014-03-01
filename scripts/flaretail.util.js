@@ -15,7 +15,7 @@ FlareTail.util = {};
 FlareTail.util.event = {};
 
 FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
-  $target.addEventListener('keydown', function (event) {
+  $target.addEventListener('keydown', event => {
     // Check the key code
     if (event.keyCode !== event['DOM_VK_' + key]) {
       return;
@@ -36,7 +36,7 @@ FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
   });
 };
 
-FlareTail.util.event.ignore = function (event) {
+FlareTail.util.event.ignore = event => {
   event.preventDefault();
   event.stopPropagation();
 
@@ -70,20 +70,20 @@ FlareTail.util.event.async = function (callback) {
   if (this.queue === undefined) {
     this.queue = [];
 
-    window.addEventListener('message', function (event) {
+    window.addEventListener('message', event => {
       if (event.source === window && event.data === 'AsyncEvent' && this.queue.length) {
         this.queue.shift().call();
       }
-    }.bind(this));
+    });
   }
 
   this.queue.push(callback);
-  window.postMessage('AsyncEvent', location.origin || location.protocol + '//' + location.host);
+  window.postMessage('AsyncEvent', location.origin);
 };
 
 // Custom event dispatcher. The async option is enabled by default
 FlareTail.util.event.dispatch = function ($target, type, options = {}, async = true) {
-  let callback = function () {
+  let callback = () => {
     $target.dispatchEvent(new CustomEvent(type, options));
   };
 
@@ -113,7 +113,7 @@ FlareTail.util.request.parse_query_str = function (str, casting = true) {
 
   for ([k, v] of [q.split('=') for (q of str.split('&'))]) {
     let arr = false,
-        key = decodeURIComponent(k).replace(/\[\]$/, function () {
+        key = decodeURIComponent(k).replace(/\[\]$/, () => {
           arr = true; // The value should be an array when the key is a string like 'component[]'
           return '';
         }),
@@ -161,9 +161,9 @@ FlareTail.util.Storage = function () {
   let req = this.request = indexedDB.open('MyTestDatabase', 1),
       db = this.db = null;
 
-  req.addEventListener('error', function (event) {});
-  req.addEventListener('success', function (event) db = request.result);
-  db.addEventListener('error', function (event) {});
+  req.addEventListener('error', event => {});
+  req.addEventListener('success', event => db = request.result);
+  db.addEventListener('error', event => {});
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -211,19 +211,16 @@ FlareTail.util.app.can_install = function (manifest, callback) {
   }
 
   let request = apps.checkInstalled(manifest);
-  request.addEventListener('success', function (event) {
-    // IndexedDB has been deactivated in WebAppRT on Firefox 24 and earlier versions (Bug 827346)
-    let idb_enabled = navigator.userAgent.match(/(Mobile|Tablet)/) ||
-                      navigator.userAgent.match(/Firefox\/(\d+)/) && parseInt(RegExp.$1) >= 25;
-    callback(!request.result && idb_enabled);
+  request.addEventListener('success', event => {
+    callback(!request.result);
   });
-  request.addEventListener('error', function (event) callback(false));
+  request.addEventListener('error', event => callback(false));
 };
 
 FlareTail.util.app.install = function (manifest, callback) {
   let request = navigator.mozApps.install(manifest);
-  request.addEventListener('success', function (event) callback(event));
-  request.addEventListener('error', function (event) callback(event));
+  request.addEventListener('success', event => callback(event));
+  request.addEventListener('error', event => callback(event));
 };
 
 FlareTail.util.app.fullscreen_enabled = function () {
@@ -247,18 +244,10 @@ FlareTail.util.app.toggle_fullscreen = function () {
 };
 
 FlareTail.util.app.auth_notification = function () {
-  if (!('Notification' in window)) {
-    return;
-  }
-
-  Notification.requestPermission(function (permission) {});
+  Notification.requestPermission(permission => {});
 };
 
 FlareTail.util.app.show_notification = function (title, options = {}) {
-  if (!('Notification' in window)) {
-    return;
-  }
-
   new Notification(title, {
     dir: options.dir || 'auto',
     lang: options.lang || 'en-US',
@@ -277,18 +266,16 @@ FlareTail.util.theme = {};
 Object.defineProperties(FlareTail.util.theme, {
   'list': {
     enumerable : true,
-    get: function () document.styleSheetSets
+    get: () => document.styleSheetSets
   },
   'default': {
     enumerable : true,
-    get: function () document.preferredStyleSheetSet
+    get: () => document.preferredStyleSheetSet
   },
   'selected': {
     enumerable : true,
-    // A regression since Firefox 20: selectedStyleSheetSet returns empty (Bug 894874)
-    get: function () document.selectedStyleSheetSet ||
-                     document.lastStyleSheetSet || document.preferredStyleSheetSet,
-    set: function (name) document.selectedStyleSheetSet = name
+    get: () => document.selectedStyleSheetSet,
+    set: name => document.selectedStyleSheetSet = name
   }
 });
 
@@ -321,7 +308,7 @@ FlareTail.util.theme.preload_images = function (callback) {
 
   for (let src of images) {
     let image = new Image();
-    image.addEventListener('load', function (event) {
+    image.addEventListener('load', event => {
       loaded++;
       if (loaded === total) {
         callback();
@@ -403,7 +390,7 @@ FlareTail.util.i18n.format_date = function (str, simple = false) {
 
 FlareTail.util.style = {};
 
-FlareTail.util.style.get = function ($element, property) {
+FlareTail.util.style.get = ($element, property) => {
   return window.getComputedStyle($element, null).getPropertyValue(property);
 };
 
@@ -413,7 +400,7 @@ FlareTail.util.style.get = function ($element, property) {
 
 FlareTail.util.object = {};
 
-FlareTail.util.object.clone = function (obj) JSON.parse(JSON.stringify(obj));
+FlareTail.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
 
 /* ----------------------------------------------------------------------------------------------
  * Array
@@ -421,7 +408,7 @@ FlareTail.util.object.clone = function (obj) JSON.parse(JSON.stringify(obj));
 
 FlareTail.util.array = {};
 
-FlareTail.util.array.clone = function (array) [...array];
+FlareTail.util.array.clone = array => [...array];
 
 /* ----------------------------------------------------------------------------------------------
  * String
@@ -429,7 +416,7 @@ FlareTail.util.array.clone = function (array) [...array];
 
 FlareTail.util.string = {};
 
-FlareTail.util.string.sanitize = function (str) {
+FlareTail.util.string.sanitize = str => {
   let chars = new Map(Iterator({
     '<': '&lt;',
     '>': '&gt;',
@@ -437,32 +424,5 @@ FlareTail.util.string.sanitize = function (str) {
     '"': '&quot;'
   }));
 
-  return str.replace(/./g, function (match) chars.get(match) || match);
+  return str.replace(/./g, match => chars.get(match) || match);
 };
-
-/* ----------------------------------------------------------------------------------------------
- * Polyfills
- * ---------------------------------------------------------------------------------------------- */
-
-// String.contains (requires Firefox 19)
-if (!('contains' in String.prototype)) {
-  String.prototype.contains = function (str, position) {
-    return -1 !== String.prototype.indexOf.call(this, str, position);
-  }
-}
-
-// ChildNode.remove (requires Firefox 23)
-if (!('remove' in Element.prototype)) {
-  Element.prototype.remove = function () {
-    if (this.parentElement) {
-      this.parentElement.removeChild(this);
-    }
-  }
-}
-
-// Table.createTBody (requires Firefox 25)
-if (!('createTBody' in HTMLTableElement.prototype)) {
-  HTMLTableElement.prototype.createTBody = function () {
-    return this.appendChild(document.createElement('tbody'));
-  }
-}
