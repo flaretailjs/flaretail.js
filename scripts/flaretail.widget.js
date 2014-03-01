@@ -1174,7 +1174,7 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
 
   let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
   picker.bind('MenuItemSelected', event => {
-    this.toggle_column(event.explicitOriginalTarget.dataset.id);
+    this.toggle_column(event.detail.target.dataset.id);
   });
 };
 
@@ -1816,6 +1816,7 @@ FlareTail.widget.Menu.prototype.select = function (event) {
     bubbles: true,
     cancelable: false,
     detail: {
+      target: event.target,
       command: event.target.dataset.command || event.target.id
     }
   });
