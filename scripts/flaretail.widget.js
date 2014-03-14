@@ -2663,6 +2663,9 @@ FlareTail.widget.ScrollBar.prototype.set_height = function () {
 
   $controller.style.height = (ctrl_height < 0 ? 0 : ctrl_height) + 'px';
   $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
+
+  // Reposition the scrollbar
+  this.onscroll();
 };
 
 FlareTail.widget.ScrollBar.prototype.bind = function () {
