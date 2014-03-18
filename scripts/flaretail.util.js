@@ -129,8 +129,8 @@ FlareTail.util.request.parse_query_str = function (str, casting = true) {
         value = false; // Convert to Boolean
       }
 
-      if (!isNaN(value)) {
-        value = parseFloat(value); // Convert to Number
+      if (!Number.isNaN(value)) {
+        value = Number.parseFloat(value); // Convert to Number
       }
     }
 

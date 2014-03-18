@@ -116,10 +116,8 @@ FlareTail.widget.RoleType.prototype.oncontextmenu = function (event) {
   return FlareTail.util.event.ignore(event);
 };
 
-FlareTail.widget.RoleType.prototype.bind = function () {
-  this.view.$container.addEventListener.apply(this.view.$container, arguments);
-  // On Firefox 27 and above, this can be:
-  // this.view.$container.addEventListener(...arguments);
+FlareTail.widget.RoleType.prototype.bind = function (...args) {
+  this.view.$container.addEventListener(...args);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -202,8 +200,8 @@ FlareTail.widget.Button.prototype.onkeydown = function (event) {
   }
 };
 
-FlareTail.widget.Button.prototype.bind = function () {
-  this.view.$button.addEventListener.apply(this.view.$button, arguments);
+FlareTail.widget.Button.prototype.bind = function (...args) {
+  this.view.$button.addEventListener(...args);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -699,7 +697,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
         }
 
         case 'width': {
-          value = parseInt(FlareTail.util.style.get(obj.$element, 'width'));
+          value = Number.parseInt(FlareTail.util.style.get(obj.$element, 'width'));
           break;
         }
 
@@ -769,7 +767,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
       return obj[prop];
     },
     set: (obj, prop, value) => {
-      if (!isNaN(prop) && value.$element) {
+      if (!Number.isNaN(prop) && value.$element) {
         $tbody.appendChild(value.$element);
       }
 
@@ -1064,7 +1062,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
 
       switch (column.type) {
         case 'integer': {
-          value = parseInt($cell.textContent);
+          value = Number.parseInt($cell.textContent);
           break;
         }
 
@@ -2415,8 +2413,8 @@ FlareTail.widget.Checkbox.prototype.onclick = function (event) {
   return false;
 };
 
-FlareTail.widget.Checkbox.prototype.bind = function () {
-  this.view.$checkbox.addEventListener.apply(this.view.$checkbox, arguments);
+FlareTail.widget.Checkbox.prototype.bind = function (...args) {
+  this.view.$checkbox.addEventListener(...args);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -2533,7 +2531,7 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
   let st = $owner.scrollTop,
       ch = $owner.clientHeight,
       sh = $owner.scrollHeight,
-      ctrl_height = parseInt($controller.style.height),
+      ctrl_height = Number.parseInt($controller.style.height),
       ctrl_adj = 0;
 
   // Consider scrollbar's min-height
@@ -2668,8 +2666,8 @@ FlareTail.widget.ScrollBar.prototype.set_height = function () {
   this.onscroll();
 };
 
-FlareTail.widget.ScrollBar.prototype.bind = function () {
-  this.view.$controller.addEventListener.apply(this.view.$controller, arguments);
+FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
+  this.view.$controller.addEventListener(...args);
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -2808,7 +2806,7 @@ FlareTail.widget.Splitter = function ($splitter) {
     controls: {}
   };
 
-  let style = ($element, prop) => parseInt(FlareTail.util.style.get($element, prop)),
+  let style = ($element, prop) => Number.parseInt(FlareTail.util.style.get($element, prop)),
       $outer = this.view.$outer,
       orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
       outer_rect = $outer.getBoundingClientRect(),
@@ -2853,14 +2851,14 @@ FlareTail.widget.Splitter = function ($splitter) {
             $before = this.view.controls.$before,
             $after = this.view.controls.$after;
 
-        if (isNaN(value) && value.match(/^(\d+)px$/)) {
-          value = parseInt(RegExp.$1);
+        if (Number.isNaN(value) && value.match(/^(\d+)px$/)) {
+          value = Number.parseInt(RegExp.$1);
         }
 
         if (value === 'default') {
           value = null; // Reset the position
         } else if (value <= 0) {
-          if (parseInt(obj.position) === 0) {
+          if (Number.parseInt(obj.position) === 0) {
             return;
           }
 
@@ -2907,7 +2905,7 @@ FlareTail.widget.Splitter = function ($splitter) {
           value = outer.size - after.max;
         }
 
-        if (!isNaN(value) && value !== null) {
+        if (!Number.isNaN(value) && value !== null) {
           value = this.data.flex ? (value / outer.size * 100).toFixed(2) + '%' : value + 'px';
         }
 
@@ -3031,8 +3029,9 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
 
       if (position === '100%') {
         value = outer.size - (this.data.controls.after.min || delta);
-      } else if (parseInt(position) !== 0) {
-        value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) - delta;
+      } else if (Number.parseInt(position) !== 0) {
+        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100
+                                : Number.parseInt(position)) - delta;
       }
 
       break;
@@ -3043,10 +3042,11 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
     case event.DOM_VK_RIGHT: {
       let delta = event.keyCode === event.DOM_VK_PAGE_DOWN || event.shiftKey ? 50 : 10;
 
-      if (parseInt(position) === 0) {
+      if (Number.parseInt(position) === 0) {
         value = this.data.controls.before.min || delta;
       } else if (position !== '100%') {
-        value = (this.data.flex ? outer.size * parseFloat(position) / 100 : parseInt(position)) + delta;
+        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100
+                                : Number.parseInt(position)) + delta;
       }
 
       break;
@@ -3058,8 +3058,8 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
   }
 };
 
-FlareTail.widget.Splitter.prototype.bind = function () {
-  this.view.$splitter.addEventListener.apply(this.view.$splitter, arguments);
+FlareTail.widget.Splitter.prototype.bind = function (...args) {
+  this.view.$splitter.addEventListener(...args);
 };
 
 /* ----------------------------------------------------------------------------------------------
