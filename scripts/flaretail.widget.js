@@ -777,14 +777,10 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
 
   // Custom scrollbar
   let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
-      mobile_mql = FlareTail.util.device.mobile.mql,
-      mobile_mql_listener = mql => {
-        let option = this.options.adjust_scrollbar;
-        scrollbar.options.adjusted = option === undefined ? !mql.matches : option;
-      };
+      option = this.options.adjust_scrollbar;
 
-  mobile_mql.addListener(mobile_mql_listener);
-  mobile_mql_listener(mobile_mql);
+  scrollbar.options.adjusted = option === undefined ? FlareTail.util.device.type === 'desktop'
+                                                    : option;
 };
 
 FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {

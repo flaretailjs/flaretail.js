@@ -584,14 +584,8 @@ a[role="menuitem"] {
  * Mobile Support
  * ---------------------------------------------------------------------------------------------- */
 
-/* On a Firefox OS phone, results of the resolution media feature are different
-   between an app and an in-browser page. Use the width feature instead. */
-@media (max-width: 640px) {
-
-  html {
-    font-size: 12px;
-  }
-
+:root[data-device-type|="mobile"] {
+  font-size: 12px;
 }
 
 @media (-moz-touch-enabled: 1) {

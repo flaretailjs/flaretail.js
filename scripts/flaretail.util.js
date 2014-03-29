@@ -171,24 +171,18 @@ FlareTail.util.Storage = function () {
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.util.device = {
-  mobile: {
-    mql: window.matchMedia('(max-width: 640px)')
-  },
   touch: {
     enabled: window.matchMedia('(-moz-touch-enabled: 1)').matches
   }
 };
 
-{
-  let ua = navigator.userAgent,
-      device = FlareTail.util.device;
-
+let (ua = navigator.userAgent, device = FlareTail.util.device) {
   // A device form factor
   // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
   if (ua.contains('Tablet')) {
-    device.type = 'tablet';
+    device.type = 'mobile-tablet';
   } else if (ua.contains('Mobile')) {
-    device.type = 'mobile';
+    device.type = 'mobile-phone';
   } else {
     device.type = 'desktop';
   }
