@@ -2373,6 +2373,8 @@ FlareTail.widget.Checkbox = function ($checkbox) {
     $checkbox: $checkbox
   };
 
+  $checkbox.tabIndex = 0;
+
   this.data = new Proxy({
     checked: $checkbox.mozMatchesSelector('[aria-checked="true"]')
   },
