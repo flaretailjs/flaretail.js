@@ -420,3 +420,10 @@ FlareTail.util.string.sanitize = str => {
 
   return str.replace(/./g, match => chars.get(match) || match);
 };
+
+FlareTail.util.string.strip_tags = str => {
+  let $p = document.createElement('p');
+  $p.innerHTML = str;
+
+  return $p.textContent;
+};
