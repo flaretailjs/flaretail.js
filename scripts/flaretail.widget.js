@@ -998,9 +998,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
       if (column.type === 'boolean') {
         $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
-        $child.dataset.simple = 'true';
-        $child.textContent = FlareTail.util.i18n.format_date(value, true);
-        $child.dateTime = value;
+        FlareTail.util.datetime.fill_element($child, value, this.options.date);
       } else {
         $child.textContent = value;
       }

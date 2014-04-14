@@ -342,6 +342,130 @@ FlareTail.util.theme.preload_images = function (callback) {
 };
 
 /* ----------------------------------------------------------------------------------------------
+ * Date & Time
+ * ---------------------------------------------------------------------------------------------- */
+
+FlareTail.util.datetime = {};
+
+FlareTail.util.datetime.options = new Proxy({
+  relative: false,
+  timezone: 'local',
+  updater_enabled: false,
+  updater_interval: 60 // seconds
+}, {
+  get: (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
+  set: (obj, prop, value) => {
+    let dt = FlareTail.util.datetime;
+
+    obj[prop] = value;
+
+    // Update timezone & format on the current view
+    dt.update_elements();
+
+    // Start or stop the timer if the relative option is changed
+    if (prop === 'relative' || prop === 'updater_enabled') {
+      if (dt.options.relative && dt.options.updater_enabled) {
+        if (!dt.updater) {
+          dt.updater = window.setInterval(() => dt.update_elements(),
+                                          dt.options.updater_interval * 1000);
+        }
+      } else if (dt.updater) {
+        window.clearInterval(dt.updater);
+        delete dt.updater;
+      }
+    }
+  }
+});
+
+FlareTail.util.datetime.format = function (str, options = {}) {
+  options.relative = options.relative !== undefined ? options.relative : this.options.relative;
+  options.simple = options.simple || false;
+  options.timezone = options.timezone || this.options.timezone;
+
+  let now = new Date(),
+      date = new Date(str),
+      shifted_date;
+
+  if (options.relative) {
+    let patterns = [
+          [now.getFullYear() - date.getFullYear(), '%dyr', 'Last year', '%d years ago'],
+          [now.getMonth() - date.getMonth(), '%dmo', 'Last month', '%d months ago'],
+          [now.getDate() - date.getDate(), '%dd', 'Yesterday', '%d days ago'],
+          [now.getHours() - date.getHours(), '%dh', '1 hour ago', '%d hours ago'],
+          [now.getMinutes() - date.getMinutes(), '%dm', '1 minute ago', '%d minutes ago'],
+          [now.getSeconds() - date.getSeconds(), '%ds', 'Just now', '%d seconds ago'],
+          [1, '%ds', 'Just now', 'Just now'] // Less than 1 second
+        ],
+        format = (value, simple, singular, plural) =>
+          (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
+
+    for (let pattern of patterns) {
+      if (pattern[0] > 0) {
+        return format(...pattern);
+      }
+    }
+  }
+
+  // Timezone conversion
+  // TODO: Rewrite this once the timezone support is added to the ECMAScript Intl API (Bug 837961)
+  // TODO: Get the timezone of the Bugzilla instance, instead of hardcoding PST
+  if (options.timezone !== 'local') {
+    let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
+                       (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
+                        > date.getTimezoneOffset(),
+        utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000,
+        offset = options.timezone === 'PST' ? 3600000 * -8 : 0;
+
+    shifted_date = new Date(utc + offset);
+  }
+
+  if (options.simple &&
+      date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
+    let dates = now.getDate() - date.getDate();
+
+    if (dates === 0) {
+      return (shifted_date || date).toLocaleFormat('%R');
+    }
+
+    if (dates === 1) {
+      return 'Yesterday';
+    }
+  }
+
+  return (shifted_date || date).toLocaleFormat(options.simple ? '%b %e' : '%Y-%m-%d %R');
+};
+
+FlareTail.util.datetime.fill_element = function ($time, value, options = {}) {
+  $time.dateTime = value;
+  $time.textContent = this.format(value, FlareTail.util.object.clone(options));
+  $time.title = (new Date(value)).toString();
+
+  if (options.relative !== undefined) {
+    $time.dataset.relative = options.relative;
+  }
+
+  if (options.simple !== undefined) {
+    $time.dataset.simple = options.simple;
+  }
+
+  return $time;
+};
+
+FlareTail.util.datetime.update_elements = function () {
+  for (let $time of document.querySelectorAll('time')) {
+    let data = $time.dataset,
+        time = this.format($time.dateTime, {
+          relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
+          simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
+        });
+
+    if ($time.textContent !== time) {
+      $time.textContent = time;
+    }
+  }
+};
+
+/* ----------------------------------------------------------------------------------------------
  * Network
  * ---------------------------------------------------------------------------------------------- */
 
@@ -364,48 +488,6 @@ FlareTail.util.l10n = {};
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.util.i18n = {};
-
-FlareTail.util.i18n.options = {
-  date: {
-    timezone: 'local',
-    format: 'relative'
-  }
-};
-
-FlareTail.util.i18n.format_date = function (str, simple = false) {
-  let timezone = this.options.date.timezone,
-      format = this.options.date.format,
-      now = new Date(),
-      date = new Date(str),
-      shifted_date,
-      dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
-        (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset()) > date.getTimezoneOffset();
-
-  // TODO: We can soon use the ECMAScript Intl API
-  // https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Date/toLocaleString
-
-  // Timezone conversion
-  if (timezone !== 'local') {
-    let utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000,
-        offset = timezone === 'PST' ? 3600000 * (dst ? -7 : -8) : 0;
-    shifted_date = new Date(utc + offset);
-  }
-
-  // Relative dates
-  if (format === 'relative') {
-    if (date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
-      if (date.getDate() === now.getDate()) {
-        return (shifted_date || date).toLocaleFormat(simple ? '%R' : 'Today %R');
-      }
-
-      if (date.getDate() === now.getDate() - 1) {
-        return (shifted_date || date).toLocaleFormat(simple ? 'Yesterday' : 'Yesterday %R');
-      }
-    }
-  }
-
-  return (shifted_date || date).toLocaleFormat(simple ? '%b %e' : '%Y-%m-%d %R');
-};
 
 /* ----------------------------------------------------------------------------------------------
  * Style
