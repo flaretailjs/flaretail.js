@@ -9,6 +9,35 @@ let FlareTail = FlareTail || {};
 FlareTail.util = {};
 
 /* ----------------------------------------------------------------------------------------------
+ * Template
+ * ---------------------------------------------------------------------------------------------- */
+
+FlareTail.util.template = {};
+
+FlareTail.util.template.fill = function (selector, data) {
+  let $content = document.querySelector(selector).content.cloneNode(true); // DocumentFragment
+
+  for (let [prop, value] of Iterator(data)) {
+    // Find the Schema.org property
+    let $item = $content.querySelector('[itemprop="' + prop + '"]');
+
+    if ($item) {
+      $item.itemValue = value;
+      continue;
+    }
+
+    // Then find the data attribute
+    $item = $content.querySelector('[data-' + prop + ']');
+
+    if ($item) {
+      $item.setAttribute('data-' + prop, value);
+    }
+  }
+
+  return $content;
+};
+
+/* ----------------------------------------------------------------------------------------------
  * Event
  * ---------------------------------------------------------------------------------------------- */
 
