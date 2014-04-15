@@ -2480,7 +2480,7 @@ FlareTail.widget.ScrollBar.prototype.onwheel = function (event) {
   event.preventDefault();
 
   let $owner = this.view.$owner,
-      top = $owner.scrollTop + event.deltaY;
+      top = $owner.scrollTop + event.deltaY * (event.deltaMode === event.DOM_DELTA_LINE ? 12 : 1);
 
   if (top < 0) {
     top = 0;
