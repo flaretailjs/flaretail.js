@@ -514,6 +514,21 @@ a[role="menuitem"] {
   pointer-events: auto;
 }
 
+.scrollable-area-content {
+  position: relative;
+}
+
+.scrollable-area-observer {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
 /* ----------------------------------------------------------------------------------------------
  * RadioGroup & CheckBox
  * ---------------------------------------------------------------------------------------------- */
@@ -588,18 +603,14 @@ a[role="menuitem"] {
   font-size: 12px;
 }
 
-@media (-moz-touch-enabled: 1) {
+:root[data-device-type|="mobile"] [role="grid"] .grid-body {
+  overflow: scroll;
+}
 
-  [role="grid"] .grid-body {
-    overflow: scroll;
-  }
+:root[data-device-type|="mobile"] [role="scrollbar"] {
+  display: none;
+}
 
-  [role="scrollbar"] {
-    display: none;
-  }
-
-  .scrollable {
-    overflow: auto !important; /* use native scrollbar */
-  }
-
+:root[data-device-type|="mobile"] .scrollable {
+  overflow: auto !important; /* use native scrollbar */
 }

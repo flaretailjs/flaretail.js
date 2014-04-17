@@ -2424,7 +2424,14 @@ FlareTail.widget.Checkbox.prototype.bind = function (...args) {
 
 FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
+      $content = document.createElement('div'),
       FTue = FlareTail.util.event;
+
+  $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
+
+  [$content.appendChild($child) for ($child of [...$owner.children])];
+  $content.className = 'scrollable-area-content';
+  $content.appendChild(this.get_observer());
 
   $controller.tabIndex = 0;
   $controller.style.top = '2px';
@@ -2433,10 +2440,15 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
   $controller.setAttribute('aria-disabled', 'true');
   $controller.setAttribute('aria-valuemin', '0');
   $controller.setAttribute('aria-valuenow', '0');
+
+  $owner.appendChild($content);
   $owner.appendChild($controller);
+  $owner.appendChild(this.get_observer());
+  $owner.style.removeProperty('display');
 
   this.view = {
     $owner: $owner,
+    $content: $content,
     $controller: $controller
   }
 
@@ -2447,19 +2459,14 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
     arrow_keys_enabled: arrow_keys_enabled
   };
 
-  FTue.bind(this, window, ['resize']);
+  if (FlareTail.util.device.type.startsWith('mobile')) {
+    return false;
+  }
+
   FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
   FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
-  // Recalculate the height of scrollbar when elements are added or removed
-  (new MutationObserver(() => {
-    this.set_height();
-  })).observe($owner, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['aria-hidden', 'aria-disabled']
-  });
+  this.set_height();
 };
 
 FlareTail.widget.ScrollBar.prototype = Object.create(FlareTail.widget.Input.prototype);
@@ -2500,7 +2507,7 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
       $controller = this.view.$controller;
 
   // Scroll by row
-  if (!FlareTail.util.device.touch.enabled && this.options.adjusted) {
+  if (this.options.adjusted) {
     let rect = $owner.getBoundingClientRect(),
         $elm = document.elementFromPoint(rect.left, rect.top),
         top = 0;
@@ -2555,10 +2562,6 @@ FlareTail.widget.ScrollBar.prototype.onunderflow = function (event) {
     this.view.$controller.setAttribute('aria-disabled', 'true');
   }
 };
-
-FlareTail.widget.ScrollBar.prototype.onresize = function (event) {
-  this.set_height();
-}
 
 FlareTail.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
   let $owner = this.view.$owner,
@@ -2660,6 +2663,27 @@ FlareTail.widget.ScrollBar.prototype.set_height = function () {
 
   // Reposition the scrollbar
   this.onscroll();
+};
+
+FlareTail.widget.ScrollBar.prototype.get_observer = function () {
+  let $iframe = document.createElement('iframe');
+
+  $iframe.addEventListener('load', event => {
+    let $doc = $iframe.contentDocument;
+
+    $doc.body.style.margin = 0;
+    $doc.addEventListener('MozScrolledAreaChanged', event => {
+      if (event.height === 0) {
+        this.view.$controller.setAttribute('aria-disabled', 'true');
+      }
+
+      this.set_height();
+    });
+  });
+  $iframe.className = 'scrollable-area-observer';
+  $iframe.src = 'about:blank';
+
+  return $iframe;
 };
 
 FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
@@ -2914,9 +2938,6 @@ FlareTail.widget.Splitter = function ($splitter) {
         FlareTail.util.event.dispatch($splitter, 'Resized', { detail: {
           position: value
         }});
-
-        // Force to resize scrollbars
-        FlareTail.util.event.dispatch(window, 'resize');
       }
 
       obj[prop] = value;
