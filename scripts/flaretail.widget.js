@@ -75,34 +75,6 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
     'focus', 'blur',
   ], true); // Set use_capture true to catch events on descendants
 
-  (new MutationObserver(mutations => {
-    for (let mutation of mutations) {
-      let $item = mutation.target;
-
-      if (mutation.type === 'attributes') {
-        this.view.members = get_items(selector + not_selector);
-
-        let index = this.view.selected.indexOf($item);
-
-        if ($item.getAttribute(mutation.attributeName) === 'true' && index > -1) {
-          // Remove the hidden/disabled item from selection
-          this.view.selected = [...this.view.selected].splice(index, 1);
-        }
-
-        this.view.$focused = null;
-      }
-
-      if (mutation.type === 'childList') {
-        // TODO: Update the member list when an element is added or removed
-      }
-    }
-  })).observe($container, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['aria-hidden', 'aria-disabled']
-  });
-
   return;
 };
 
@@ -526,7 +498,8 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
 
     FlareTail.util.event.dispatch(this.view.$container, 'Selected', { detail: {
       items: newval,
-      ids: newval ? [$item.dataset.id for ($item of newval)] : []
+      ids: newval ? [($item.dataset.id || $item.id) for ($item of newval)] : [],
+      labels: newval ? [$item.textContent for ($item of newval)] : []
     }});
   }
 
@@ -1420,6 +1393,23 @@ FlareTail.widget.ListBox = function ($container, data) {
     search_enabled: true
   };
 
+  this.handler = {
+    get: (obj, prop) => {
+      if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
+        return obj.$element.getAttribute('aria-' + prop) === 'true';
+      }
+
+      return obj[prop];
+    },
+    set: (obj, prop, value) => {
+      if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
+        obj.$element.setAttribute('aria-' + prop, value);
+      }
+
+      obj[prop] = value;
+    }
+  };
+
   this.data = {};
 
   if (data) {
@@ -1437,7 +1427,7 @@ FlareTail.widget.ListBox = function ($container, data) {
 FlareTail.widget.ListBox.prototype = Object.create(FlareTail.widget.Select.prototype);
 
 FlareTail.widget.ListBox.prototype.build = function () {
-  let map = this.data.map = new WeakMap(),
+  let map = this.data.map = new Map(),
       $fragment = new DocumentFragment(),
       $_item = document.createElement('li');
 
@@ -1458,14 +1448,14 @@ FlareTail.widget.ListBox.prototype.build = function () {
     }
 
     // Save the item/obj reference
-    map.set($item, item);
+    map.set(item.label, new Proxy(item, this.handler));
   }
 
   this.view.$container.appendChild($fragment);
 };
 
 FlareTail.widget.ListBox.prototype.get_data = function () {
-  let map = this.data.map = new WeakMap();
+  let map = this.data.map = new Map();
 
   this.data.structure = this.view.members.map($item => {
     let item = {
@@ -1483,10 +1473,32 @@ FlareTail.widget.ListBox.prototype.get_data = function () {
     }
 
     // Save the item/obj reference
-    map.set($item, item);
+    map.set(item.label, new Proxy(item, this.handler));
 
     return item;
   });
+};
+
+FlareTail.widget.ListBox.prototype.filter = function (list) {
+  let $container = this.view.$container;
+
+  $container.setAttribute('aria-busy', 'true'); // Prevent reflows
+
+  // Filter the options
+  for (let [name, item] of this.data.map) {
+    item.selected = false;
+    item.disabled = list.length && list.indexOf(name) === -1;
+  }
+
+  // Update the member list
+  this.view.members = [...$container.querySelectorAll(
+    '[role="option"]:not([aria-disabled="true"]):not([aria-hidden="true"])')];
+
+  if (this.view.selected.length) {
+    this.view.selected = [];
+  }
+
+  $container.removeAttribute('aria-busy');
 };
 
 /* ----------------------------------------------------------------------------------------------
