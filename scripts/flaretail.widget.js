@@ -1533,6 +1533,14 @@ FlareTail.widget.Menu = function ($container, data = []) {
     this.view.$owner = $owner;
     FlareTail.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
   }
+
+  Object.defineProperties(this, {
+    'closed': {
+      enumerable : true,
+      get: () => $container.getAttribute('aria-expanded') === 'false',
+      set: value => value ? this.open() : this.close()
+    }
+  });
 };
 
 FlareTail.widget.Menu.prototype = Object.create(FlareTail.widget.Select.prototype);
@@ -2385,17 +2393,14 @@ FlareTail.widget.Checkbox = function ($checkbox) {
 
   $checkbox.tabIndex = 0;
 
-  this.data = new Proxy({
-    checked: $checkbox.mozMatchesSelector('[aria-checked="true"]')
-  },
-  {
-    set: (obj, prop, value) => {
-      if (prop === 'checked') {
-        FlareTail.util.event.dispatch($checkbox, 'Changed');
+  Object.defineProperties(this, {
+    'checked': {
+      enumerable : true,
+      get: () => $checkbox.getAttribute('aria-checked') === 'true',
+      set: value => {
         $checkbox.setAttribute('aria-checked', value);
+        FlareTail.util.event.dispatch($checkbox, 'Toggled', { detail: { checked: value } });
       }
-
-      obj[prop] = value; // The default behavior
     }
   });
 
@@ -2411,12 +2416,8 @@ FlareTail.widget.Checkbox.prototype.onkeydown = function (event) {
 }
 
 FlareTail.widget.Checkbox.prototype.onclick = function (event) {
-  this.data.checked = !this.data.checked;
+  this.checked = !this.checked;
   this.view.$checkbox.focus();
-
-  FlareTail.util.event.dispatch(this.view.$checkbox, 'Toggled', { detail: {
-    checked: this.data.checked
-  }});
 
   return false;
 };
