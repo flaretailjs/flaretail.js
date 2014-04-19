@@ -2279,6 +2279,17 @@ FlareTail.widget.TabList = function ($container) {
       this.set_close_button($tab);
     }
   }
+
+  // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
+  (new MutationObserver(mutations => {
+    this.view.members
+      = [...$container.querySelectorAll('[role="tab"]:not([aria-hidden="true"])')];
+  })).observe($container, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['aria-hidden']
+  });
 };
 
 FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.prototype);
