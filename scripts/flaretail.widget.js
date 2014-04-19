@@ -1358,6 +1358,35 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   delete this.data.drag;
 };
 
+FlareTail.widget.Grid.prototype.filter = function (list) {
+  let $grid_body = this.view.$body,
+      list = new Set(list),
+      selected = [...this.view.selected];
+
+  $grid_body.setAttribute('aria-busy', 'true');
+
+  // Filter the rows
+  for (let $row of $grid_body.querySelectorAll('[role="row"]')) {
+    $row.setAttribute('aria-hidden', !list.has($row.dataset.id));
+  }
+
+  // Update the member list
+  this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
+
+  if (selected.length) {
+    for (let [index, $row] of Iterator(selected)) {
+      if ($row.getAttribute('aria-hidden') === 'true') {
+        selected.splice(index, 1);
+      }
+    }
+
+    this.view.selected = selected;
+  }
+
+  $grid_body.scrollTop = 0;
+  $grid_body.removeAttribute('aria-busy');
+};
+
 /* ----------------------------------------------------------------------------------------------
  * Select (abstract role) extends Composite
  * ---------------------------------------------------------------------------------------------- */

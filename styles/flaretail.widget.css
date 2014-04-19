@@ -267,6 +267,7 @@ col[data-hidden="true"] {
   height: calc(100% - 1.8rem);
 }
 
+[role="grid"] .grid-body[aria-busy="true"],
 [role="grid"] .grid-body tbody[aria-busy="true"] {
   display: none; /* for sorting performance */
 }
