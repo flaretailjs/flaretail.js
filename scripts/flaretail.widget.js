@@ -1570,6 +1570,17 @@ FlareTail.widget.Menu = function ($container, data = []) {
       set: value => value ? this.open() : this.close()
     }
   });
+
+  // TEMP: Update the members of the menu when the aria-hidden attribute is changed
+  (new MutationObserver(mutations => {
+    this.view.members = [...$container.querySelectorAll('[role^="menuitem"]'
+                      + ':not([aria-disabled="true"]):not([aria-hidden="true"])')];
+  })).observe($container, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['aria-hidden']
+  });
 };
 
 FlareTail.widget.Menu.prototype = Object.create(FlareTail.widget.Select.prototype);
