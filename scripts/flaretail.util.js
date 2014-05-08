@@ -137,45 +137,6 @@ FlareTail.util.request.build_query = function (query) {
   return '?' + [...fields].join('&');
 };
 
-FlareTail.util.request.parse_query_str = function (str, casting = true) {
-  let query = new Map();
-
-  for ([k, v] of [q.split('=') for (q of str.split('&'))]) {
-    let arr = false,
-        key = decodeURIComponent(k).replace(/\[\]$/, () => {
-          arr = true; // The value should be an array when the key is a string like 'component[]'
-          return '';
-        }),
-        value = decodeURIComponent(v).replace(/\+/g, ' '),
-        _value = query.get(key); // Existing value
-
-    if (casting) {
-      if (value === 'true') {
-        value = true; // Convert to Boolean
-      }
-
-      if (value === 'false') {
-        value = false; // Convert to Boolean
-      }
-
-      if (!Number.isNaN(value)) {
-        value = Number.parseFloat(value); // Convert to Number
-      }
-    }
-
-    if (_value) {
-      _value = Array.isArray(_value) ? _value : [_value];
-      _value.push(value);
-    } else {
-      _value = arr ? [value] : value;
-    }
-
-    query.set(key, _value);
-  }
-
-  return query;
-};
-
 /* ----------------------------------------------------------------------------------------------
  * Preferences
  * ---------------------------------------------------------------------------------------------- */
