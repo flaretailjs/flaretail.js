@@ -327,23 +327,27 @@ FlareTail.util.datetime.format = function (str, options = {}) {
 
   let now = new Date(),
       date = new Date(str),
+      delta = now - date,
       shifted_date;
 
   if (options.relative) {
     let patterns = [
-          [now.getFullYear() - date.getFullYear(), '%dyr', 'Last year', '%d years ago'],
-          [now.getMonth() - date.getMonth(), '%dmo', 'Last month', '%d months ago'],
-          [now.getDate() - date.getDate(), '%dd', 'Yesterday', '%d days ago'],
-          [now.getHours() - date.getHours(), '%dh', '1 hour ago', '%d hours ago'],
-          [now.getMinutes() - date.getMinutes(), '%dm', '1 minute ago', '%d minutes ago'],
-          [now.getSeconds() - date.getSeconds(), '%ds', 'Just now', '%d seconds ago'],
-          [1, '%ds', 'Just now', 'Just now'] // Less than 1 second
-        ],
-        format = (value, simple, singular, plural) =>
-          (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
+      [1000 * 60 * 60 * 24 * 365, '%dyr', 'Last year', '%d years ago'],
+      [1000 * 60 * 60 * 24 * 30, '%dmo', 'Last month', '%d months ago'],
+      [1000 * 60 * 60 * 24, '%dd', 'Yesterday', '%d days ago'],
+      [1000 * 60 * 60, '%dh', '1 hour ago', '%d hours ago'],
+      [1000 * 60, '%dm', '1 minute ago', '%d minutes ago'],
+      [1000, '%ds', 'Just now', '%d seconds ago'],
+      [0, '%ds', 'Just now', 'Just now'] // Less than 1 second
+    ];
+
+    let format = (ms, simple, singular, plural) => {
+      let value = Math.floor(delta / ms);
+      return (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
+    };
 
     for (let pattern of patterns) {
-      if (pattern[0] > 0) {
+      if (delta > pattern[0]) {
         return format(...pattern);
       }
     }
