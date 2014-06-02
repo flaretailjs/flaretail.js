@@ -498,8 +498,8 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
 
     FlareTail.util.event.dispatch(this.view.$container, 'Selected', { detail: {
       items: newval,
-      ids: newval ? [($item.dataset.id || $item.id) for ($item of newval)] : [],
-      labels: newval ? [$item.textContent for ($item of newval)] : []
+      ids: [for ($item of newval) $item.dataset.id || $item.id],
+      labels: [for ($item of newval) $item.textContent]
     }});
   }
 
@@ -654,7 +654,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       }
 
       // Extension: Find column by id
-      return [col for (col of obj) if (col.id === prop)][0];
+      return [for (col of obj) if (col.id === prop) col][0];
     }
   });
 
@@ -714,7 +714,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   let handler = {
     set: (obj, prop, value) => {
       // Reflect Data change into View
-      let row = [row for (row of this.data.rows) if (row.data.id === obj.id)][0],
+      let row = [for (row of this.data.rows) if (row.data.id === obj.id) row][0],
           $elm = row.$element.querySelector('[data-id="' + prop + '"] > *');
 
       this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
@@ -2238,7 +2238,7 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
   $item.setAttribute('aria-expanded', !expanded);
 
   // Update data with visible items
-  this.view.members = [$item for ($item of items) if ($item.offsetParent !== null)];
+  this.view.members = [for ($item of items) if ($item.offsetParent !== null) $item];
 
   if (!children.length) {
     return;
@@ -2253,7 +2253,7 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
   }
 
   // Remove the item's children from selection
-  let selected = [$item for ($item of this.view.selected) if (children.indexOf($item) === -1)];
+  let selected = [for ($item of this.view.selected) if (children.indexOf($item) === -1) $item];
 
   // Add the item to selection
   selected.push($item);
@@ -2493,7 +2493,7 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
 
   $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
 
-  [$content.appendChild($child) for ($child of [...$owner.children])];
+  [for ($child of [...$owner.children]) $content.appendChild($child)];
   $content.className = 'scrollable-area-content';
   $content.appendChild(this.get_observer());
 

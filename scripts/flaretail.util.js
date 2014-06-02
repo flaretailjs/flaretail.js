@@ -120,24 +120,6 @@ FlareTail.util.event.dispatch = function ($target, type, options = {}, async = t
 };
 
 /* ----------------------------------------------------------------------------------------------
- * Request
- * ---------------------------------------------------------------------------------------------- */
-
-FlareTail.util.request = {};
-
-FlareTail.util.request.build_query = function (query) {
-  let fields = new Set();
-
-  for (let [key, value] of Iterator(query)) {
-    for (let val of (Array.isArray(value) ? value : [value])) {
-      fields.add(encodeURIComponent(key) + '=' + encodeURIComponent(val));
-    }
-  }
-
-  return '?' + [...fields].join('&');
-};
-
-/* ----------------------------------------------------------------------------------------------
  * Preferences
  * ---------------------------------------------------------------------------------------------- */
 
