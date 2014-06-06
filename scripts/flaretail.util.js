@@ -213,14 +213,12 @@ FlareTail.util.app.auth_notification = function () {
   Notification.requestPermission(permission => {});
 };
 
-FlareTail.util.app.show_notification = function (title, options = {}) {
-  new Notification(title, {
-    dir: options.dir || 'auto',
-    lang: options.lang || 'en-US',
-    body: options.body || '',
-    tag: options.tag || '',
-    icon: options.icon || ''
-  });
+FlareTail.util.app.show_notification = function (title, options, callback) {
+  let notification = new Notification(title, options);
+
+  if (callback) {
+    notification.addEventListener('click', callback);
+  }
 };
 
 /* ----------------------------------------------------------------------------------------------
