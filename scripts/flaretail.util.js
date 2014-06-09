@@ -247,8 +247,8 @@ FlareTail.util.theme.preload_images = function (callback) {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
-  for (let [i, sheet] of Iterator(document.styleSheets)) {
-    for (let [i, rule] of Iterator(sheet.cssRules)) {
+  for (let sheet of document.styleSheets) {
+    for (let rule of sheet.cssRules) {
       let match = rule.style && rule.style.backgroundImage &&
                   rule.style.backgroundImage.match(RegExp(pattern, 'g'));
 
