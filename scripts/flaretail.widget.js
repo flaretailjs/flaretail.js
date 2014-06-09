@@ -1221,13 +1221,13 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
       $_image = document.createElement('canvas'),
       $follower,
       headers = [],
-      rect = $grid.getBoundingClientRect(),
+      point = $grid.getBoxQuads()[0].p1,
       style = $container.style;
 
   event.target.dataset.grabbed = 'true';
   $container.id = 'column-drag-image-container';
-  style.top = rect.top + 'px';
-  style.left = rect.left + 'px';
+  style.top = point.y + 'px';
+  style.left = point.x + 'px';
   style.width = $grid.offsetWidth + 'px';
   style.height = $grid.offsetHeight + 'px';
 
@@ -1678,7 +1678,7 @@ FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
       this.open(event);
     }
 
-    if ($container.getBoundingClientRect().right > window.innerWidth) {
+    if ($container.getBoxQuads()[0].p2.x > window.innerWidth) {
       // The menu is shown beyond the window width. Reposition it
       style.left = ($owner.offsetWidth - $container.offsetWidth - 4) + 'px';
     }
@@ -1851,11 +1851,10 @@ FlareTail.widget.Menu.prototype.open = function () {
   $container.removeAttribute('aria-activedescendant');
   FlareTail.util.event.dispatch($container, 'MenuOpened');
 
-  let rect = $container.getBoundingClientRect(),
-      parent = this.data.parent;
+  let parent = this.data.parent;
 
   // Show the submenu on the left if there is not enough space
-  if (rect.right > window.innerWidth ||
+  if ($container.getBoxQuads()[0].p2.x > window.innerWidth ||
       parent && parent.view.$container.classList.contains('dir-left')) {
     $container.classList.add('dir-left');
   }
@@ -2572,8 +2571,8 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
 
   // Scroll by row
   if (this.options.adjusted) {
-    let rect = $owner.getBoundingClientRect(),
-        $elm = document.elementFromPoint(rect.left, rect.top),
+    let point = $owner.getBoxQuads()[0].p1,
+        $elm = document.elementFromPoint(point.x, point.y),
         top = 0;
 
     while ($elm) {
