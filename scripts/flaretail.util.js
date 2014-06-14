@@ -148,7 +148,10 @@ FlareTail.util.device = {
   }
 };
 
-let (ua = navigator.userAgent, device = FlareTail.util.device) {
+{
+  let ua = navigator.userAgent,
+      device = FlareTail.util.device;
+
   // A device form factor
   // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
   if (ua.contains('Tablet')) {
