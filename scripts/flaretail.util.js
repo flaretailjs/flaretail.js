@@ -470,18 +470,16 @@ FlareTail.util.array.clone = array => [...array];
 FlareTail.util.string = {};
 
 FlareTail.util.string.sanitize = str => {
-  let chars = new Map(Iterator({
-    '<': '&lt;',
-    '>': '&gt;',
-    '&': '&amp;',
-    '"': '&quot;'
-  }));
+  let $p = document.createElement('p');
 
-  return str.replace(/./g, match => chars.get(match) || match);
+  $p.textContent = str;
+
+  return $p.innerHTML;
 };
 
 FlareTail.util.string.strip_tags = str => {
   let $p = document.createElement('p');
+
   $p.innerHTML = str;
 
   return $p.textContent;
