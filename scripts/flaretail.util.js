@@ -270,19 +270,14 @@ FlareTail.util.theme.preload_images = function (callback) {
     }
   }
 
-  let total = images.size,
-      loaded = 0;
-
-  for (let src of images) {
+  let _load = src => new Promise((resolve, reject) => {
     let image = new Image();
-    image.addEventListener('load', event => {
-      loaded++;
-      if (loaded === total) {
-        callback();
-      }
-    });
+
+    image.addEventListener('load', event => resolve());
     image.src = src;
-  }
+  });
+
+  Promise.all([for (src of images) _load(src)]).then(() => callback());
 };
 
 /* ----------------------------------------------------------------------------------------------
