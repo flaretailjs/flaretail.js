@@ -9,6 +9,72 @@ let FlareTail = FlareTail || {};
 FlareTail.util = {};
 
 /* ----------------------------------------------------------------------------------------------
+ * Compatibility
+ * ---------------------------------------------------------------------------------------------- */
+
+{
+  let features = [
+    'toLocaleFormat' in Date.prototype, // Gecko specific
+    'mozMatchesSelector' in Element.prototype, // Gecko specific; prefixed
+    'Proxy' in window, // Firefox 4
+    'IDBObjectStore' in window, // Firefox 4
+    'mozGetAll' in IDBObjectStore.prototype, // Gecko specific; prefixed
+    'matchMedia' in window, // Firefox 6
+    'WeakMap' in window, // Firefox 6
+    'Set' in window, // Firefox 13
+    'MutationObserver' in window, // Firefox 14
+    'buttons' in MouseEvent.prototype, // Firefox 15
+    'isNaN' in Number, // Firefox 15
+    'scrollTopMax' in Element.prototype, // Firefox 16
+    'isInteger' in Number, // Firefox 16
+    'indexedDB' in window, // unprefixed in Firefox 16
+    'onwheel' in window, // Firefox 17
+    'contains' in String.prototype, // Firefox 19
+    'origin' in location, // Firefox 21
+    'HTMLTemplateElement' in window, // Firefox 22
+    'Notification' in window, // Firefox 22
+    'remove' in Element.prototype, // Firefox 23
+    'parseInt' in Number, // Firefox 25
+    'createTBody' in HTMLTableElement.prototype, // Firefox 25
+    'Promise' in window, // Firefox 29
+    'URLSearchParams' in window, // Firefox 29
+    'escape' in CSS, // Firefox 31
+    'getBoxQuads' in Element.prototype, // Firefox 31
+    '@@iterator' in StyleSheetList.prototype, // Firefox 31
+    '@@iterator' in CSSRuleList.prototype // Firefox 32
+  ];
+
+  let compatible = true;
+
+  try {
+    // (Strict) feature detection & arrow function expression (Firefox 22)
+    if (!features.every(item => item)) {
+      throw new Error;
+    }
+
+    // Iterator and destructuring assignment (Firefox 2)
+    // for...of loop (Firefox 13)
+    for (let [key, value] of Iterator(['a', 'b', 'c'])) if (key === 1) {}
+
+    // Direct Proxy (Firefox 18; constructor)
+    new Proxy({}, {});
+
+    // Spread operation in function calls (Firefox 27)
+    [0, 1, 2].push(...[3, 4, 5]);
+
+    // ES6 Array comprehensions (Firefox 30)
+    [for (item of Iterator(['a', 'b', 'c'])) if (item[0] === 1) item[1]];
+  } catch (ex) {
+    compatible = false;
+  }
+
+  Object.defineProperty(FlareTail.util, 'compatible', {
+    enumerable: true,
+    value: compatible
+  });
+}
+
+/* ----------------------------------------------------------------------------------------------
  * Template
  * ---------------------------------------------------------------------------------------------- */
 
