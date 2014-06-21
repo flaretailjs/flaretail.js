@@ -19,7 +19,7 @@ FlareTail.util.template.fill = function (selector, data) {
 
   for (let [prop, value] of Iterator(data)) {
     // Find the Schema.org property
-    let $item = $content.querySelector('[itemprop="' + prop + '"]');
+    let $item = $content.querySelector('[itemprop="' + CSS.escape(prop) + '"]');
 
     if ($item) {
       $item.itemValue = value;
@@ -27,7 +27,7 @@ FlareTail.util.template.fill = function (selector, data) {
     }
 
     // Then find the data attribute
-    $item = $content.querySelector('[data-' + prop + ']');
+    $item = $content.querySelector('[data-' + CSS.escape(prop) + ']');
 
     if ($item) {
       $item.setAttribute('data-' + prop, value);

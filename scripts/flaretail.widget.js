@@ -715,7 +715,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
     set: (obj, prop, value) => {
       // Reflect Data change into View
       let row = [for (row of this.data.rows) if (row.data.id === obj.id) row][0],
-          $elm = row.$element.querySelector('[data-id="' + prop + '"] > *');
+          $elm = row.$element.querySelector('[data-id="' + CSS.escape(prop) + '"] > *');
 
       this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
                                                  : $elm.textContent = value;
@@ -1068,7 +1068,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
     $header.querySelector('[aria-sort]').removeAttribute('aria-sort');
   }
 
-  let $sorter = $header.querySelector('[role="columnheader"][data-id="' + cond.key + '"]'),
+  let $sorter = $header.querySelector('[role="columnheader"][data-id="' + CSS.escape(cond.key) + '"]'),
       type = $sorter.dataset.type;
 
   $tbody.setAttribute('aria-busy', 'true'); // display: none
@@ -1556,7 +1556,7 @@ FlareTail.widget.Menu = function ($container, data = []) {
   this.activate_extend();
 
   // Context menu
-  let $owner = document.querySelector('[aria-owns="' + $container.id + '"]');
+  let $owner = document.querySelector('[aria-owns="' + CSS.escape($container.id) + '"]');
 
   if ($owner && !$owner.mozMatchesSelector('[role="menuitem"]')) {
     this.view.$owner = $owner;
