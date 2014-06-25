@@ -269,7 +269,7 @@ col[data-hidden="true"] {
 
 [role="grid"] .grid-body[aria-busy="true"],
 [role="grid"] .grid-body tbody[aria-busy="true"] {
-  display: none; /* for sorting performance */
+  visibility: hidden; /* for sorting performance */
 }
 
 [role="gridcell"] [role="checkbox"] {
