@@ -75,32 +75,63 @@ FlareTail.util = {};
 }
 
 /* ----------------------------------------------------------------------------------------------
- * Template
+ * Content
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.util.template = {};
+FlareTail.util.content = {};
 
-FlareTail.util.template.fill = function (selector, data) {
-  let $content = document.querySelector(selector).content.cloneNode(true); // DocumentFragment
+FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
+  let iterate = ($scope, data) => {
+    for (let [prop, value] of Iterator(data)) {
+      for (let $item of $scope.properties[prop] || []) {
+        // Multiple items
+        if (Array.isArray(value)) {
+          let $parent = $item.parentElement,
+              $_item = $parent.removeChild($item);
 
-  for (let [prop, value] of Iterator(data)) {
-    // Find the Schema.org property
-    let $item = $content.querySelector('[itemprop="' + CSS.escape(prop) + '"]');
+          $parent.innerHTML = ''; // Empty the loop before adding items
 
-    if ($item) {
-      $item.itemValue = value;
-      continue;
+          for (let _value of value) {
+            let $item = $parent.appendChild($_item.cloneNode(true));
+
+            if (typeof _value === 'object') {
+              iterate($item, _value); // Another scope
+            } else {
+              fill($item, _value);
+            }
+          }
+        } else if (typeof value === 'object') {
+          iterate($item, value); // Another scope
+        } else {
+          fill($item, value)
+        }
+      }
     }
+  };
 
-    // Then find the data attribute
-    $item = $content.querySelector('[data-' + CSS.escape(prop) + ']');
+  let fill = ($item, value) => {
+    if ($item.dateTime !== undefined) {
+      FlareTail.util.datetime.fill_element($item, value);
+    } else {
+      $item.itemValue = value;
+    }
+  };
 
-    if ($item) {
-      $item.setAttribute('data-' + prop, value);
+  $scope.setAttribute('aria-busy', 'true');
+
+  // Microdata
+  iterate($scope, data);
+
+  // Attributes
+  for (let [attr, value] of Iterator(attrs)) {
+    for (let $item of $scope.querySelectorAll('[data-attr~="' + CSS.escape(attr) + '"]')) {
+      $item.setAttribute(attr, value);
     }
   }
 
-  return $content;
+  $scope.removeAttribute('aria-busy');
+
+  return $scope;
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -445,6 +476,11 @@ FlareTail.util.datetime.format = function (str, options = {}) {
 };
 
 FlareTail.util.datetime.fill_element = function ($time, value, options = {}) {
+  if (!options) {
+    options.relative = $time.dataset.relative ? eval($time.dataset.relative) : undefined;
+    options.simple = $time.dataset.simple ? eval($time.dataset.simple) : undefined;
+  }
+
   $time.dateTime = value;
   $time.textContent = this.format(value, FlareTail.util.object.clone(options));
   $time.title = (new Date(value)).toString();
