@@ -581,3 +581,5 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
+
+FlareTail.util.string.format = (str, obj) => str.replace(/{(.*?)}/g, (match, key) => obj[key]);
