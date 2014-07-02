@@ -163,7 +163,7 @@ FlareTail.widget.Button.prototype.onclick = function (event) {
     this.data.pressed = !this.data.pressed;
   }
 
-  FlareTail.util.event.dispatch(this.view.$button, 'Pressed');
+  FlareTail.util.event.trigger(this.view.$button, 'Pressed');
 };
 
 FlareTail.widget.Button.prototype.onkeydown = function (event) {
@@ -496,7 +496,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
       }
     }
 
-    FlareTail.util.event.dispatch(this.view.$container, 'Selected', { detail: {
+    FlareTail.util.event.trigger(this.view.$container, 'Selected', { detail: {
       items: newval || [],
       ids: [for ($item of newval || []) $item.dataset.id || $item.id],
       labels: [for ($item of newval || []) $item.textContent]
@@ -690,7 +690,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       switch (prop) {
         case 'hidden': {
           // Fire an event
-          FlareTail.util.event.dispatch(this.view.$container, 'ColumnModified', { detail: {
+          FlareTail.util.event.trigger(this.view.$container, 'ColumnModified', { detail: {
             columns: columns
           }});
 
@@ -986,7 +986,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
     this.activate_rows();
-    FlareTail.util.event.dispatch($grid, 'Rebuilt');
+    FlareTail.util.event.trigger($grid, 'Rebuilt');
   }
 };
 
@@ -1116,7 +1116,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
   // Fire an event
-  FlareTail.util.event.dispatch($grid, 'Sorted', { detail: {
+  FlareTail.util.event.trigger($grid, 'Sorted', { detail: {
     conditions: FlareTail.util.object.clone(cond) // Clone cond as it's a proxyfied object
   }});
 
@@ -1346,7 +1346,7 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   }
 
   // Fire an event
-  FlareTail.util.event.dispatch($grid, 'ColumnModified', { detail: {
+  FlareTail.util.event.trigger($grid, 'ColumnModified', { detail: {
     columns: columns
   }});
 
@@ -1849,7 +1849,7 @@ FlareTail.widget.Menu.prototype.open = function () {
 
   $container.setAttribute('aria-expanded', 'true');
   $container.removeAttribute('aria-activedescendant');
-  FlareTail.util.event.dispatch($container, 'MenuOpened');
+  FlareTail.util.event.trigger($container, 'MenuOpened');
 
   let parent = this.data.parent;
 
@@ -1863,7 +1863,7 @@ FlareTail.widget.Menu.prototype.open = function () {
 };
 
 FlareTail.widget.Menu.prototype.select = function (event) {
-  FlareTail.util.event.dispatch(this.view.$container, 'MenuItemSelected', {
+  FlareTail.util.event.trigger(this.view.$container, 'MenuItemSelected', {
     bubbles: true,
     cancelable: false,
     detail: {
@@ -1881,7 +1881,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
 
   $container.setAttribute('aria-expanded', 'false');
   $container.removeAttribute('aria-activedescendant');
-  FlareTail.util.event.dispatch($container, 'MenuClosed');
+  FlareTail.util.event.trigger($container, 'MenuClosed');
   this.view.selected = [];
 
   if (parent) {
@@ -2449,7 +2449,7 @@ FlareTail.widget.Checkbox = function ($checkbox) {
       get: () => $checkbox.getAttribute('aria-checked') === 'true',
       set: value => {
         $checkbox.setAttribute('aria-checked', value);
-        FlareTail.util.event.dispatch($checkbox, 'Toggled', { detail: { checked: value } });
+        FlareTail.util.event.trigger($checkbox, 'Toggled', { detail: { checked: value } });
       }
     }
   });
@@ -2858,7 +2858,7 @@ FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
 FlareTail.widget.Dialog.prototype.show = function () {};
 
 FlareTail.widget.Dialog.prototype.hide = function () {
-  FlareTail.util.event.dispatch(this.view.$dialog, 'Hidden');
+  FlareTail.util.event.trigger(this.view.$dialog, 'Hidden');
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -3003,7 +3003,7 @@ FlareTail.widget.Splitter = function ($splitter) {
           $before.style.width = $splitter.style.left = $after.style.left = value;
         }
 
-        FlareTail.util.event.dispatch($splitter, 'Resized', { detail: {
+        FlareTail.util.event.trigger($splitter, 'Resized', { detail: {
           position: value
         }});
       }

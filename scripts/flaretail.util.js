@@ -208,7 +208,7 @@ FlareTail.util.event.async = function (callback) {
 };
 
 // Custom event dispatcher. The async option is enabled by default
-FlareTail.util.event.dispatch = function ($target, type, options = {}, async = true) {
+FlareTail.util.event.trigger = function ($target, type, options = {}, async = true) {
   let callback = () => {
     $target.dispatchEvent(new CustomEvent(type, options));
   };
