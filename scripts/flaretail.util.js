@@ -475,10 +475,12 @@ FlareTail.util.datetime.format = function (str, options = {}) {
   return (shifted_date || date).toLocaleFormat(options.simple ? '%b %e' : '%Y-%m-%d %R');
 };
 
-FlareTail.util.datetime.fill_element = function ($time, value, options = {}) {
+FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
   if (!options) {
-    options.relative = $time.dataset.relative ? eval($time.dataset.relative) : undefined;
-    options.simple = $time.dataset.simple ? eval($time.dataset.simple) : undefined;
+    options = {
+      'relative': $time.dataset.relative ? eval($time.dataset.relative) : undefined,
+      'simple': $time.dataset.simple ? eval($time.dataset.simple) : undefined
+    };
   }
 
   $time.dateTime = value;
