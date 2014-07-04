@@ -40,7 +40,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
                = get_items(selector + '[' + this.options.selected_attr + '="true"]');
 
   // Focus Management
-  for (let [i, $item] of Iterator(members)) {
+  for (let [i, $item] of members.entries()) {
     $item.tabIndex = i === 0 ? 0 : -1;
   }
 
@@ -705,7 +705,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
     }
   };
 
-  for (let [i, col] of Iterator(columns)) {
+  for (let [i, col] of columns.entries()) {
     columns[i] = new Proxy(col, handler);
   }
 };
@@ -964,7 +964,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
       }
     }
 
-    for (let [i, column] of Iterator(this.data.columns)) {
+    for (let [i, column] of this.data.columns.entries()) {
       let $child = $row.cells[i].firstElementChild,
           value = row.data[column.id];
 
@@ -1022,7 +1022,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
       data: {}
     };
 
-    for (let [index, $cell] of Iterator($row.cells)) {
+    for (let [index, $cell] of [...$row.cells].entries()) {
       let column = this.data.columns[index],
           value,
           normalized_value;
@@ -1374,7 +1374,7 @@ FlareTail.widget.Grid.prototype.filter = function (list) {
   this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
 
   if (selected.length) {
-    for (let [index, $row] of Iterator(selected)) {
+    for (let [index, $row] of selected.entries()) {
       if ($row.getAttribute('aria-hidden') === 'true') {
         selected.splice(index, 1);
       }
@@ -3015,7 +3015,7 @@ FlareTail.widget.Splitter = function ($splitter) {
   // Add event listeners
   FlareTail.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
-  for (let [i, id] of Iterator($splitter.getAttribute('aria-controls').split(/\s+/))) {
+  for (let [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
     let $target = document.getElementById(id),
         position = i === 0 ? 'before' : 'after';
 
