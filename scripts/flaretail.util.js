@@ -36,6 +36,7 @@ FlareTail.util = {};
     'remove' in Element.prototype, // Firefox 23
     'parseInt' in Number, // Firefox 25
     'createTBody' in HTMLTableElement.prototype, // Firefox 25
+    'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
     'URLSearchParams' in window, // Firefox 29
     'escape' in CSS, // Firefox 31
