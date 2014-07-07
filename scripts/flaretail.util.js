@@ -6,6 +6,7 @@
 'use strict';
 
 let FlareTail = FlareTail || {};
+
 FlareTail.util = {};
 
 /* ----------------------------------------------------------------------------------------------
@@ -95,27 +96,18 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
           for (let _value of value) {
             let $item = $parent.appendChild($_item.cloneNode(true));
 
-            if (typeof _value === 'object') {
-              iterate($item, _value); // Another scope
-            } else {
-              fill($item, _value);
-            }
+            typeof _value === 'object' ? iterate($item, _value) : fill($item, _value);
           }
-        } else if (typeof value === 'object') {
-          iterate($item, value); // Another scope
         } else {
-          fill($item, value)
+          typeof value === 'object' ? iterate($item, value) : fill($item, value);
         }
       }
     }
   };
 
   let fill = ($item, value) => {
-    if ($item.dateTime !== undefined) {
-      FlareTail.util.datetime.fill_element($item, value);
-    } else {
-      $item.itemValue = value;
-    }
+    $item.dateTime !== undefined ? FlareTail.util.datetime.fill_element($item, value)
+                                 : $item.itemValue = value;
   };
 
   $scope.setAttribute('aria-busy', 'true');
@@ -210,9 +202,7 @@ FlareTail.util.event.async = function (callback) {
 
 // Custom event dispatcher. The async option is enabled by default
 FlareTail.util.event.trigger = function ($target, type, options = {}, async = true) {
-  let callback = () => {
-    $target.dispatchEvent(new CustomEvent(type, options));
-  };
+  let callback = () => $target.dispatchEvent(new CustomEvent(type, options));
 
   async ? this.async(callback) : callback();
 };
@@ -278,36 +268,25 @@ FlareTail.util.app.can_install = function (manifest, callback) {
   }
 
   let request = apps.checkInstalled(manifest);
-  request.addEventListener('success', event => {
-    callback(!request.result);
-  });
+
+  request.addEventListener('success', event => callback(!request.result));
   request.addEventListener('error', event => callback(false));
 };
 
 FlareTail.util.app.install = function (manifest, callback) {
   let request = navigator.mozApps.install(manifest);
+
   request.addEventListener('success', event => callback(event));
   request.addEventListener('error', event => callback(event));
 };
 
 FlareTail.util.app.fullscreen_enabled = function () {
-  return document.fullscreenEnabled || document.mozFullScreenEnabled;
+  return document.mozFullScreenEnabled;
 };
 
-FlareTail.util.app.toggle_fullscreen = function () {
-  if (document.fullscreenElement === null || document.mozFullScreenElement === null) {
-    if (document.body.requestFullscreen) {
-      document.body.requestFullscreen();
-    } else if (document.body.mozRequestFullScreen) {
-      document.body.mozRequestFullScreen();
-    }
-  } else {
-    if (document.cancelFullScreen) {
-      document.cancelFullScreen();
-    } else if (document.mozCancelFullScreen) {
-      document.mozCancelFullScreen();
-    }
-  }
+FlareTail.util.app.toggle_fullscreen = function ($element = document.body) {
+  document.mozFullScreenElement ? document.mozCancelFullScreen()
+                                : $element.mozRequestFullScreen();
 };
 
 FlareTail.util.app.auth_notification = function () {
@@ -408,6 +387,7 @@ FlareTail.util.datetime.options = new Proxy({
         }
       } else if (dt.updater) {
         window.clearInterval(dt.updater);
+
         delete dt.updater;
       }
     }
@@ -437,6 +417,7 @@ FlareTail.util.datetime.format = function (str, options = {}) {
 
     let format = (ms, simple, singular, plural) => {
       let value = Math.floor(delta / ms);
+
       return (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
     };
 

@@ -6,6 +6,7 @@
 'use strict';
 
 let FlareTail = FlareTail || {};
+
 FlareTail.widget = {};
 
 /* ----------------------------------------------------------------------------------------------
@@ -26,14 +27,10 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
   this.options.multiselectable = $container.mozMatchesSelector('[aria-multiselectable="true"]');
 
-  let get_items = selector => {
-    // Convert NodeList to Array for convenience in operation
-    return [...$container.querySelectorAll(selector)];
-  };
-
   let FTue = FlareTail.util.event,
       selector = this.options.item_selector,
       not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
+      get_items = selector => [...$container.querySelectorAll(selector)],
       members  = this.view.members
                = get_items(selector + not_selector),
       selected = this.view.selected
@@ -193,7 +190,6 @@ FlareTail.widget.Composite.prototype.onfocus = function (event) {
 
 FlareTail.widget.Composite.prototype.onblur = function (event) {
   this.view.$container.removeAttribute('aria-activedescendant');
-
   FlareTail.util.event.ignore(event);
 };
 
@@ -270,6 +266,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
 
       if (!multi) {
         this.view.selected = $focused;
+
         break;
       }
 
@@ -410,7 +407,9 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
       // Find As You Type: Incremental Search for simple list like ListBox or Tree
       let input = String.fromCharCode(kcode),
           char = this.data.search_key || '';
+
       char = char === input ? input : char + input;
+
       let pattern = new RegExp('^' + char, 'i');
 
       let get_label = $item => {
@@ -418,6 +417,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
 
         if ($item.hasAttribute('aria-labelledby')) {
           $element = document.getElementById($item.getAttribute('aria-labelledby'));
+
           if ($element) {
             return $element.textContent;
           }
@@ -640,22 +640,14 @@ FlareTail.widget.Grid.prototype.activate_extend = function () {
     set: this.sort.bind(this)
   });
 
-
   this.activate_columns();
   this.activate_rows();
 };
 
 FlareTail.widget.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
-    get: (obj, prop) => {
-      // The default behavior
-      if (prop in obj) {
-        return obj[prop];
-      }
-
-      // Extension: Find column by id
-      return [for (col of obj) if (col.id === prop) col][0];
-    }
+    // Default behavior, or find column by id
+    get: (obj, prop) => prop in obj ? obj[prop] : [for (col of obj) if (col.id === prop) col][0]
   });
 
   // Handler to show/hide column
@@ -666,16 +658,19 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       switch (prop) {
         case 'index': {
           value = obj.$element.cellIndex;
+
           break;
         }
 
         case 'width': {
           value = Number.parseInt(FlareTail.util.style.get(obj.$element, 'width'));
+
           break;
         }
 
         case 'left': {
           value = obj.$element.offsetLeft;
+
           break;
         }
 
@@ -719,7 +714,6 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
 
       this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
                                                  : $elm.textContent = value;
-
       obj[prop] = value;
     }
   };
@@ -736,9 +730,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   this.data.rows = new Proxy(rows, {
     // A proxyifixed array needs the get trap even if it's not necessary, or the set trap is not
     // called. This is a regression since Firefox 21 (Bug 876114)
-    get: (obj, prop) => {
-      return obj[prop];
-    },
+    get: (obj, prop) => obj[prop],
     set: (obj, prop, value) => {
       if (!Number.isNaN(prop) && value.$element) {
         $tbody.appendChild(value.$element);
@@ -878,11 +870,12 @@ FlareTail.widget.Grid.prototype.build_header = function () {
   $_cell.appendChild(document.createElement('label'));
 
   for (let column of this.data.columns) {
-    let $col = $colgroup.appendChild($_col.cloneNode(true));
+    let $col = $colgroup.appendChild($_col.cloneNode(true)),
+        $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
+
     $col.dataset.id = column.id || '';
     $col.dataset.hidden = column.hidden === true;
 
-    let $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
     $cell.firstElementChild.textContent = column.label;
     $cell.title = column.title || 'Click to sort by ' + column.label; // l10n
 
@@ -916,6 +909,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
       $table = $grid_body.appendChild(document.createElement('table')),
       $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
       $tbody = $table.createTBody(),
+      $_row = document.createElement('tr'),
       cond = this.options.sort_conditions,
       row_prefix = $grid.id + '-row-';
 
@@ -923,7 +917,6 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   this.sort(cond, 'key', cond.key, null, true);
 
   // Create a template row
-  let $_row = document.createElement('tr');
   $_row.draggable = false;
   $_row.setAttribute('role', 'row');
   $_row.setAttribute('aria-selected', 'false');
@@ -942,6 +935,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
 
     if (column.type === 'boolean') {
       let $checkbox = $cell.appendChild(document.createElement('span'));
+
       $checkbox.setAttribute('role', 'checkbox');
       $cell.setAttribute('aria-readonly', 'false');
     } else {
@@ -954,6 +948,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
 
   for (let row of this.data.rows) {
     let $row = row.$element = $tbody.appendChild($_row.cloneNode(true));
+
     $row.id = row_prefix + row.data.id;
     $row.dataset.id = row.data.id;
 
@@ -1030,11 +1025,13 @@ FlareTail.widget.Grid.prototype.get_data = function () {
       switch (column.type) {
         case 'integer': {
           value = Number.parseInt($cell.textContent);
+
           break;
         }
 
         case 'boolean': { // checkbox
           value = $cell.querySelector('[role="checkbox"]').mozMatchesSelector('[aria-checked="true"]');
+
           break;
         }
 
@@ -1128,16 +1125,17 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 };
 
 FlareTail.widget.Grid.prototype.init_columnpicker = function () {
-  let $picker = this.view.$columnpicker = document.createElement('ul');
+  let $picker = this.view.$columnpicker = document.createElement('ul'),
+      $header = this.view.$header;
+
   $picker.id = this.view.$container.id + '-columnpicker';
   $picker.setAttribute('role', 'menu');
   $picker.setAttribute('aria-expanded', 'false');
-
-  let $header = this.view.$header;
   $header.appendChild($picker);
   $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
   let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
+
   picker.bind('MenuItemSelected', event => {
     this.toggle_column(event.detail.target.dataset.id);
   });
@@ -1161,6 +1159,7 @@ FlareTail.widget.Grid.prototype.build_columnpicker = function () {
 FlareTail.widget.Grid.prototype.toggle_column = function (id) {
   // Find column by id, thanks to Proxy
   let col = this.data.columns[id];
+
   col.hidden = !col.hidden;
 };
 
@@ -1334,12 +1333,14 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
     // View
     for (let $colgroup of $grid.querySelectorAll('colgroup')) {
       let items = $colgroup.children;
+
       $colgroup.insertBefore(items[start_idx],
                              items[start_idx > current_idx ? current_idx : current_idx + 1]);
     }
 
     for (let $row of $grid.querySelectorAll('[role="row"]')) {
       let items = $row.children;
+
       $row.insertBefore(items[start_idx],
                         items[start_idx > current_idx ? current_idx : current_idx + 1]);
     }
@@ -1466,6 +1467,7 @@ FlareTail.widget.ListBox.prototype.build = function () {
 
   for (let item of this.data.structure) {
     let $item = item.$element = $fragment.appendChild($_item.cloneNode(true));
+
     $item.id = item.id;
     $item.setAttribute('aria-selected', item.selected ? 'true' : 'false');
     $item.firstElementChild.textContent = item.label;
@@ -1597,6 +1599,7 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
     if ($item.hasAttribute('aria-owns')) {
       let $menu = document.getElementById($item.getAttribute('aria-owns')),
           menu = new FlareTail.widget.Menu($menu);
+
       menu.data.parent = this;
       menus.set($item, menu);
     }
@@ -1671,6 +1674,7 @@ FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
 
   if ($owner) {
     let style = $container.style;
+
     style.top = event.layerY + 'px';
     style.left = event.layerX + 'px';
 
@@ -1711,6 +1715,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
       case event.DOM_VK_UP:
       case event.DOM_VK_END: {
         view.selected = view.$focused = items[items.length - 1];
+
         break;
       }
 
@@ -1718,12 +1723,14 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
       case event.DOM_VK_RIGHT:
       case event.DOM_VK_HOME: {
         view.selected = view.$focused = items[0];
+
         break;
       }
 
       case event.DOM_VK_ESCAPE:
       case event.DOM_VK_TAB: {
         this.close();
+
         break;
       }
     }
@@ -1738,12 +1745,14 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
       if (has_submenu) {
         // Select the first item in the submenu
         let view = menus.get(event.target).view;
+
         view.selected = view.$focused = view.members[0];
       } else if (parent) {
         // Select the next (or first) item in the parent menu
         let view = parent.view,
             items = view.members,
             $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
+
         view.selected = view.$focused = $target;
       }
 
@@ -1757,6 +1766,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
             $target = view.$container.mozMatchesSelector('[role="menubar"]')
                     ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1]
                     : view.selected[0];
+
         view.selected = view.$focused = $target;
       }
 
@@ -1821,6 +1831,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
     }
 
     let $item = item.$element = $fragment.appendChild($_outer.cloneNode(true)).firstElementChild;
+
     $item.id = item.id;
     $item.setAttribute('role', item.type || 'menuitem');
     $item.setAttribute('aria-disabled', item.disabled === true);
@@ -1919,8 +1930,6 @@ FlareTail.widget.MenuBar = function ($container, data) {
 
   this.activate();
   this.activate_extend();
-
-  let menus = menus = this.data.menus;
 };
 
 FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototype);
@@ -1928,6 +1937,7 @@ FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototy
 FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
     FlareTail.util.event.ignore(event);
+
     return;
   }
 
@@ -2110,6 +2120,7 @@ FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
       } else if ($item.hasAttribute('aria-expanded')) {
         // Select the item just below
         let $selected = items[items.indexOf($item) + 1];
+
         this.view.selected = this.view.$focused = $selected;
       }
 
@@ -2132,27 +2143,26 @@ FlareTail.widget.Tree.prototype.ondblclick = function (event) {
 FlareTail.widget.Tree.prototype.build = function () {
   let $tree = this.view.$container,
       $fragment = new DocumentFragment(),
+      $outer = document.createElement('li'),
+      $treeitem = document.createElement('span'),
+      $expander = document.createElement('span'),
+      $group = document.createElement('ul'),
       structure = this.data.structure,
       map = this.data.map = new WeakMap(),
       level = 1;
 
-  let $outer = document.createElement('li');
   $outer.setAttribute('role', 'presentation');
-
-  let $treeitem = document.createElement('span');
   $treeitem.setAttribute('role', 'treeitem');
   $treeitem.appendChild(document.createElement('label'));
-
-  let $expander = document.createElement('span');
   $expander.className = 'expander';
   $expander.setAttribute('role', 'presentation');
-
-  let $group = document.createElement('ul');
   $group.setAttribute('role', 'group');
 
   let get_item = obj => {
     let $item = $treeitem.cloneNode(true),
+        $_outer = $outer.cloneNode(false),
         item_id = $tree.id + '-' + obj.id;
+
     $item.firstChild.textContent = obj.label;
     $item.id = item_id;
     $item.setAttribute('aria-level', level);
@@ -2162,7 +2172,6 @@ FlareTail.widget.Tree.prototype.build = function () {
     map.set($item, obj);
     obj.$element = $item;
 
-    let $_outer = $outer.cloneNode(false);
     $_outer.appendChild($item);
 
     if (obj.data) {
@@ -2177,8 +2186,8 @@ FlareTail.widget.Tree.prototype.build = function () {
       $item.setAttribute('aria-owns', item_id + '-group');
 
       let $_group = $_outer.appendChild($group.cloneNode(false));
-      $_group.id = item_id + '-group';
 
+      $_group.id = item_id + '-group';
       level++;
 
       for (let sub of obj.sub) {
@@ -2356,6 +2365,7 @@ FlareTail.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $ne
 
 FlareTail.widget.TabList.prototype.set_close_button = function ($tab) {
   let $button = document.createElement('span');
+
   $button.className = 'close';
   $button.title = 'Close Tab'; // l10n
   $button.setAttribute('role', 'button');
@@ -2414,6 +2424,7 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
   // Switch tab
   if (this.view.selected[0] === $tab) {
     let $new_tab = items[index - 1] || items[index + 1];
+
     this.view.selected = this.view.$focused = $new_tab;
   }
 
@@ -2794,43 +2805,45 @@ FlareTail.widget.Dialog = function (options) {
 FlareTail.widget.Dialog.prototype = Object.create(FlareTail.widget.Window.prototype);
 
 FlareTail.widget.Dialog.prototype.build = function () {
-  let options = this.options;
+  let options = this.options,
+      $dialog = this.view.$dialog = document.createElement('aside'),
+      $title = this.view.$title = $dialog.appendChild(document.createElement('h2')),
+      $message = this.view.$message = $dialog.appendChild(document.createElement('p')),
+      $btn_ok = this.view.$btn_ok = $dialog.appendChild(document.createElement('button')),
+      $wrapper = this.view.$wrapper = document.body.appendChild(document.createElement('div'));
 
-  let $dialog = this.view.$dialog = document.createElement('aside');
   $dialog.id = 'dialog-' + options.id;
   $dialog.tabIndex = 0;
   $dialog.setAttribute('role', options.type === 'alert' ? 'alertdialog' : 'dialog');
   $dialog.setAttribute('aria-labelledby', 'dialog-' + options.id + '-title');
   $dialog.setAttribute('aria-describedby', 'dialog-' + options.id + '-message');
 
-  let $title = this.view.$title = $dialog.appendChild(document.createElement('h2'));
   $title.id = 'dialog-' + options.id + '-title';
   $title.textContent = options.title;
 
-  let $message = this.view.$message = $dialog.appendChild(document.createElement('p'));
   $message.textContent = options.message;
   $message.id = 'dialog-' + options.id + '-message';
 
   if (options.type === 'prompt') {
     let $input = this.view.$input = $dialog.appendChild(document.createElement('input'));
+
     $input.value = options.value || '';
     $input.setAttribute('role', 'textbox');
   }
 
-  let $btn_ok = this.view.$btn_ok = $dialog.appendChild(document.createElement('button'));
   $btn_ok.textContent = options.btn_ok_label;
   $btn_ok.setAttribute('role', 'button');
   $btn_ok.dataset.id = 'ok';
 
   if (options.type !== 'alert') {
     let $btn_cancel = this.view.$btn_cancel = $dialog.appendChild($btn_ok.cloneNode(false));
+
     $btn_cancel.textContent = options.btn_cancel_label;
     $btn_cancel.dataset.id = 'cancel';
   }
 
-  let wrapper = this.view.$wrapper = document.body.appendChild(document.createElement('div'));
-  wrapper.className = 'dialog-wrapper';
-  wrapper.appendChild($dialog)
+  $wrapper.className = 'dialog-wrapper';
+  $wrapper.appendChild($dialog)
 };
 
 FlareTail.widget.Dialog.prototype.activate = function () {
@@ -3099,11 +3112,13 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
   switch (event.keyCode) {
     case event.DOM_VK_HOME: {
       value = !before.min || before.collapsible ? 0 : before.min;
+
       break;
     }
 
     case event.DOM_VK_END: {
       value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
+
       break;
     }
 
