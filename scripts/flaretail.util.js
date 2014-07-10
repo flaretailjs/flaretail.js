@@ -16,12 +16,15 @@ FlareTail.util = {};
 {
   let features = [
     'toLocaleFormat' in Date.prototype, // Gecko specific
-    'mozMatchesSelector' in Element.prototype, // Gecko specific; prefixed
+    'mozMatchesSelector' in Element.prototype, // Firefox 3.6, still prefixed
+    'FileReader' in window, // Firefox 3.6
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
-    'mozGetAll' in IDBObjectStore.prototype, // Gecko specific; prefixed
+    'createObjectURL' in URL, // Firefox 4
+    'mozGetAll' in IDBObjectStore.prototype, // Firefox 4, still prefixed
     'matchMedia' in window, // Firefox 6
     'WeakMap' in window, // Firefox 6
+    'Blob' in window, // Firefox 13
     'Set' in window, // Firefox 13
     'MutationObserver' in window, // Firefox 14
     'buttons' in MouseEvent.prototype, // Firefox 15
