@@ -2779,8 +2779,10 @@ FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prot
  *            type: alert, confirm or prompt
  *            title
  *            message
- *            btn_ok_label (optional)
- *            btn_cancel_label (optional)
+ *            button_accept_label (optional)
+ *            button_cancel_label (optional)
+ *            onaccept (callback function, optional)
+ *            oncancel (callback function, optional)
  *            value (for prompt, optional)
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
@@ -2791,12 +2793,14 @@ FlareTail.widget.Dialog = function (options) {
     'type': options.type,
     'title': options.title,
     'message': options.message,
-    'btn_ok_label': options.btn_ok_label || 'OK',
-    'btn_cancel_label': options.btn_cancel_label || 'Cancel',
+    'button_accept_label': options.button_accept_label || 'OK',
+    'button_cancel_label': options.button_cancel_label || 'Cancel',
+    'onaccept': options.onaccept,
+    'oncancel': options.oncancel,
     'value': options.value || ''
-  }
+  };
 
-  this.view = {}
+  this.view = {};
 
   this.build();
   this.activate();
@@ -2806,40 +2810,51 @@ FlareTail.widget.Dialog.prototype = Object.create(FlareTail.widget.Window.protot
 
 FlareTail.widget.Dialog.prototype.build = function () {
   let options = this.options,
+      $wrapper = this.view.$wrapper = document.createElement('div'),
       $dialog = this.view.$dialog = document.createElement('aside'),
-      $title = this.view.$title = $dialog.appendChild(document.createElement('h2')),
-      $message = this.view.$message = $dialog.appendChild(document.createElement('p')),
-      $btn_ok = this.view.$btn_ok = $dialog.appendChild(document.createElement('button')),
-      $wrapper = this.view.$wrapper = document.body.appendChild(document.createElement('div'));
+      $header = $dialog.appendChild(document.createElement('header')),
+      $title,
+      $message = $dialog.appendChild(document.createElement('p')),
+      $input,
+      $footer = $dialog.appendChild(document.createElement('footer')),
+      $button = document.createElement('span'),
+      $button_accept,
+      $button_cancel;
 
   $dialog.id = 'dialog-' + options.id;
   $dialog.tabIndex = 0;
   $dialog.setAttribute('role', options.type === 'alert' ? 'alertdialog' : 'dialog');
-  $dialog.setAttribute('aria-labelledby', 'dialog-' + options.id + '-title');
   $dialog.setAttribute('aria-describedby', 'dialog-' + options.id + '-message');
 
-  $title.id = 'dialog-' + options.id + '-title';
-  $title.textContent = options.title;
+  if (options.title) {
+    $title = $header.appendChild(document.createElement('h2'));
+    $title.id = 'dialog-' + options.id + '-title';
+    $title.textContent = options.title;
+    $dialog.setAttribute('aria-labelledby', 'dialog-' + options.id + '-title');
+  }
 
   $message.textContent = options.message;
   $message.id = 'dialog-' + options.id + '-message';
 
   if (options.type === 'prompt') {
-    let $input = this.view.$input = $dialog.appendChild(document.createElement('input'));
-
+    $input = this.view.$input = $dialog.insertBefore(document.createElement('input'), $footer);
     $input.value = options.value || '';
     $input.setAttribute('role', 'textbox');
   }
 
-  $btn_ok.textContent = options.btn_ok_label;
-  $btn_ok.setAttribute('role', 'button');
-  $btn_ok.dataset.id = 'ok';
+  $button.tabIndex = 0;
+  $button.setAttribute('role', 'button');
+
+  $button_accept = this.view.$button_accept = $footer.appendChild($button.cloneNode(true)),
+  $button_accept.textContent = options.button_accept_label;
+  $button_accept.dataset.action = 'accept';
+  (new FlareTail.widget.Button($button_accept)).bind('Pressed', event => this.hide('accept'));
 
   if (options.type !== 'alert') {
-    let $btn_cancel = this.view.$btn_cancel = $dialog.appendChild($btn_ok.cloneNode(false));
-
-    $btn_cancel.textContent = options.btn_cancel_label;
-    $btn_cancel.dataset.id = 'cancel';
+    $button_cancel = this.view.$button_cancel = $footer.appendChild($button.cloneNode(true)),
+    $button_cancel.textContent = options.button_cancel_label;
+    $button_cancel.dataset.action = 'cancel';
+    (new FlareTail.widget.Button($button_cancel)).bind('Pressed', event => this.hide('cancel'));
   }
 
   $wrapper.className = 'dialog-wrapper';
@@ -2848,30 +2863,51 @@ FlareTail.widget.Dialog.prototype.build = function () {
 
 FlareTail.widget.Dialog.prototype.activate = function () {
   // Add event listeners
-  FlareTail.util.event.bind(this, this.view.$dialog, ['click', 'keypress']);
-};
-
-FlareTail.widget.Dialog.prototype.onclick = function (event) {
-  if (event.target.mozMatchesSelector('[role="button"]')) {
-  }
+  FlareTail.util.event.bind(this, this.view.$dialog, ['keypress']);
 };
 
 FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
-  switch (event.keyCode) {
-    case event.DOM_VK_RETURN: {
-      break;
-    }
-
-    case event.DOM_VK_ESCAPE: {
-      break;
-    }
+  if (event.keyCode === event.DOM_VK_RETURN) {
+    this.hide('accept');
   }
+
+  if (event.keyCode === event.DOM_VK_ESCAPE) {
+    this.hide('cancel');
+  }
+
+  event.stopPropagation();
 };
 
-FlareTail.widget.Dialog.prototype.show = function () {};
+FlareTail.widget.Dialog.prototype.show = function () {
+  this.focus_map = new Map();
+  this.focus_origial = document.activeElement;
 
-FlareTail.widget.Dialog.prototype.hide = function () {
-  FlareTail.util.event.trigger(this.view.$dialog, 'Hidden');
+  // Prevent elements outside the dialog being focused
+  for (let $element of document.querySelectorAll(':link, [tabindex]')) {
+    this.focus_map.set($element, $element.getAttribute('tabindex'));
+    $element.tabIndex = -1;
+  }
+
+  document.body.appendChild(this.view.$wrapper);
+  this.view.$dialog.focus();
+};
+
+FlareTail.widget.Dialog.prototype.hide = function (action) {
+  for (let [$element, tabindex] of this.focus_map) {
+    tabindex ? $element.tabIndex = tabindex : $element.removeAttribute('tabindex');
+  }
+
+  this.focus_map.clear();
+  this.focus_origial.focus();
+  this.view.$wrapper.remove();
+
+  if (action === 'accept' && typeof this.options.onaccept === 'function') {
+    this.options.onaccept(this.options.type === 'prompt' ? this.view.$input.value : null);
+  }
+
+  if (action === 'cancel' && typeof this.options.oncancel === 'function') {
+    this.options.oncancel();
+  }
 };
 
 /* ----------------------------------------------------------------------------------------------

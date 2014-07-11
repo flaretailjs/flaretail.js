@@ -409,22 +409,20 @@ a[role="menuitem"] {
   height: 100%;
 }
 
-[role="dialog"],
-[role="alertdialog"] {
+[role$="dialog"] {
   position: absolute;
-  top: 8rem;
-  left: 50%;
-  margin-left: -20rem;
-  padding: 4rem;
-  width: 36rem;
+  top: calc(50% - 8rem);
+  left: calc(50% - 24rem);
+  box-sizing: padding-box;
+  width: 48rem;
 }
 
-:-moz-any([role="dialog"], [role="alertdialog"]) h2 {
+[role$="dialog"] h2 {
   margin: 0;
 }
 
-:-moz-any([role="dialog"], [role="alertdialog"]) button {
-  display: inline-block;
+[role$="dialog"] footer {
+  text-align: right;
 }
 
 /* ----------------------------------------------------------------------------------------------
