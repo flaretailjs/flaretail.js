@@ -207,7 +207,8 @@ FlareTail.util.event.async = function (callback) {
 FlareTail.util.event.trigger = function ($target, type, options = {}, async = true) {
   let callback = () => $target.dispatchEvent(new CustomEvent(type, options));
 
-  async ? this.async(callback) : callback();
+  // Local files have no origin (Bug 878297)
+  async && location.origin !== 'null' ? this.async(callback) : callback();
 };
 
 /* ----------------------------------------------------------------------------------------------
