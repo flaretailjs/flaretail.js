@@ -2833,7 +2833,7 @@ FlareTail.widget.Dialog.prototype.build = function () {
     $dialog.setAttribute('aria-labelledby', 'dialog-' + options.id + '-title');
   }
 
-  $message.textContent = options.message;
+  $message.innerHTML = options.message;
   $message.id = 'dialog-' + options.id + '-message';
 
   if (options.type === 'prompt') {
