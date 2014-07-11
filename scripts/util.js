@@ -74,8 +74,8 @@ FlareTail.util = {};
   }
 
   Object.defineProperty(FlareTail.util, 'compatible', {
-    enumerable: true,
-    value: compatible
+    'enumerable': true,
+    'value': compatible
   });
 }
 
@@ -234,8 +234,8 @@ FlareTail.util.Storage = function () {
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.util.device = {
-  touch: {
-    enabled: window.matchMedia('(-moz-touch-enabled: 1)').matches
+  'touch': {
+    'enabled': window.matchMedia('(-moz-touch-enabled: 1)').matches
   }
 };
 
@@ -312,17 +312,17 @@ FlareTail.util.theme = {};
 
 Object.defineProperties(FlareTail.util.theme, {
   'list': {
-    enumerable : true,
-    get: () => document.styleSheetSets
+    'enumerable': true,
+    'get': () => document.styleSheetSets
   },
   'default': {
-    enumerable : true,
-    get: () => document.preferredStyleSheetSet
+    'enumerable': true,
+    'get': () => document.preferredStyleSheetSet
   },
   'selected': {
-    enumerable : true,
-    get: () => document.selectedStyleSheetSet,
-    set: name => document.selectedStyleSheetSet = name
+    'enumerable': true,
+    'get': () => document.selectedStyleSheetSet,
+    'set': name => document.selectedStyleSheetSet = name
   }
 });
 
@@ -367,13 +367,13 @@ FlareTail.util.theme.preload_images = function (callback) {
 FlareTail.util.datetime = {};
 
 FlareTail.util.datetime.options = new Proxy({
-  relative: false,
-  timezone: 'local',
-  updater_enabled: false,
-  updater_interval: 60 // seconds
+  'relative': false,
+  'timezone': 'local',
+  'updater_enabled': false,
+  'updater_interval': 60 // seconds
 }, {
-  get: (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
-  set: (obj, prop, value) => {
+  'get': (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
+  'set': (obj, prop, value) => {
     let dt = FlareTail.util.datetime;
 
     obj[prop] = value;
@@ -487,8 +487,8 @@ FlareTail.util.datetime.update_elements = function () {
   for (let $time of document.querySelectorAll('time')) {
     let data = $time.dataset,
         time = this.format($time.dateTime, {
-          relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
-          simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
+          'relative': data.relative !== undefined ? data.relative === 'true' : this.options.relative,
+          'simple': data.simple !== undefined ? data.simple === 'true' : this.options.simple
         });
 
     if ($time.textContent !== time) {
