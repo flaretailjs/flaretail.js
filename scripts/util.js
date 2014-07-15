@@ -263,25 +263,33 @@ FlareTail.util.device = {
 
 FlareTail.util.app = {};
 
-FlareTail.util.app.can_install = function (manifest, callback) {
+FlareTail.util.app.can_install = function (manifest) {
   let apps = navigator.mozApps;
 
-  if (!apps) {
-    callback(false);
-    return;
-  }
+  return new Promise((resolve, reject) => {
+    if (apps) {
+      let request = apps.checkInstalled(manifest);
 
-  let request = apps.checkInstalled(manifest);
+      request.addEventListener('success', event => {
+        request.result ? reject(new Error('The app has already been installed')) : resolve();
+      });
 
-  request.addEventListener('success', event => callback(!request.result));
-  request.addEventListener('error', event => callback(false));
+      request.addEventListener('error', event => {
+        reject(new Error('Unknown error'));
+      });
+    } else {
+      reject(new Error('The app runtime is not available'));
+    }
+  });
 };
 
-FlareTail.util.app.install = function (manifest, callback) {
+FlareTail.util.app.install = function (manifest) {
   let request = navigator.mozApps.install(manifest);
 
-  request.addEventListener('success', event => callback(event));
-  request.addEventListener('error', event => callback(event));
+  return new Promise((resolve, reject) => {
+    request.addEventListener('success', event => resolve());
+    request.addEventListener('error', event => reject(new Error()));
+  });
 };
 
 FlareTail.util.app.fullscreen_enabled = function () {
@@ -297,12 +305,12 @@ FlareTail.util.app.auth_notification = function () {
   Notification.requestPermission(permission => {});
 };
 
-FlareTail.util.app.show_notification = function (title, options, callback) {
+FlareTail.util.app.show_notification = function (title, options) {
   let notification = new Notification(title, options);
 
-  if (callback) {
-    notification.addEventListener('click', callback);
-  }
+  return new Promise((resolve, reject) => {
+    notification.addEventListener('click', event => resolve(event));
+  });
 };
 
 /* ----------------------------------------------------------------------------------------------
@@ -327,7 +335,7 @@ Object.defineProperties(FlareTail.util.theme, {
   }
 });
 
-FlareTail.util.theme.preload_images = function (callback) {
+FlareTail.util.theme.preload_images = function () {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
@@ -358,7 +366,7 @@ FlareTail.util.theme.preload_images = function (callback) {
     image.src = src;
   });
 
-  Promise.all([for (src of images) _load(src)]).then(() => callback());
+  return Promise.all([for (src of images) _load(src)]);
 };
 
 /* ----------------------------------------------------------------------------------------------
