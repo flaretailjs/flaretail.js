@@ -150,6 +150,8 @@ FlareTail.widget.Button = function ($button) {
 FlareTail.widget.Button.prototype = Object.create(FlareTail.widget.Command.prototype);
 
 FlareTail.widget.Button.prototype.onclick = function (event) {
+  let pressed = false;
+
   FlareTail.util.event.ignore(event);
 
   if (this.data.disabled) {
@@ -157,10 +159,10 @@ FlareTail.widget.Button.prototype.onclick = function (event) {
   }
 
   if (this.options.toggle) {
-    this.data.pressed = !this.data.pressed;
+    pressed = this.data.pressed = !this.data.pressed;
   }
 
-  FlareTail.util.event.trigger(this.view.$button, 'Pressed');
+  FlareTail.util.event.trigger(this.view.$button, 'Pressed', { 'detail': { 'pressed': pressed }});
 };
 
 FlareTail.widget.Button.prototype.onkeydown = function (event) {
