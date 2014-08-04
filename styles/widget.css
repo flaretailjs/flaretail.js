@@ -530,7 +530,7 @@ a[role="menuitem"] {
   opacity: 0;
 }
 
-.scrollable {
+[role="region"] {
   pointer-events: auto;
 }
 
