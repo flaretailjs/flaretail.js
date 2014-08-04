@@ -69,6 +69,9 @@ FlareTail.util = {};
 
     // ES6 Array comprehensions (Firefox 30)
     [for (item of Iterator(['a', 'b', 'c'])) if (item[0] === 1) item[1]];
+
+    // ES6 shorthand properties in object literals
+    let a = 1, b = 2, c = { a, b };
   } catch (ex) {
     compatible = false;
   }

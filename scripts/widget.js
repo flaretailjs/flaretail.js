@@ -122,9 +122,7 @@ FlareTail.widget.Command.prototype = Object.create(FlareTail.widget.Widget.proto
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.Button = function ($button) {
-  this.view = {
-    '$button': $button
-  };
+  this.view = { $button };
 
   this.data = new Proxy({
     'disabled': $button.mozMatchesSelector('[aria-disabled="true"]'),
@@ -162,7 +160,7 @@ FlareTail.widget.Button.prototype.onclick = function (event) {
     pressed = this.data.pressed = !this.data.pressed;
   }
 
-  FlareTail.util.event.trigger(this.view.$button, 'Pressed', { 'detail': { 'pressed': pressed }});
+  FlareTail.util.event.trigger(this.view.$button, 'Pressed', { 'detail': { pressed }});
 };
 
 FlareTail.widget.Button.prototype.onkeydown = function (event) {
@@ -556,9 +554,7 @@ FlareTail.widget.Grid = function ($container, data, options) {
     throw new Error('Unimplemented role: gridcell');
   }
 
-  this.view = {
-    '$container': $container,
-  };
+  this.view = { $container };
 
   if (data) {
     this.data = data;
@@ -687,9 +683,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       switch (prop) {
         case 'hidden': {
           // Fire an event
-          FlareTail.util.event.trigger(this.view.$container, 'ColumnModified', { 'detail': {
-            'columns': columns
-          }});
+          FlareTail.util.event.trigger(this.view.$container, 'ColumnModified', { 'detail': { columns }});
 
           // Reflect the change of row's visibility to UI
           value === true ? this.hide_column(obj) : this.show_column(obj);
@@ -1250,9 +1244,9 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
       $follower = $image;
       $image.className = 'follower';
       this.data.drag = {
-        '$container': $container,
+        $container,
         '$header': $chead,
-        '$follower': $follower,
+        $follower,
         'start_index': index,
         'current_index': index,
         'start_left': event.clientX - left,
@@ -1261,11 +1255,7 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
       };
     }
 
-    headers.push(new Proxy({
-      'index': index,
-      'left': left,
-      'width': width
-    }, {
+    headers.push(new Proxy({ index, left, width }, {
       'set': (obj, prop, value) => {
         if (prop === 'left') {
           let $image = document.querySelector('#column-drag-image-' + obj.index);
@@ -1349,9 +1339,7 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   }
 
   // Fire an event
-  FlareTail.util.event.trigger($grid, 'ColumnModified', { 'detail': {
-    'columns': columns
-  }});
+  FlareTail.util.event.trigger($grid, 'ColumnModified', { 'detail': { columns }});
 
   // Cleanup
   drag.$header.removeAttribute('data-grabbed');
@@ -1415,9 +1403,7 @@ FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prot
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.ListBox = function ($container, data) {
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'item_roles': ['option'],
@@ -1539,9 +1525,7 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.Menu = function ($container, data = []) {
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'item_roles': ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
@@ -1920,9 +1904,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.MenuBar = function ($container, data) {
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'item_roles': ['menuitem'],
@@ -2029,9 +2011,7 @@ FlareTail.widget.MenuBar.prototype.close = function () {
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.RadioGroup = function ($container, data) {
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'item_roles': ['radio'],
@@ -2054,9 +2034,7 @@ FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.pr
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.Tree = function ($container, data) {
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'search_enabled': true,
@@ -2222,7 +2200,7 @@ FlareTail.widget.Tree.prototype.get_data = function () {
           '$element': $item,
           'id': $item.id,
           'label': $item.textContent,
-          'level': level,
+          level,
           'sub': []
         };
 
@@ -2299,9 +2277,7 @@ FlareTail.widget.TabList = function ($container) {
     throw new Error('Multi-selectable tab list is not supported yet.');
   }
 
-  this.view = {
-    '$container': $container
-  };
+  this.view = { $container };
 
   this.options = {
     'item_roles': ['tab'],
@@ -2450,9 +2426,7 @@ FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototy
  * ---------------------------------------------------------------------------------------------- */
 
 FlareTail.widget.Checkbox = function ($checkbox) {
-  this.view = {
-    '$checkbox': $checkbox
-  };
+  this.view = { $checkbox };
 
   $checkbox.tabIndex = 0;
 
@@ -2460,9 +2434,9 @@ FlareTail.widget.Checkbox = function ($checkbox) {
     'checked': {
       'enumerable': true,
       'get': () => $checkbox.getAttribute('aria-checked') === 'true',
-      'set': value => {
-        $checkbox.setAttribute('aria-checked', value);
-        FlareTail.util.event.trigger($checkbox, 'Toggled', { 'detail': { 'checked': value } });
+      'set': checked => {
+        $checkbox.setAttribute('aria-checked', checked);
+        FlareTail.util.event.trigger($checkbox, 'Toggled', { 'detail': { checked }});
       }
     }
   });
@@ -2522,18 +2496,9 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
   $owner.appendChild(this.get_observer());
   $owner.style.removeProperty('display');
 
-  this.view = {
-    '$owner': $owner,
-    '$content': $content,
-    '$controller': $controller
-  }
-
+  this.view = { $owner, $content, $controller };
   this.data = {};
-
-  this.options = {
-    'adjusted': adjusted,
-    'arrow_keys_enabled': arrow_keys_enabled
-  };
+  this.options = { adjusted, arrow_keys_enabled };
 
   if (FlareTail.util.device.type.startsWith('mobile')) {
     return false;
@@ -2935,7 +2900,7 @@ FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.
 
 FlareTail.widget.Splitter = function ($splitter) {
   this.view = {
-    '$splitter': $splitter,
+    $splitter,
     '$outer': $splitter.parentElement,
     'controls': {}
   };
@@ -2971,8 +2936,8 @@ FlareTail.widget.Splitter = function ($splitter) {
         return obj[prop];
       }
     }),
-    'orientation': orientation,
-    'flex': flex,
+    orientation,
+    flex,
     'position': flex ? (position / outer_size * 100).toFixed(2) + '%' : position + 'px',
     'controls': {},
     'grabbed': false
@@ -3071,7 +3036,7 @@ FlareTail.widget.Splitter = function ($splitter) {
         position = i === 0 ? 'before' : 'after';
 
     this.data.controls[position] = new Proxy({
-      'id': id,
+      id,
       'collapsible': $target.hasAttribute('aria-expanded'),
       'expanded': $target.getAttribute('aria-expanded') !== 'false'
     },
