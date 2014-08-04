@@ -72,6 +72,9 @@ FlareTail.util = {};
 
     // ES6 shorthand properties in object literals
     let a = 1, b = 2, c = { a, b };
+
+    // ES6 Template Literals
+    let d = `a: ${a}, b: ${b}`;
   } catch (ex) {
     compatible = false;
   }
@@ -123,7 +126,7 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
 
   // Attributes
   for (let [attr, value] of Iterator(attrs)) {
-    for (let $item of $scope.querySelectorAll('[data-attr~="' + CSS.escape(attr) + '"]')) {
+    for (let $item of $scope.querySelectorAll(`[data-attr~="${CSS.escape(attr)}"]`)) {
       $item.setAttribute(attr, value);
     }
   }
@@ -142,7 +145,7 @@ FlareTail.util.event = {};
 FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
   $target.addEventListener('keydown', event => {
     // Check the key code
-    if (event.keyCode !== event['DOM_VK_' + key]) {
+    if (event.keyCode !== event[`DOM_VK_${key}`]) {
       return;
     }
 
@@ -150,8 +153,8 @@ FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
     modifiers = modifiers ? modifiers.split(',') : [];
 
     for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
-      if ((modifiers.indexOf(mod) > -1 && !event[mod + 'Key']) ||
-          (modifiers.indexOf(mod) === -1 && event[mod + 'Key'])) {
+      if ((modifiers.indexOf(mod) > -1 && !event[`${mod}Key`]) ||
+          (modifiers.indexOf(mod) === -1 && event[`${mod}Key`])) {
         return;
       }
     }
@@ -175,7 +178,7 @@ FlareTail.util.event.bind = function (that, $target, types, use_capture = false,
   }
 
   for (let type of types) {
-    if (!that['on' + type]) {
+    if (!that[`on${type}`]) {
       continue; // No such handler
     }
 
@@ -580,5 +583,3 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
-
-FlareTail.util.string.format = (str, obj) => str.replace(/{(.*?)}/g, (match, key) => obj[key]);
