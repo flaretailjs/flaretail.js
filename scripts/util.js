@@ -16,7 +16,6 @@ FlareTail.util = {};
 {
   let features = [
     'toLocaleFormat' in Date.prototype, // Gecko specific
-    'mozMatchesSelector' in Element.prototype, // Firefox 3.6, still prefixed
     'FileReader' in window, // Firefox 3.6
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
@@ -46,7 +45,8 @@ FlareTail.util = {};
     'escape' in CSS, // Firefox 31
     'getBoxQuads' in Element.prototype, // Firefox 31
     '@@iterator' in StyleSheetList.prototype, // Firefox 31
-    '@@iterator' in CSSRuleList.prototype // Firefox 32
+    '@@iterator' in CSSRuleList.prototype, // Firefox 32
+    'matches' in Element.prototype // Firefox 34
   ];
 
   let compatible = true;
@@ -70,10 +70,10 @@ FlareTail.util = {};
     // ES6 Array comprehensions (Firefox 30)
     [for (item of Iterator(['a', 'b', 'c'])) if (item[0] === 1) item[1]];
 
-    // ES6 shorthand properties in object literals
+    // ES6 shorthand properties in object literals (Firefox 33)
     let a = 1, b = 2, c = { a, b };
 
-    // ES6 Template Literals
+    // ES6 Template Literals (Firefox 34)
     let d = `a: ${a}, b: ${b}`;
   } catch (ex) {
     compatible = false;

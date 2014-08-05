@@ -25,7 +25,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   this.options = this.options || {};
   this.options.item_roles = this.options.item_roles || [];
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
-  this.options.multiselectable = $container.mozMatchesSelector('[aria-multiselectable="true"]');
+  this.options.multiselectable = $container.matches('[aria-multiselectable="true"]');
 
   let FTue = FlareTail.util.event,
       selector = this.options.item_selector,
@@ -125,8 +125,8 @@ FlareTail.widget.Button = function ($button) {
   this.view = { $button };
 
   this.data = new Proxy({
-    'disabled': $button.mozMatchesSelector('[aria-disabled="true"]'),
-    'pressed': $button.mozMatchesSelector('[aria-pressed="true"]')
+    'disabled': $button.matches('[aria-disabled="true"]'),
+    'pressed': $button.matches('[aria-pressed="true"]')
   },
   {
     'set': (obj, prop, value) => {
@@ -747,7 +747,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
 FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
   let $target = event.target;
 
-  if ($target.mozMatchesSelector('[role="columnheader"]')) {
+  if ($target.matches('[role="columnheader"]')) {
     if (event.button === 0 && this.options.reorderable) {
       FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
     }
@@ -760,10 +760,10 @@ FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
   }
 
   // Editable checkbox in cells
-  if ($target.mozMatchesSelector('[role="checkbox"]')) {
+  if ($target.matches('[role="checkbox"]')) {
     let index = $target.parentElement.parentElement.sectionRowIndex,
         id = $target.parentElement.dataset.id,
-        value = !$target.mozMatchesSelector('[aria-checked="true"]');
+        value = !$target.matches('[aria-checked="true"]');
 
     this.data.rows[index].data[id] = value;
 
@@ -795,7 +795,7 @@ FlareTail.widget.Grid.prototype.onmouseup = function (event) {
   let $target = event.target,
       options = this.options;
 
-  if ($target.mozMatchesSelector('[role="columnheader"]') && options.sortable) {
+  if ($target.matches('[role="columnheader"]') && options.sortable) {
     options.sort_conditions.key = $target.dataset.id;
   }
 };
@@ -1026,7 +1026,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
         }
 
         case 'boolean': { // checkbox
-          value = $cell.querySelector('[role="checkbox"]').mozMatchesSelector('[aria-checked="true"]');
+          value = $cell.querySelector('[role="checkbox"]').matches('[aria-checked="true"]');
 
           break;
         }
@@ -1546,7 +1546,7 @@ FlareTail.widget.Menu = function ($container, data = []) {
   // Context menu
   let $owner = document.querySelector(`[aria-owns="${CSS.escape($container.id)}"]`);
 
-  if ($owner && !$owner.mozMatchesSelector('[role="menuitem"]')) {
+  if ($owner && !$owner.matches('[role="menuitem"]')) {
     this.view.$owner = $owner;
     FlareTail.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
   }
@@ -1748,7 +1748,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
       if (parent) {
         let view = parent.view,
             items = view.members,
-            $target = view.$container.mozMatchesSelector('[role="menubar"]')
+            $target = view.$container.matches('[role="menubar"]')
                     ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1]
                     : view.selected[0];
 
@@ -1851,7 +1851,7 @@ FlareTail.widget.Menu.prototype.open = function () {
 
   // Show the submenu on the left if there is not enough space
   if ($container.getBoxQuads()[0].bounds.right > window.innerWidth ||
-      parent && parent.view.$container.classList.contains('dir-left')) {
+      parent && parent.view.$container.matches('.dir-left')) {
     $container.classList.add('dir-left');
   }
 
@@ -1966,7 +1966,7 @@ FlareTail.widget.MenuBar.prototype.onkeydown_extend = function (event) {
     }
 
     case event.DOM_VK_SPACE: {
-      if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
+      if (event.target.matches('[aria-selected="true"]')) {
         menu.$container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       } else {
@@ -1978,7 +1978,7 @@ FlareTail.widget.MenuBar.prototype.onkeydown_extend = function (event) {
     }
 
     case event.DOM_VK_ESCAPE: {
-      if (event.target.mozMatchesSelector('[aria-selected="true"]')) {
+      if (event.target.matches('[aria-selected="true"]')) {
         menu.$container.setAttribute('aria-expanded', 'false');
         this.view.selected = [];
       }
@@ -2058,7 +2058,7 @@ FlareTail.widget.Tree = function ($container, data) {
 FlareTail.widget.Tree.prototype = Object.create(FlareTail.widget.Select.prototype);
 
 FlareTail.widget.Tree.prototype.onmousedown_extend = function (event) {
-  if (event.target.mozMatchesSelector('.expander')) {
+  if (event.target.matches('.expander')) {
     this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
   } else {
     // The default behavior
@@ -2072,7 +2072,7 @@ FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
 
   switch (event.keyCode) {
     case event.DOM_VK_LEFT: {
-      if ($item.mozMatchesSelector('[aria-expanded="true"]')) {
+      if ($item.matches('[aria-expanded="true"]')) {
         this.expand($item); // Collapse the subgroup
       } else {
         // Select the parent item
@@ -2094,7 +2094,7 @@ FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
     }
 
     case event.DOM_VK_RIGHT: {
-      if ($item.mozMatchesSelector('[aria-expanded="false"]')) {
+      if ($item.matches('[aria-expanded="false"]')) {
         this.expand($item); // Expand the subgroup
       } else if ($item.hasAttribute('aria-expanded')) {
         // Select the item just below
@@ -2217,7 +2217,7 @@ FlareTail.widget.Tree.prototype.get_data = function () {
 };
 
 FlareTail.widget.Tree.prototype.expand = function ($item) {
-  let expanded = $item.mozMatchesSelector('[aria-expanded="true"]'),
+  let expanded = $item.matches('[aria-expanded="true"]'),
       items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
       selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`,
       children = [...document.querySelectorAll(selector)];
@@ -2272,7 +2272,7 @@ FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.protot
 FlareTail.widget.TabList = function ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
-  if ($container.mozMatchesSelector('[aria-multiselectable="true"]')) {
+  if ($container.matches('[aria-multiselectable="true"]')) {
     throw new Error('Multi-selectable tab list is not supported yet.');
   }
 
@@ -2321,7 +2321,7 @@ FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.pr
 
 FlareTail.widget.TabList.prototype.onclick = function (event) {
   if (event.currentTarget === this.view.$container &&
-      event.target.mozMatchesSelector('.close')) {
+      event.target.matches('.close')) {
     this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
   }
 };
@@ -2553,7 +2553,7 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
         top = 0;
 
     while ($elm) {
-      if ($elm.mozMatchesSelector('[role="row"], [role="option"], [role="treeitem"]')) {
+      if ($elm.matches('[role="row"], [role="option"], [role="treeitem"]')) {
         break;
       }
 
