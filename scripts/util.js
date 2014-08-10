@@ -136,6 +136,20 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
   return $scope;
 };
 
+FlareTail.util.content.get_fragment = function (id, prefix = undefined) {
+  let $fragment = document.getElementById(id).content.cloneNode(true);
+
+  if (prefix) {
+    for (let attr of ['id', 'aria-controls', 'aria-labelledby']) {
+      for (let $element of $fragment.querySelectorAll(`[${attr}]`)) {
+        $element.setAttribute(attr, $element.getAttribute(attr).replace(/TID/, prefix));
+      }
+    }
+  }
+
+  return $fragment;
+};
+
 /* ----------------------------------------------------------------------------------------------
  * Event
  * ---------------------------------------------------------------------------------------------- */
