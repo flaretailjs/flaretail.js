@@ -13,7 +13,7 @@ FlareTail.widget = {};
  * RoleType (top level abstract role)
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.RoleType = function () {};
+FlareTail.widget.RoleType = function RoleType () {};
 
 FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   let $container = this.view.$container;
@@ -93,35 +93,39 @@ FlareTail.widget.RoleType.prototype.bind = function (...args) {
  * Structure (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Structure = function () {};
+FlareTail.widget.Structure = function Structure () {};
 FlareTail.widget.Structure.prototype = Object.create(FlareTail.widget.RoleType.prototype);
+FlareTail.widget.Structure.prototype.constructor = FlareTail.widget.Structure;
 
 /* ----------------------------------------------------------------------------------------------
  * Section (abstract role) extends Structure
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Section = function () {};
+FlareTail.widget.Section = function Section () {};
 FlareTail.widget.Section.prototype = Object.create(FlareTail.widget.Structure.prototype);
+FlareTail.widget.Section.prototype.constructor = FlareTail.widget.Section;
 
 /* ----------------------------------------------------------------------------------------------
  * Widget (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Widget = function () {};
+FlareTail.widget.Widget = function Widget () {};
 FlareTail.widget.Widget.prototype = Object.create(FlareTail.widget.RoleType.prototype);
+FlareTail.widget.Widget.prototype.constructor = FlareTail.widget.Widget;
 
 /* ----------------------------------------------------------------------------------------------
  * Command (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Command = function () {};
+FlareTail.widget.Command = function Command () {};
 FlareTail.widget.Command.prototype = Object.create(FlareTail.widget.Widget.prototype);
+FlareTail.widget.Command.prototype.constructor = FlareTail.widget.Command;
 
 /* ----------------------------------------------------------------------------------------------
  * Button extends Command
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Button = function ($button) {
+FlareTail.widget.Button = function Button ($button) {
   this.view = { $button };
 
   this.data = new Proxy({
@@ -146,6 +150,7 @@ FlareTail.widget.Button = function ($button) {
 };
 
 FlareTail.widget.Button.prototype = Object.create(FlareTail.widget.Command.prototype);
+FlareTail.widget.Button.prototype.constructor = FlareTail.widget.Button;
 
 FlareTail.widget.Button.prototype.onclick = function (event) {
   let pressed = false;
@@ -177,8 +182,9 @@ FlareTail.widget.Button.prototype.bind = function (...args) {
  * Composite (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Composite = function () {};
+FlareTail.widget.Composite = function Composite () {};
 FlareTail.widget.Composite.prototype = Object.create(FlareTail.widget.Widget.prototype);
+FlareTail.widget.Composite.prototype.constructor = FlareTail.widget.Composite;
 
 FlareTail.widget.Composite.prototype.onfocus = function (event) {
   if (this.view.members.indexOf(event.target) > -1 && event.target.id) {
@@ -542,7 +548,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
  * @returns {Object} the widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Grid = function ($container, data, options) {
+FlareTail.widget.Grid = function Grid ($container, data, options) {
   // What can be selected on the grid
   let dataset = $container.dataset,
       role = data ? 'row'
@@ -601,6 +607,7 @@ FlareTail.widget.Grid = function ($container, data, options) {
 };
 
 FlareTail.widget.Grid.prototype = Object.create(FlareTail.widget.Composite.prototype);
+FlareTail.widget.Grid.prototype.constructor = FlareTail.widget.Grid;
 
 FlareTail.widget.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
@@ -1382,15 +1389,17 @@ FlareTail.widget.Grid.prototype.filter = function (list) {
  * Select (abstract role) extends Composite
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Select = function () {};
+FlareTail.widget.Select = function Select () {};
 FlareTail.widget.Select.prototype = Object.create(FlareTail.widget.Composite.prototype);
+FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
 
 /* ----------------------------------------------------------------------------------------------
  * ComboBox extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Combobox = function () {};
+FlareTail.widget.Combobox = function Combobox () {};
 FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.Combobox.prototype.constructor = FlareTail.widget.Combobox;
 
 /* ----------------------------------------------------------------------------------------------
  * ListBox extends Select
@@ -1402,7 +1411,7 @@ FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.ListBox = function ($container, data) {
+FlareTail.widget.ListBox = function ListBox ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -1443,6 +1452,7 @@ FlareTail.widget.ListBox = function ($container, data) {
 };
 
 FlareTail.widget.ListBox.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.ListBox.prototype.constructor = FlareTail.widget.ListBox;
 
 FlareTail.widget.ListBox.prototype.build = function () {
   let map = this.data.map = new Map(),
@@ -1524,7 +1534,7 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
  * Menu extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Menu = function ($container, data = []) {
+FlareTail.widget.Menu = function Menu ($container, data = []) {
   this.view = { $container };
 
   this.options = {
@@ -1572,6 +1582,7 @@ FlareTail.widget.Menu = function ($container, data = []) {
 };
 
 FlareTail.widget.Menu.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.Menu.prototype.constructor = FlareTail.widget.Menu;
 
 FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   // Redefine items
@@ -1902,7 +1913,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
  * MenuBar extends Menu
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.MenuBar = function ($container, data) {
+FlareTail.widget.MenuBar = function MenuBar ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -1916,6 +1927,7 @@ FlareTail.widget.MenuBar = function ($container, data) {
 };
 
 FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototype);
+FlareTail.widget.MenuBar.prototype.constructor = FlareTail.widget.MenuBar;
 
 FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
@@ -2009,7 +2021,7 @@ FlareTail.widget.MenuBar.prototype.close = function () {
  * RadioGroup extends Select
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.RadioGroup = function ($container, data) {
+FlareTail.widget.RadioGroup = function RadioGroup ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -2023,6 +2035,7 @@ FlareTail.widget.RadioGroup = function ($container, data) {
 };
 
 FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.RadioGroup.prototype.constructor = FlareTail.widget.RadioGroup;
 
 /* ----------------------------------------------------------------------------------------------
  * Tree extends Select
@@ -2032,7 +2045,7 @@ FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.pr
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Tree = function ($container, data) {
+FlareTail.widget.Tree = function Tree ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -2056,6 +2069,7 @@ FlareTail.widget.Tree = function ($container, data) {
 };
 
 FlareTail.widget.Tree.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.Tree.prototype.constructor = FlareTail.widget.Tree;
 
 FlareTail.widget.Tree.prototype.onmousedown_extend = function (event) {
   if (event.target.matches('.expander')) {
@@ -2251,8 +2265,9 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
  * TreeGrid extends Tree and Grid
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.TreeGrid = function () {};
+FlareTail.widget.TreeGrid = function TreeGrid () {};
 FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.prototype);
+FlareTail.widget.TreeGrid.prototype.constructor = FlareTail.widget.TreeGrid;
 
 /* ----------------------------------------------------------------------------------------------
  * TabList extends Composite
@@ -2269,7 +2284,7 @@ FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.protot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.TabList = function ($container) {
+FlareTail.widget.TabList = function TabList ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
   if ($container.matches('[aria-multiselectable="true"]')) {
@@ -2318,6 +2333,7 @@ FlareTail.widget.TabList = function ($container) {
 };
 
 FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.prototype);
+FlareTail.widget.TabList.prototype.constructor = FlareTail.widget.TabList;
 
 FlareTail.widget.TabList.prototype.onclick = function (event) {
   if (event.currentTarget === this.view.$container &&
@@ -2417,14 +2433,15 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
  * Input (abstract role) extends Widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Input = function () {};
+FlareTail.widget.Input = function Input () {};
 FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototype);
+FlareTail.widget.Input.prototype.constructor = FlareTail.widget.Input;
 
 /* ----------------------------------------------------------------------------------------------
  * Checkbox extends Input
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Checkbox = function ($checkbox) {
+FlareTail.widget.Checkbox = function Checkbox ($checkbox) {
   this.view = { $checkbox };
 
   $checkbox.tabIndex = 0;
@@ -2444,6 +2461,7 @@ FlareTail.widget.Checkbox = function ($checkbox) {
 };
 
 FlareTail.widget.Checkbox.prototype = Object.create(FlareTail.widget.Input.prototype);
+FlareTail.widget.Checkbox.prototype.constructor = FlareTail.widget.Checkbox;
 
 FlareTail.widget.Checkbox.prototype.onkeydown = function (event) {
   if (event.keyCode === event.DOM_VK_SPACE) {
@@ -2471,7 +2489,7 @@ FlareTail.widget.Checkbox.prototype.bind = function (...args) {
  *                    Scroll with up/down arrow keys. Should be false on Grid, Tree, ListBox
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enabled = true) {
+FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
       $content = document.createElement('div'),
       FTue = FlareTail.util.event;
@@ -2510,6 +2528,7 @@ FlareTail.widget.ScrollBar = function ($owner, adjusted = false, arrow_keys_enab
 };
 
 FlareTail.widget.ScrollBar.prototype = Object.create(FlareTail.widget.Input.prototype);
+FlareTail.widget.ScrollBar.prototype.constructor = FlareTail.widget.ScrollBar;
 
 FlareTail.widget.ScrollBar.prototype.onmousedown = function (event) {
   this.scroll_with_mouse(event);
@@ -2734,8 +2753,9 @@ FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
  * Window (abstract role) extends RoleType
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Window = function () {};
+FlareTail.widget.Window = function Window () {};
 FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prototype);
+FlareTail.widget.Window.prototype.constructor = FlareTail.widget.Window;
 
 /* ----------------------------------------------------------------------------------------------
  * Dialog extends Window
@@ -2753,7 +2773,7 @@ FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prot
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Dialog = function (options) {
+FlareTail.widget.Dialog = function Dialog (options) {
   this.options = {
     'id': options.id || Date.now(),
     'type': options.type,
@@ -2773,6 +2793,7 @@ FlareTail.widget.Dialog = function (options) {
 };
 
 FlareTail.widget.Dialog.prototype = Object.create(FlareTail.widget.Window.prototype);
+FlareTail.widget.Dialog.prototype.constructor = FlareTail.widget.Dialog;
 
 FlareTail.widget.Dialog.prototype.build = function () {
   let options = this.options,
@@ -2880,15 +2901,17 @@ FlareTail.widget.Dialog.prototype.hide = function (action) {
  * AlertDialog (abstract role) extends Dialog
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.AlertDialog = function () {};
+FlareTail.widget.AlertDialog = function AlertDialog () {};
 FlareTail.widget.AlertDialog.prototype = Object.create(FlareTail.widget.Dialog.prototype);
+FlareTail.widget.AlertDialog.prototype.constructor = FlareTail.widget.AlertDialog;
 
 /* ----------------------------------------------------------------------------------------------
  * Separator extends Structure
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Separator = function () {};
+FlareTail.widget.Separator = function Separator () {};
 FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.prototype);
+FlareTail.widget.Separator.prototype.constructor = FlareTail.widget.Separator;
 
 /* ----------------------------------------------------------------------------------------------
  * Splitter (custom widget) extends Separator
@@ -2897,7 +2920,7 @@ FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.
  * @returns object widget
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Splitter = function ($splitter) {
+FlareTail.widget.Splitter = function Splitter ($splitter) {
   this.view = {
     $splitter,
     '$outer': $splitter.parentElement,
@@ -3063,6 +3086,7 @@ FlareTail.widget.Splitter = function ($splitter) {
 };
 
 FlareTail.widget.Splitter.prototype = Object.create(FlareTail.widget.Separator.prototype);
+FlareTail.widget.Splitter.prototype.constructor = FlareTail.widget.Splitter;
 
 FlareTail.widget.Splitter.prototype.onmousedown = function (event) {
   if (event.button !== 0) {
@@ -3168,47 +3192,54 @@ FlareTail.widget.Splitter.prototype.bind = function (...args) {
  * Region extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Region = function () {};
+FlareTail.widget.Region = function Region () {};
 FlareTail.widget.Region.prototype = Object.create(FlareTail.widget.Section.prototype);
+FlareTail.widget.Region.prototype.constructor = FlareTail.widget.Region;
 
 /* ----------------------------------------------------------------------------------------------
  * Status extends Region
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Status = function () {};
+FlareTail.widget.Status = function Status () {};
 FlareTail.widget.Status.prototype = Object.create(FlareTail.widget.Region.prototype);
+FlareTail.widget.Status.prototype.constructor = FlareTail.widget.Status;
 
 /* ----------------------------------------------------------------------------------------------
  * Landmark (abstract role) extends Region
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Landmark = function () {};
+FlareTail.widget.Landmark = function Landmark () {};
 FlareTail.widget.Landmark.prototype = Object.create(FlareTail.widget.Region.prototype);
+FlareTail.widget.Landmark.prototype.constructor = FlareTail.widget.Landmark;
 
 /* ----------------------------------------------------------------------------------------------
  * Application extends Landmark
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Application = function () {};
+FlareTail.widget.Application = function Application () {};
 FlareTail.widget.Application.prototype = Object.create(FlareTail.widget.Landmark.prototype);
+FlareTail.widget.Application.prototype.constructor = FlareTail.widget.Application;
 
 /* ----------------------------------------------------------------------------------------------
  * Tooltip extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Tooltip = function () {};
+FlareTail.widget.Tooltip = function Tooltip () {};
 FlareTail.widget.Tooltip.prototype = Object.create(FlareTail.widget.Section.prototype);
+FlareTail.widget.Tooltip.prototype.constructor = FlareTail.widget.Tooltip;
 
 /* ----------------------------------------------------------------------------------------------
  * Group extends Section
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.Group = function () {};
+FlareTail.widget.Group = function Group () {};
 FlareTail.widget.Group.prototype = Object.create(FlareTail.widget.Section.prototype);
+FlareTail.widget.Group.prototype.constructor = FlareTail.widget.Group;
 
 /* ----------------------------------------------------------------------------------------------
  * Toolbar extends Group
  * ---------------------------------------------------------------------------------------------- */
 
-FlareTail.widget.ToolBar = function () {};
+FlareTail.widget.ToolBar = function ToolBar () {};
 FlareTail.widget.ToolBar.prototype = Object.create(FlareTail.widget.Group.prototype);
+FlareTail.widget.ToolBar.prototype.constructor = FlareTail.widget.ToolBar;
