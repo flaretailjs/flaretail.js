@@ -1001,7 +1001,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  this.data.columns = Array.map($header.querySelector('[role="row"]').cells, $cell => {
+  this.data.columns = Array.mapPar($header.querySelector('[role="row"]').cells, $cell => {
     return {
       'id': $cell.dataset.id,
       'type': $cell.dataset.type || 'string',
@@ -1013,7 +1013,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   });
 
   // Fill the row database
-  this.data.rows = Array.map(this.view.$body.querySelectorAll('[role="row"]'), $row => {
+  this.data.rows = Array.mapPar(this.view.$body.querySelectorAll('[role="row"]'), $row => {
     let row = {
       'id': $row.id,
       '$element': $row,
@@ -1145,7 +1145,7 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
 };
 
 FlareTail.widget.Grid.prototype.build_columnpicker = function () {
-  this.data.columnpicker.build(this.data.columns.map(col => {
+  this.data.columnpicker.build(this.data.columns.mapPar(col => {
     return {
       'id': `${this.view.$container.id}-columnpicker-${col.id}`,
       'label': col.label,
@@ -1486,7 +1486,7 @@ FlareTail.widget.ListBox.prototype.build = function () {
 FlareTail.widget.ListBox.prototype.get_data = function () {
   let map = this.data.map = new Map();
 
-  this.data.structure = this.view.members.map($item => {
+  this.data.structure = this.view.members.mapPar($item => {
     let item = {
       '$element': $item,
       'id': $item.id,
@@ -1819,7 +1819,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
   $_separator.setAttribute('role', 'separator');
   $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
 
-  this.data.structure = data.map(item => {
+  this.data.structure = data.mapPar(item => {
     if (item.type === 'separator') {
       $fragment.appendChild($_separator.cloneNode(true));
 
@@ -1841,7 +1841,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
     }
 
     return item;
-  }).filter(item => item !== null);
+  }).filterPar(item => item !== null);
 
   $container.appendChild($fragment);
 
