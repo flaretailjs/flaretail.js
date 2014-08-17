@@ -465,13 +465,7 @@ FlareTail.util.datetime.format = function (str, options = {}) {
   // TODO: Rewrite this once the timezone support is added to the ECMAScript Intl API (Bug 837961)
   // TODO: Get the timezone of the Bugzilla instance, instead of hardcoding PST
   if (options.timezone !== 'local') {
-    let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
-                       (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
-                        > date.getTimezoneOffset(),
-        utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000,
-        offset = options.timezone === 'PST' ? 3600000 * -8 : 0;
-
-    shifted_date = new Date(utc + offset);
+    shifted_date = this.get_shifted_date(date, options.timezone === 'PST' ? -8 : 0);
   }
 
   if (options.simple &&
@@ -488,6 +482,15 @@ FlareTail.util.datetime.format = function (str, options = {}) {
   }
 
   return (shifted_date || date).toLocaleFormat(options.simple ? '%b %e' : '%Y-%m-%d %R');
+};
+
+FlareTail.util.datetime.get_shifted_date = function (date, offset) {
+  let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
+                     (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
+                      > date.getTimezoneOffset(),
+      utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000;
+
+  return new Date(utc + offset * 3600000);
 };
 
 FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
