@@ -581,7 +581,7 @@ FlareTail.widget.Grid = function Grid ($container, data, options) {
   this.options = new Proxy(this.options, {
     'set': (obj, prop, value) => {
       if (prop === 'adjust_scrollbar') {
-        this.view.scrollbar.options.adjusted = value;
+        this.view.$$scrollbar.options.adjusted = value;
       }
 
       obj[prop] = value;
@@ -730,10 +730,10 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   });
 
   // Custom scrollbar
-  let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
+  let $$scrollbar = this.view.$$scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
       option = this.options.adjust_scrollbar;
 
-  scrollbar.options.adjusted = option === undefined ? FlareTail.util.device.type === 'desktop' : option;
+  $$scrollbar.options.adjusted = option === undefined ? FlareTail.util.device.type === 'desktop' : option;
 };
 
 FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
@@ -1116,13 +1116,13 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
   $header.appendChild($picker);
   $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
-  let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
+  let $$picker = this.data.$$columnpicker = new FlareTail.widget.Menu($picker);
 
-  picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
+  $$picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
 };
 
 FlareTail.widget.Grid.prototype.build_columnpicker = function () {
-  this.data.columnpicker.build(this.data.columns.mapPar(col => ({
+  this.data.$$columnpicker.build(this.data.columns.mapPar(col => ({
     'id': `${this.view.$container.id}-columnpicker-${col.id}`,
     'label': col.label,
     'type': 'menuitemcheckbox',
@@ -1560,10 +1560,10 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   for (let $item of items) {
     if ($item.hasAttribute('aria-owns')) {
       let $menu = document.getElementById($item.getAttribute('aria-owns')),
-          menu = new FlareTail.widget.Menu($menu);
+          $$menu = new FlareTail.widget.Menu($menu);
 
-      menu.data.parent = this;
-      menus.set($item, menu);
+      $$menu.data.parent = this;
+      menus.set($item, $$menu);
     }
   }
 
