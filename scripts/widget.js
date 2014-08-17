@@ -9,9 +9,9 @@ let FlareTail = FlareTail || {};
 
 FlareTail.widget = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * RoleType (top level abstract role)
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.RoleType = function RoleType () {};
 
@@ -31,10 +31,8 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
       selector = this.options.item_selector,
       not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       get_items = selector => [...$container.querySelectorAll(selector)],
-      members  = this.view.members
-               = get_items(`${selector}${not_selector}`),
-      selected = this.view.selected
-               = get_items(`${selector}[${this.options.selected_attr}="true"]`);
+      members = this.view.members = get_items(`${selector}${not_selector}`),
+      selected = this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
 
   // Focus Management
   for (let [i, $item] of members.entries()) {
@@ -50,9 +48,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   }
 
   if (this.update_view) {
-    this.view = new Proxy(this.view, {
-      'set': this.update_view.bind(this)
-    });
+    this.view = new Proxy(this.view, { 'set': this.update_view.bind(this) });
   }
 
   // Add event listeners
@@ -67,6 +63,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
     // DragEvent
     'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend'
   ], false);
+
   FTue.bind(this, $container, [
     // FocusEvent
     'focus', 'blur',
@@ -89,41 +86,41 @@ FlareTail.widget.RoleType.prototype.bind = function (...args) {
   this.view.$container.addEventListener(...args);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Structure (abstract role) extends RoleType
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Structure = function Structure () {};
 FlareTail.widget.Structure.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 FlareTail.widget.Structure.prototype.constructor = FlareTail.widget.Structure;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Section (abstract role) extends Structure
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Section = function Section () {};
 FlareTail.widget.Section.prototype = Object.create(FlareTail.widget.Structure.prototype);
 FlareTail.widget.Section.prototype.constructor = FlareTail.widget.Section;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Widget (abstract role) extends RoleType
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Widget = function Widget () {};
 FlareTail.widget.Widget.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 FlareTail.widget.Widget.prototype.constructor = FlareTail.widget.Widget;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Command (abstract role) extends Widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Command = function Command () {};
 FlareTail.widget.Command.prototype = Object.create(FlareTail.widget.Widget.prototype);
 FlareTail.widget.Command.prototype.constructor = FlareTail.widget.Command;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Button extends Command
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Button = function Button ($button) {
   this.view = { $button };
@@ -178,9 +175,9 @@ FlareTail.widget.Button.prototype.bind = function (...args) {
   this.view.$button.addEventListener(...args);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Composite (abstract role) extends Widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Composite = function Composite () {};
 FlareTail.widget.Composite.prototype = Object.create(FlareTail.widget.Widget.prototype);
@@ -222,8 +219,7 @@ FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
     let start = items.indexOf(selected[0]),
         end = items.indexOf($target);
 
-    selected = start < end ? items.slice(start, end + 1)
-                           : items.slice(end, start + 1).reverse();
+    selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
   } else if (event.ctrlKey || event.metaKey) {
     if (multi && selected.indexOf($target) === -1) {
       // Add the item to selection
@@ -464,17 +460,14 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         let start = focused_idx,
             end = i;
 
-        this.view.selected = start < end ? items.slice(start, end + 1)
-                                         : items.slice(end, start + 1).reverse();
+        this.view.selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
       }
 
       // Remember the searched character(s) for later
       this.data.search_key = char;
 
       // Forget the character(s) after 1.5s
-      window.setTimeout(() => {
-        delete this.data.search_key;
-      }, 1500);
+      window.setTimeout(() => delete this.data.search_key, 1500);
     }
   }
 
@@ -527,7 +520,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
   obj[prop] = newval; // The default behavior
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Grid extends Composite
  *
  * @param   {Element} $container <table role="grid">
@@ -546,14 +539,13 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
  *           * aria-selected: if the attribute is set on the cells, the grid
  *                            will be like a spreadsheet application
  * @returns {Object} the widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Grid = function Grid ($container, data, options) {
   // What can be selected on the grid
   let dataset = $container.dataset,
-      role = data ? 'row'
-                  : $container.querySelector('.grid-body [role="row"]')
-                              .hasAttribute('aria-selected') ? 'row' : 'gridcell';
+      role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
+                                      .hasAttribute('aria-selected') ? 'row' : 'gridcell';
 
   // If the role is gridcell, the navigation management should be different
   if (role === 'gridcell') {
@@ -575,10 +567,7 @@ FlareTail.widget.Grid = function Grid ($container, data, options) {
   } else {
     this.view.$header = $container.querySelector('.grid-header');
     this.view.$body = $container.querySelector('.grid-body');
-    this.data = {
-      'columns': [],
-      'rows': []
-    };
+    this.data = { 'columns': [], 'rows': [] };
     this.options = {
       'item_roles': [role],
       'item_selector': `.grid-body [role="${role}"]`,
@@ -641,9 +630,7 @@ FlareTail.widget.Grid.prototype.activate_extend = function () {
     }
   });
 
-  this.options.sort_conditions = new Proxy(this.options.sort_conditions, {
-    'set': this.sort.bind(this)
-  });
+  this.options.sort_conditions = new Proxy(this.options.sort_conditions, { 'set': this.sort.bind(this) });
 
   this.activate_columns();
   this.activate_rows();
@@ -715,8 +702,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
       let row = [for (row of this.data.rows) if (row.data.id === obj.id) row][0],
           $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
 
-      this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
-                                                 : $elm.textContent = value;
+      this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value) : $elm.textContent = value;
       obj[prop] = value;
     }
   };
@@ -747,8 +733,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   let scrollbar = this.view.scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
       option = this.options.adjust_scrollbar;
 
-  scrollbar.options.adjusted = option === undefined ? FlareTail.util.device.type === 'desktop'
-                                                    : option;
+  scrollbar.options.adjusted = option === undefined ? FlareTail.util.device.type === 'desktop' : option;
 };
 
 FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
@@ -1001,24 +986,18 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  this.data.columns = Array.mapPar($header.querySelector('[role="row"]').cells, $cell => {
-    return {
-      'id': $cell.dataset.id,
-      'type': $cell.dataset.type || 'string',
-      'label': $cell.textContent,
-      'hidden': false,
-      'key': $cell.dataset.key ? true : false,
-      '$element': $cell
-    };
-  });
+  this.data.columns = Array.mapPar($header.querySelector('[role="row"]').cells, $cell => ({
+    'id': $cell.dataset.id,
+    'type': $cell.dataset.type || 'string',
+    'label': $cell.textContent,
+    'hidden': false,
+    'key': $cell.dataset.key ? true : false,
+    '$element': $cell
+  }));
 
   // Fill the row database
   this.data.rows = Array.mapPar(this.view.$body.querySelectorAll('[role="row"]'), $row => {
-    let row = {
-      'id': $row.id,
-      '$element': $row,
-      'data': {}
-    };
+    let row = { 'id': $row.id, '$element': $row, 'data': {} };
 
     for (let [index, $cell] of [...$row.cells].entries()) {
       let column = this.data.columns[index],
@@ -1139,24 +1118,18 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
 
   let picker = this.data.columnpicker = new FlareTail.widget.Menu($picker);
 
-  picker.bind('MenuItemSelected', event => {
-    this.toggle_column(event.detail.target.dataset.id);
-  });
+  picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
 };
 
 FlareTail.widget.Grid.prototype.build_columnpicker = function () {
-  this.data.columnpicker.build(this.data.columns.mapPar(col => {
-    return {
-      'id': `${this.view.$container.id}-columnpicker-${col.id}`,
-      'label': col.label,
-      'type': 'menuitemcheckbox',
-      'disabled': col.key === true,
-      'checked': !col.hidden,
-      'data': {
-        'id': col.id
-      }
-    };
-  }));
+  this.data.columnpicker.build(this.data.columns.mapPar(col => ({
+    'id': `${this.view.$container.id}-columnpicker-${col.id}`,
+    'label': col.label,
+    'type': 'menuitemcheckbox',
+    'disabled': col.key === true,
+    'checked': !col.hidden,
+    'data': { 'id': col.id }
+  })));
 };
 
 FlareTail.widget.Grid.prototype.toggle_column = function (id) {
@@ -1271,6 +1244,7 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
             $image.style.left = `${value}px`;
           }
         }
+
         obj[prop] = value;
       }
     }));
@@ -1333,15 +1307,13 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
     for (let $colgroup of $grid.querySelectorAll('colgroup')) {
       let items = $colgroup.children;
 
-      $colgroup.insertBefore(items[start_idx],
-                             items[start_idx > current_idx ? current_idx : current_idx + 1]);
+      $colgroup.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
     }
 
     for (let $row of $grid.querySelectorAll('[role="row"]')) {
       let items = $row.children;
 
-      $row.insertBefore(items[start_idx],
-                        items[start_idx > current_idx ? current_idx : current_idx + 1]);
+      $row.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
     }
   }
 
@@ -1372,10 +1344,8 @@ FlareTail.widget.Grid.prototype.filter = function (list) {
   this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
 
   if (selected.length) {
-    for (let [index, $row] of selected.entries()) {
-      if ($row.getAttribute('aria-hidden') === 'true') {
-        selected.splice(index, 1);
-      }
+    for (let [index, $row] of selected.entries()) if ($row.getAttribute('aria-hidden') === 'true') {
+      selected.splice(index, 1);
     }
 
     this.view.selected = selected;
@@ -1385,23 +1355,23 @@ FlareTail.widget.Grid.prototype.filter = function (list) {
   $grid_body.removeAttribute('aria-busy');
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Select (abstract role) extends Composite
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Select = function Select () {};
 FlareTail.widget.Select.prototype = Object.create(FlareTail.widget.Composite.prototype);
 FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * ComboBox extends Select
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Combobox = function Combobox () {};
 FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prototype);
 FlareTail.widget.Combobox.prototype.constructor = FlareTail.widget.Combobox;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * ListBox extends Select
  *
  * @param   element <menu role="listbox">
@@ -1409,7 +1379,7 @@ FlareTail.widget.Combobox.prototype.constructor = FlareTail.widget.Combobox;
  * @options attributes on the listbox element:
  *           * aria-multiselectable
  * @returns object widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.ListBox = function ListBox ($container, data) {
   this.view = { $container };
@@ -1487,11 +1457,7 @@ FlareTail.widget.ListBox.prototype.get_data = function () {
   let map = this.data.map = new Map();
 
   this.data.structure = this.view.members.mapPar($item => {
-    let item = {
-      '$element': $item,
-      'id': $item.id,
-      'label': $item.textContent
-    };
+    let item = { '$element': $item, 'id': $item.id, 'label': $item.textContent };
 
     if (Object.keys($item.dataset).length) {
       item.data = {};
@@ -1530,9 +1496,9 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
   $container.removeAttribute('aria-busy');
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Menu extends Select
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Menu = function Menu ($container, data = []) {
   this.view = { $container };
@@ -1760,8 +1726,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
         let view = parent.view,
             items = view.members,
             $target = view.$container.matches('[role="menubar"]')
-                    ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1]
-                    : view.selected[0];
+                    ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1] : view.selected[0];
 
         view.selected = view.$focused = $target;
       }
@@ -1909,9 +1874,9 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
   }
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * MenuBar extends Menu
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.MenuBar = function MenuBar ($container, data) {
   this.view = { $container };
@@ -1946,8 +1911,7 @@ FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
 };
 
 FlareTail.widget.MenuBar.prototype.onmouseover = function (event) {
-  if (this.view.selected.length &&
-      this.view.members.indexOf(event.target) > -1) {
+  if (this.view.selected.length && this.view.members.indexOf(event.target) > -1) {
     this.view.selected = this.view.$focused = event.target;
   }
 
@@ -2017,9 +1981,9 @@ FlareTail.widget.MenuBar.prototype.close = function () {
   this.view.selected = [];
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * RadioGroup extends Select
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.RadioGroup = function RadioGroup ($container, data) {
   this.view = { $container };
@@ -2037,13 +2001,13 @@ FlareTail.widget.RadioGroup = function RadioGroup ($container, data) {
 FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.prototype);
 FlareTail.widget.RadioGroup.prototype.constructor = FlareTail.widget.RadioGroup;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Tree extends Select
  *
  * @param   $container <menu role="tree">
  * @param   optional array data
  * @returns object widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Tree = function Tree ($container, data) {
   this.view = { $container };
@@ -2261,15 +2225,15 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
   this.view.selected = selected;
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * TreeGrid extends Tree and Grid
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.TreeGrid = function TreeGrid () {};
 FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.prototype);
 FlareTail.widget.TreeGrid.prototype.constructor = FlareTail.widget.TreeGrid;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * TabList extends Composite
  *
  * @param   $container <ul role="tablist">
@@ -2282,7 +2246,7 @@ FlareTail.widget.TreeGrid.prototype.constructor = FlareTail.widget.TreeGrid;
  *           * aria-selected: if true, the tab will be selected first
  *           * draggable and aria-grabbed: tabs can be dragged (to reorder)
  * @returns object widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.TabList = function TabList ($container) {
   // TODO: aria-multiselectable support for accordion UI
@@ -2322,8 +2286,7 @@ FlareTail.widget.TabList = function TabList ($container) {
 
   // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
   (new MutationObserver(mutations => {
-    this.view.members
-      = [...$container.querySelectorAll('[role="tab"]:not([aria-hidden="true"])')];
+    this.view.members = [...$container.querySelectorAll('[role="tab"]:not([aria-hidden="true"])')];
   })).observe($container, {
     'subtree': true,
     'childList': true,
@@ -2336,8 +2299,7 @@ FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.pr
 FlareTail.widget.TabList.prototype.constructor = FlareTail.widget.TabList;
 
 FlareTail.widget.TabList.prototype.onclick = function (event) {
-  if (event.currentTarget === this.view.$container &&
-      event.target.matches('.close')) {
+  if (event.currentTarget === this.view.$container && event.target.matches('.close')) {
     this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
   }
 };
@@ -2404,8 +2366,7 @@ FlareTail.widget.TabList.prototype.add_tab = function (name, title, label, $pane
   $panel.setAttribute('aria-labelledby', $tab.id);
 
   // Add tabpanel
-  document.getElementById($selected.getAttribute('aria-controls'))
-          .parentElement.appendChild($panel);
+  document.getElementById($selected.getAttribute('aria-controls')).parentElement.appendChild($panel);
 
   return $tab;
 };
@@ -2429,17 +2390,17 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
   $tab.remove(); // Update view
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Input (abstract role) extends Widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Input = function Input () {};
 FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototype);
 FlareTail.widget.Input.prototype.constructor = FlareTail.widget.Input;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Checkbox extends Input
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Checkbox = function Checkbox ($checkbox) {
   this.view = { $checkbox };
@@ -2480,14 +2441,14 @@ FlareTail.widget.Checkbox.prototype.bind = function (...args) {
   this.view.$checkbox.addEventListener(...args);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * ScrollBar extends Input
  *
  * @param   $owner    An element to be scrolled
  * @param   adjusted  Adjust the scrolling increment for Grid, Tree, ListBox
  * @param   arrow_keys_enabled
  *                    Scroll with up/down arrow keys. Should be false on Grid, Tree, ListBox
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
@@ -2584,8 +2545,7 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
     }
 
     top = $owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling
-        ? $elm.offsetTop
-        : $elm.nextElementSibling.offsetTop;
+        ? $elm.offsetTop : $elm.nextElementSibling.offsetTop;
 
     $owner.scrollTop = top;
   }
@@ -2687,8 +2647,7 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
     case event.DOM_VK_SPACE:
     case event.DOM_VK_PAGE_UP:
     case event.DOM_VK_PAGE_DOWN: {
-      $owner.scrollTop += key === event.DOM_VK_PAGE_UP ||
-                          key === event.DOM_VK_SPACE && event.shiftKey ? -ch : ch;
+      $owner.scrollTop += key === event.DOM_VK_PAGE_UP || key === event.DOM_VK_SPACE && event.shiftKey ? -ch : ch;
 
       break;
     }
@@ -2749,15 +2708,15 @@ FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
   this.view.$controller.addEventListener(...args);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Window (abstract role) extends RoleType
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Window = function Window () {};
 FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prototype);
 FlareTail.widget.Window.prototype.constructor = FlareTail.widget.Window;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Dialog extends Window
  *
  * @param   object options
@@ -2771,7 +2730,7 @@ FlareTail.widget.Window.prototype.constructor = FlareTail.widget.Window;
  *            oncancel (callback function, optional)
  *            value (for prompt, optional)
  * @returns object widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Dialog = function Dialog (options) {
   this.options = {
@@ -2897,28 +2856,28 @@ FlareTail.widget.Dialog.prototype.hide = function (action) {
   }
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * AlertDialog (abstract role) extends Dialog
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.AlertDialog = function AlertDialog () {};
 FlareTail.widget.AlertDialog.prototype = Object.create(FlareTail.widget.Dialog.prototype);
 FlareTail.widget.AlertDialog.prototype.constructor = FlareTail.widget.AlertDialog;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Separator extends Structure
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Separator = function Separator () {};
 FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.prototype);
 FlareTail.widget.Separator.prototype.constructor = FlareTail.widget.Separator;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Splitter (custom widget) extends Separator
  *
  * @param   element <div class="splitter" role="separator">
  * @returns object widget
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Splitter = function Splitter ($splitter) {
   this.view = {
@@ -3110,8 +3069,7 @@ FlareTail.widget.Splitter.prototype.onmousemove = function (event) {
   }
 
   this.data.position = this.data.orientation === 'horizontal'
-                     ? event.clientY - this.data.outer.top
-                     : event.clientX - this.data.outer.left;
+                     ? event.clientY - this.data.outer.top : event.clientX - this.data.outer.left;
 };
 
 FlareTail.widget.Splitter.prototype.onmouseup = function (event) {
@@ -3156,8 +3114,7 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
       if (position === '100%') {
         value = outer.size - (this.data.controls.after.min || delta);
       } else if (Number.parseInt(position) !== 0) {
-        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100
-                                : Number.parseInt(position)) - delta;
+        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) - delta;
       }
 
       break;
@@ -3171,8 +3128,7 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
       if (Number.parseInt(position) === 0) {
         value = this.data.controls.before.min || delta;
       } else if (position !== '100%') {
-        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100
-                                : Number.parseInt(position)) + delta;
+        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) + delta;
       }
 
       break;
@@ -3188,57 +3144,57 @@ FlareTail.widget.Splitter.prototype.bind = function (...args) {
   this.view.$splitter.addEventListener(...args);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Region extends Section
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Region = function Region () {};
 FlareTail.widget.Region.prototype = Object.create(FlareTail.widget.Section.prototype);
 FlareTail.widget.Region.prototype.constructor = FlareTail.widget.Region;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Status extends Region
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Status = function Status () {};
 FlareTail.widget.Status.prototype = Object.create(FlareTail.widget.Region.prototype);
 FlareTail.widget.Status.prototype.constructor = FlareTail.widget.Status;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Landmark (abstract role) extends Region
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Landmark = function Landmark () {};
 FlareTail.widget.Landmark.prototype = Object.create(FlareTail.widget.Region.prototype);
 FlareTail.widget.Landmark.prototype.constructor = FlareTail.widget.Landmark;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Application extends Landmark
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Application = function Application () {};
 FlareTail.widget.Application.prototype = Object.create(FlareTail.widget.Landmark.prototype);
 FlareTail.widget.Application.prototype.constructor = FlareTail.widget.Application;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Tooltip extends Section
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Tooltip = function Tooltip () {};
 FlareTail.widget.Tooltip.prototype = Object.create(FlareTail.widget.Section.prototype);
 FlareTail.widget.Tooltip.prototype.constructor = FlareTail.widget.Tooltip;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Group extends Section
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.Group = function Group () {};
 FlareTail.widget.Group.prototype = Object.create(FlareTail.widget.Section.prototype);
 FlareTail.widget.Group.prototype.constructor = FlareTail.widget.Group;
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Toolbar extends Group
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.widget.ToolBar = function ToolBar () {};
 FlareTail.widget.ToolBar.prototype = Object.create(FlareTail.widget.Group.prototype);

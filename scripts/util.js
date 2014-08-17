@@ -9,9 +9,9 @@ let FlareTail = FlareTail || {};
 
 FlareTail.util = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Compatibility
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 {
   let features = [
@@ -86,9 +86,9 @@ FlareTail.util = {};
   });
 }
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Content
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.content = {};
 
@@ -115,10 +115,8 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
     }
   };
 
-  let fill = ($item, value) => {
-    $item.dateTime !== undefined ? FlareTail.util.datetime.fill_element($item, value)
-                                 : $item.itemValue = value;
-  };
+  let fill = ($item, value) => $item.dateTime !== undefined ? FlareTail.util.datetime.fill_element($item, value)
+                                                            : $item.itemValue = value;
 
   $scope.setAttribute('aria-busy', 'true');
 
@@ -151,9 +149,9 @@ FlareTail.util.content.get_fragment = function (id, prefix = undefined) {
   return $fragment;
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Event
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.event = {};
 
@@ -197,8 +195,7 @@ FlareTail.util.event.bind = function (that, $target, types, use_capture = false,
       continue; // No such handler
     }
 
-    unbind ? $target.removeEventListener(type, that, use_capture)
-           : $target.addEventListener(type, that, use_capture);
+    unbind ? $target.removeEventListener(type, that, use_capture) : $target.addEventListener(type, that, use_capture);
   }
 
   return true;
@@ -232,15 +229,15 @@ FlareTail.util.event.trigger = function ($target, type, options = {}, async = tr
   async && location.origin !== 'null' ? this.async(callback) : callback();
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Preferences
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.prefs = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Storage
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.Storage = function () {
   let req = this.request = indexedDB.open('MyTestDatabase', 1),
@@ -251,9 +248,9 @@ FlareTail.util.Storage = function () {
   db.addEventListener('error', event => {});
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Device
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.device = {
   'touch': {
@@ -278,9 +275,9 @@ FlareTail.util.device = {
   document.documentElement.setAttribute('data-device-type', device.type);
 }
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * App
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.app = {};
 
@@ -291,13 +288,9 @@ FlareTail.util.app.can_install = function (manifest) {
     if (apps) {
       let request = apps.checkInstalled(manifest);
 
-      request.addEventListener('success', event => {
-        request.result ? reject(new Error('The app has already been installed')) : resolve();
-      });
-
-      request.addEventListener('error', event => {
-        reject(new Error('Unknown error'));
-      });
+      request.addEventListener('success', event =>
+        request.result ? reject(new Error('The app has already been installed')) : resolve());
+      request.addEventListener('error', event => reject(new Error('Unknown error')));
     } else {
       reject(new Error('The app runtime is not available'));
     }
@@ -318,8 +311,7 @@ FlareTail.util.app.fullscreen_enabled = function () {
 };
 
 FlareTail.util.app.toggle_fullscreen = function ($element = document.body) {
-  document.mozFullScreenElement ? document.mozCancelFullScreen()
-                                : $element.mozRequestFullScreen();
+  document.mozFullScreenElement ? document.mozCancelFullScreen() : $element.mozRequestFullScreen();
 };
 
 FlareTail.util.app.auth_notification = function () {
@@ -329,14 +321,12 @@ FlareTail.util.app.auth_notification = function () {
 FlareTail.util.app.show_notification = function (title, options) {
   let notification = new Notification(title, options);
 
-  return new Promise((resolve, reject) => {
-    notification.addEventListener('click', event => resolve(event));
-  });
+  return new Promise(resolve => notification.addEventListener('click', event => resolve(event)));
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Theme
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.theme = {};
 
@@ -362,8 +352,7 @@ FlareTail.util.theme.preload_images = function () {
 
   for (let sheet of document.styleSheets) {
     for (let rule of sheet.cssRules) {
-      let match = rule.style && rule.style.backgroundImage &&
-                  rule.style.backgroundImage.match(RegExp(pattern, 'g'));
+      let match = rule.style && rule.style.backgroundImage && rule.style.backgroundImage.match(RegExp(pattern, 'g'));
 
       if (!match) {
         continue;
@@ -390,9 +379,9 @@ FlareTail.util.theme.preload_images = function () {
   return Promise.all([for (src of images) _load(src)]);
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Date & Time
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.datetime = {};
 
@@ -415,8 +404,7 @@ FlareTail.util.datetime.options = new Proxy({
     if (prop === 'relative' || prop === 'updater_enabled') {
       if (dt.options.relative && dt.options.updater_enabled) {
         if (!dt.updater) {
-          dt.updater = window.setInterval(() => dt.update_elements(),
-                                          dt.options.updater_interval * 1000);
+          dt.updater = window.setInterval(() => dt.update_elements(), dt.options.updater_interval * 1000);
         }
       } else if (dt.updater) {
         window.clearInterval(dt.updater);
@@ -454,10 +442,8 @@ FlareTail.util.datetime.format = function (str, options = {}) {
       return (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
     };
 
-    for (let pattern of patterns) {
-      if (delta > pattern[0]) {
-        return format(...pattern);
-      }
+    for (let pattern of patterns) if (delta > pattern[0]) {
+      return format(...pattern);
     }
   }
 
@@ -468,8 +454,7 @@ FlareTail.util.datetime.format = function (str, options = {}) {
     shifted_date = this.get_shifted_date(date, options.timezone === 'PST' ? -8 : 0);
   }
 
-  if (options.simple &&
-      date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
+  if (options.simple && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
     let dates = now.getDate() - date.getDate();
 
     if (dates === 0) {
@@ -530,59 +515,57 @@ FlareTail.util.datetime.update_elements = function () {
   }
 };
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Network
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.network = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * History
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.history = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Localization
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.l10n = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Internationalization
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.i18n = {};
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Style
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.style = {};
 
-FlareTail.util.style.get = ($element, property) => {
-  return window.getComputedStyle($element, null).getPropertyValue(property);
-};
+FlareTail.util.style.get = ($element, property) => window.getComputedStyle($element, null).getPropertyValue(property);
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Object
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.object = {};
 
 FlareTail.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * Array
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.array = {};
 
 FlareTail.util.array.clone = array => [...array];
 
-/* ----------------------------------------------------------------------------------------------
+/* ------------------------------------------------------------------------------------------------------------------
  * String
- * ---------------------------------------------------------------------------------------------- */
+ * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.util.string = {};
 
