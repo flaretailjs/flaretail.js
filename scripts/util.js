@@ -47,6 +47,7 @@ FlareTail.util = {};
     'getBoxQuads' in Element.prototype, // Firefox 31
     '@@iterator' in StyleSheetList.prototype, // Firefox 31
     '@@iterator' in CSSRuleList.prototype, // Firefox 32
+    'assign' in Object, // Firefox 34
     'matches' in Element.prototype // Firefox 34
   ];
 
@@ -553,7 +554,7 @@ FlareTail.util.style.get = ($element, property) => window.getComputedStyle($elem
 
 FlareTail.util.object = {};
 
-FlareTail.util.object.clone = obj => JSON.parse(JSON.stringify(obj));
+FlareTail.util.object.clone = obj => Object.assign({}, obj);
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Array
