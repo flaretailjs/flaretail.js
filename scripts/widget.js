@@ -1330,8 +1330,9 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
 
 FlareTail.widget.Grid.prototype.filter = function (list) {
   let $grid_body = this.view.$body,
-      list = new Set(list),
       selected = [...this.view.selected];
+
+  list = new Set(list);
 
   $grid_body.setAttribute('aria-busy', 'true');
 
