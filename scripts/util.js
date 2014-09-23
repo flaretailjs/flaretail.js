@@ -48,7 +48,8 @@ FlareTail.util = {};
     '@@iterator' in StyleSheetList.prototype, // Firefox 31
     '@@iterator' in CSSRuleList.prototype, // Firefox 32
     'assign' in Object, // Firefox 34
-    'matches' in Element.prototype // Firefox 34
+    'matches' in Element.prototype, // Firefox 34
+    'contains' in Array.prototype // Firefox 35
   ];
 
   let compatible = true;
@@ -167,8 +168,8 @@ FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
     modifiers = modifiers ? modifiers.split(',') : [];
 
     for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
-      if ((modifiers.indexOf(mod) > -1 && !event[`${mod}Key`]) ||
-          (modifiers.indexOf(mod) === -1 && event[`${mod}Key`])) {
+      if ((modifiers.contains(mod) && !event[`${mod}Key`]) ||
+          (!modifiers.contains(mod) && event[`${mod}Key`])) {
         return;
       }
     }

@@ -184,7 +184,7 @@ FlareTail.widget.Composite.prototype = Object.create(FlareTail.widget.Widget.pro
 FlareTail.widget.Composite.prototype.constructor = FlareTail.widget.Composite;
 
 FlareTail.widget.Composite.prototype.onfocus = function (event) {
-  if (this.view.members.indexOf(event.target) > -1 && event.target.id) {
+  if (this.view.members.contains(event.target) && event.target.id) {
     this.view.$container.setAttribute('aria-activedescendant', event.target.id);
   } else {
     this.view.$container.removeAttribute('aria-activedescendant');
@@ -197,7 +197,7 @@ FlareTail.widget.Composite.prototype.onblur = function (event) {
 };
 
 FlareTail.widget.Composite.prototype.onmousedown = function (event) {
-  if (this.view.members.indexOf(event.target) === -1 || event.button !== 0) {
+  if (!this.view.members.contains(event.target) || event.button !== 0) {
     return;
   }
 
@@ -221,10 +221,10 @@ FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
 
     selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
   } else if (event.ctrlKey || event.metaKey) {
-    if (multi && selected.indexOf($target) === -1) {
+    if (multi && !selected.contains($target)) {
       // Add the item to selection
       selected.push($target);
-    } else if (selected.indexOf($target) > -1) {
+    } else if (selected.contains($target)) {
       // Remove the item from selection
       selected.splice(selected.indexOf($target), 1);
     }
@@ -272,7 +272,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         break;
       }
 
-      if (selected.indexOf($focused) === -1) {
+      if (!selected.contains($focused)) {
         // Add item
         selected.push($focused);
         this.view.selected = selected;
@@ -343,10 +343,10 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         break;
       }
 
-      if (selected.indexOf($focused) === -1) {
+      if (!selected.contains($focused)) {
         // Create new range
         this.view.selected = items.slice(focused_idx - 1, focused_idx + 1).reverse();
-      } else if (selected.indexOf(items[focused_idx - 1]) === -1) {
+      } else if (!selected.contains(items[focused_idx - 1])) {
         // Expand range
         selected.push(this.view.$focused);
         this.view.selected = selected;
@@ -377,10 +377,10 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         break;
       }
 
-      if (selected.indexOf($focused) === -1) {
+      if (!selected.contains($focused)) {
         // Create new range
         this.view.selected = items.slice(focused_idx, focused_idx + 2);
-      } else if (selected.indexOf(items[focused_idx + 1]) === -1) {
+      } else if (!selected.contains(items[focused_idx + 1])) {
         // Expand range
         selected.push(this.view.$focused);
         this.view.selected = selected;
@@ -1483,7 +1483,7 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
   // Filter the options
   for (let [name, item] of this.data.map) {
     item.selected = false;
-    item.disabled = list.length && list.indexOf(name) === -1;
+    item.disabled = list.length && !list.contains(name);
   }
 
   // Update the member list
@@ -1615,7 +1615,7 @@ FlareTail.widget.Menu.prototype.onmousedown = function (event) {
 
   if (event.currentTarget === window) {
     this.close(true);
-  } else if (!this.data.menus.has(event.target) && this.view.members.indexOf(event.target) > -1) {
+  } else if (!this.data.menus.has(event.target) && this.view.members.contains(event.target)) {
     this.select(event)
     this.close(true);
   }
@@ -1624,7 +1624,7 @@ FlareTail.widget.Menu.prototype.onmousedown = function (event) {
 };
 
 FlareTail.widget.Menu.prototype.onmouseover = function (event) {
-  if (this.view.members.indexOf(event.target) > -1) {
+  if (this.view.members.contains(event.target)) {
     this.view.selected = this.view.$focused = event.target;
   }
 
@@ -1902,7 +1902,7 @@ FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
     return;
   }
 
-  if (this.view.members.indexOf(event.target) > -1) {
+  if (this.view.members.contains(event.target)) {
     event.target !== this.view.selected[0] ? this.open(event) : this.close();
   } else if (this.view.selected.length) {
     this.close();
@@ -1912,7 +1912,7 @@ FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
 };
 
 FlareTail.widget.MenuBar.prototype.onmouseover = function (event) {
-  if (this.view.selected.length && this.view.members.indexOf(event.target) > -1) {
+  if (this.view.selected.length && this.view.members.contains(event.target)) {
     this.view.selected = this.view.$focused = event.target;
   }
 
@@ -2219,7 +2219,7 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
   }
 
   // Remove the item's children from selection
-  let selected = [for ($item of this.view.selected) if (children.indexOf($item) === -1) $item];
+  let selected = [for ($item of this.view.selected) if (!children.contains($item)) $item];
 
   // Add the item to selection
   selected.push($item);
