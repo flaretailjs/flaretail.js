@@ -49,7 +49,6 @@ FlareTail.util = {};
     '@@iterator' in CSSRuleList.prototype, // Firefox 32
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
-    'contains' in Array.prototype // Firefox 35
   ];
 
   let compatible = true;
@@ -586,3 +585,13 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Polyfills
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+if (typeof Array.prototype.contains !== 'function') {
+  Array.prototype.contains = function (item) {
+    return Array.prototype.indexOf.call(this, item) > -1;
+  }
+}
