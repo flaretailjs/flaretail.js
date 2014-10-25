@@ -632,6 +632,8 @@ a[role="menuitem"] {
   display: none;
 }
 
-:root[data-device-type|="mobile"] .scrollable {
+:root[data-device-type|="mobile"] .scrollable-area-content {
   overflow: auto !important; /* use native scrollbar */
+  width: 100%;
+  height: 100%;
 }
