@@ -2938,7 +2938,7 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
             $after = this.view.controls.$after;
 
         if (Number.isNaN(value) && value.match(/^(\d+)px$/)) {
-          value = Number.parseInt(RegExp.$1);
+          value = Number.parseInt(value);
         }
 
         if (value === 'default') {
