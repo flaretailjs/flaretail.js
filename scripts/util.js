@@ -51,6 +51,7 @@ FlareTail.util = {};
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
     'iterator' in Symbol, // Firefox 36
+    'includes' in Array.prototype, // Firefox 36
   ];
 
   let compatible = true;
@@ -169,8 +170,8 @@ FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
     modifiers = modifiers ? modifiers.split(',') : [];
 
     for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
-      if ((modifiers.contains(mod) && !event[`${mod}Key`]) ||
-          (!modifiers.contains(mod) && event[`${mod}Key`])) {
+      if ((modifiers.includes(mod) && !event[`${mod}Key`]) ||
+          (!modifiers.includes(mod) && event[`${mod}Key`])) {
         return;
       }
     }
@@ -587,13 +588,3 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Polyfills
- * ------------------------------------------------------------------------------------------------------------------ */
-
-if (typeof Array.prototype.contains !== 'function') {
-  Array.prototype.contains = function (item) {
-    return Array.prototype.indexOf.call(this, item) > -1;
-  }
-}
