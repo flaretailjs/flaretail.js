@@ -1196,13 +1196,13 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
       $_image = document.createElement('canvas'),
       $follower,
       headers = [],
-      bounds = $grid.getBoxQuads()[0].bounds,
+      rect = $grid.getBoundingClientRect(),
       style = $container.style;
 
   event.target.dataset.grabbed = 'true';
   $container.id = 'column-drag-image-container';
-  style.top = `${bounds.top}px`;
-  style.left = `${bounds.left}px`;
+  style.top = `${rect.top}px`;
+  style.left = `${rect.left}px`;
   style.width = `${$grid.offsetWidth}px`;
   style.height = `${$grid.offsetHeight}px`;
 
@@ -1645,7 +1645,7 @@ FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
       this.open(event);
     }
 
-    if ($container.getBoxQuads()[0].bounds.right > window.innerWidth) {
+    if ($container.getBoundingClientRect().right > window.innerWidth) {
       // The menu is shown beyond the window width. Reposition it
       style.left = `${$owner.offsetWidth - $container.offsetWidth - 4}px`;
     }
@@ -1827,7 +1827,7 @@ FlareTail.widget.Menu.prototype.open = function () {
   let parent = this.data.parent;
 
   // Show the submenu on the left if there is not enough space
-  if ($container.getBoxQuads()[0].bounds.right > window.innerWidth ||
+  if ($container.getBoundingClientRect().right > window.innerWidth ||
       parent && parent.view.$container.matches('.dir-left')) {
     $container.classList.add('dir-left');
   }
@@ -2529,8 +2529,8 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
 
   // Scroll by row
   if (this.options.adjusted) {
-    let bounds = $owner.getBoxQuads()[0].bounds,
-        $elm = document.elementFromPoint(bounds.left, bounds.top),
+    let rect = $owner.getBoundingClientRect(),
+        $elm = document.elementFromPoint(rect.left, rect.top),
         top = 0;
 
     while ($elm) {
@@ -2890,7 +2890,7 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
   let style = ($element, prop) => Number.parseInt(FlareTail.util.style.get($element, prop)),
       $outer = this.view.$outer,
       orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
-      outer_bounds = $outer.getBoxQuads()[0].bounds,
+      outer_bounds = $outer.getBoundingClientRect(),
       outer_size = orientation === 'horizontal' ? outer_bounds.height : outer_bounds.width,
       flex = $splitter.dataset.flex !== 'false',
       position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
@@ -2903,16 +2903,11 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
     }, {
       'get': (obj, prop) => {
         if (prop === 'size') {
-          // The getBoxQuads method returns an empty array if the element is hidden
-          if (!$outer.getBoxQuads().length) {
-            return 0;
-          }
-
           // The dimension of the element can be changed when the window is resized.
           // Return the current width or height
-          let bounds = $outer.getBoxQuads()[0].bounds;
+          let rect = $outer.getBoundingClientRect();
 
-          return this.data.orientation === 'horizontal' ? bounds.height : bounds.width;
+          return this.data.orientation === 'horizontal' ? rect.height : rect.width;
         }
 
         return obj[prop];
