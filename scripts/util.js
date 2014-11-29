@@ -525,6 +525,19 @@ FlareTail.util.datetime.update_elements = function () {
 
 FlareTail.util.network = {};
 
+FlareTail.util.network.jsonp = url => {
+  let $script = document.body.appendChild(document.createElement('script')),
+      callback_id = 'jsonp_' + Date.now(),
+      cleanup = () => { $script.remove(); delete window[callback_id]; };
+
+  return new Promise((resolve, reject) => {
+    window[callback_id] = data => resolve(data);
+    $script.addEventListener('load', event => cleanup());
+    $script.addEventListener('error', event => { cleanup(); reject(new Error()); });
+    $script.src = url + '?callback=' + callback_id;
+  });
+};
+
 /* ------------------------------------------------------------------------------------------------------------------
  * History
  * ------------------------------------------------------------------------------------------------------------------ */
