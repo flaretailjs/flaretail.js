@@ -34,6 +34,23 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
       members = this.view.members = get_items(`${selector}${not_selector}`),
       selected = this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
 
+  this.view = new Proxy(this.view, {
+    'get': (obj, prop) => {
+      if (prop === 'members') {
+        return get_items(`${selector}${not_selector}`);
+      }
+
+      if (prop === 'selected') {
+        return get_items(`${selector}[${this.options.selected_attr}="true"]`);
+      }
+
+      return obj[prop];
+    },
+    'set': (obj, prop, value) => {
+      this.update_view ? this.update_view(obj, prop, value) : obj[prop] = value;
+    }
+  });
+
   // Focus Management
   for (let [i, $item] of members.entries()) {
     $item.tabIndex = i === 0 ? 0 : -1;
@@ -45,10 +62,6 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
 
   if (rebuild) {
     return;
-  }
-
-  if (this.update_view) {
-    this.view = new Proxy(this.view, { 'set': this.update_view.bind(this) });
   }
 
   // Add event listeners
@@ -967,7 +980,6 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   $grid.appendChild($grid_body);
 
   if (row_data) {
-    this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
     this.activate_rows();
     FlareTail.util.event.trigger($grid, 'Rebuilt');
   }
@@ -1090,9 +1102,6 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   $tbody.removeAttribute('aria-busy');
   $sorter.setAttribute('aria-sort', cond.order);
-
-  // Reorder the member list
-  this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
   // Fire an event
   FlareTail.util.event.trigger($grid, 'Sorted', { 'detail': {
@@ -1341,9 +1350,6 @@ FlareTail.widget.Grid.prototype.filter = function (list) {
     $row.setAttribute('aria-hidden', !list.has($row.dataset.id));
   }
 
-  // Update the member list
-  this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
-
   if (selected.length) {
     for (let [index, $row] of selected.entries()) if ($row.getAttribute('aria-hidden') === 'true') {
       selected.splice(index, 1);
@@ -1486,10 +1492,6 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
     item.disabled = list.length && !list.includes(name);
   }
 
-  // Update the member list
-  this.view.members = [...$container.querySelectorAll(
-    '[role="option"]:not([aria-disabled="true"]):not([aria-hidden="true"])')];
-
   if (this.view.selected.length) {
     this.view.selected = [];
   }
@@ -1534,17 +1536,6 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
       'get': () => $container.getAttribute('aria-expanded') === 'false',
       'set': value => value ? this.open() : this.close()
     }
-  });
-
-  // TEMP: Update the members of the menu when the aria-hidden attribute is changed
-  (new MutationObserver(mutations => {
-    this.view.members = [...$container.querySelectorAll('[role^="menuitem"]'
-                      + ':not([aria-disabled="true"]):not([aria-hidden="true"])')];
-  })).observe($container, {
-    'subtree': true,
-    'childList': true,
-    'attributes': true,
-    'attributeFilter': ['aria-hidden']
   });
 };
 
@@ -2203,9 +2194,6 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
 
   $item.setAttribute('aria-expanded', !expanded);
 
-  // Update data with visible items
-  this.view.members = [for ($item of items) if ($item.offsetParent !== null) $item];
-
   if (!children.length) {
     return;
   }
@@ -2284,16 +2272,6 @@ FlareTail.widget.TabList = function TabList ($container) {
       this.set_close_button($tab);
     }
   }
-
-  // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
-  (new MutationObserver(mutations => {
-    this.view.members = [...$container.querySelectorAll('[role="tab"]:not([aria-hidden="true"])')];
-  })).observe($container, {
-    'subtree': true,
-    'childList': true,
-    'attributes': true,
-    'attributeFilter': ['aria-hidden']
-  });
 };
 
 FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.prototype);
