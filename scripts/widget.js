@@ -1361,6 +1361,8 @@ FlareTail.widget.Grid.prototype.filter = function (ids) {
 
   $grid_body.scrollTop = 0;
   $grid_body.removeAttribute('aria-busy');
+
+  FlareTail.util.event.trigger(this.view.$container, 'Filtered');
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
