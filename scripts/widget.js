@@ -986,7 +986,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  this.data.columns = Array.mapPar($header.querySelector('[role="row"]').cells, $cell => ({
+  this.data.columns = [...$header.querySelector('[role="row"]').cells].mapPar($cell => ({
     'id': $cell.dataset.id,
     'type': $cell.dataset.type || 'string',
     'label': $cell.textContent,
@@ -996,7 +996,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }));
 
   // Fill the row database
-  this.data.rows = Array.mapPar(this.view.$body.querySelectorAll('[role="row"]'), $row => {
+  this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].mapPar($row => {
     let row = { 'id': $row.id, '$element': $row, 'data': {} };
 
     for (let [index, $cell] of [...$row.cells].entries()) {
