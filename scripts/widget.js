@@ -1337,17 +1337,18 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   delete this.data.drag;
 };
 
-FlareTail.widget.Grid.prototype.filter = function (list) {
+FlareTail.widget.Grid.prototype.filter = function (ids) {
   let $grid_body = this.view.$body,
       selected = [...this.view.selected];
-
-  list = new Set(list);
 
   $grid_body.setAttribute('aria-busy', 'true');
 
   // Filter the rows
   for (let $row of $grid_body.querySelectorAll('[role="row"]')) {
-    $row.setAttribute('aria-hidden', !list.has($row.dataset.id));
+    let id = $row.dataset.id;
+
+    // Support both literal IDs and numeric IDs
+    $row.setAttribute('aria-hidden', !ids.includes(Number.isNaN(id) ? id : Number(id)));
   }
 
   if (selected.length) {
