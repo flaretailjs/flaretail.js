@@ -32,7 +32,6 @@ FlareTail.util = {};
     'isInteger' in Number, // Firefox 16
     'indexedDB' in window, // unprefixed in Firefox 16
     'onwheel' in window, // Firefox 17
-    'contains' in String.prototype, // Firefox 19
     'origin' in location, // Firefox 21
     'HTMLTemplateElement' in window, // Firefox 22
     'Notification' in window, // Firefox 22
@@ -86,6 +85,22 @@ FlareTail.util = {};
     'enumerable': true,
     'value': compatible
   });
+}
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Polyfills
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+if (typeof Array.prototype.includes !== 'function') {
+  Array.prototype.includes = function (item) {
+    return Array.prototype.indexOf.call(this, item) > -1;
+  }
+}
+
+if (typeof String.prototype.includes !== 'function') {
+  String.prototype.includes = function (item) {
+    return String.prototype.search.call(this, new RegExp(item)) > -1;
+  }
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -266,9 +281,9 @@ FlareTail.util.device = {
 
   // A device form factor
   // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
-  if (ua.contains('Tablet')) {
+  if (ua.includes('Tablet')) {
     device.type = 'mobile-tablet';
-  } else if (ua.contains('Mobile')) {
+  } else if (ua.includes('Mobile')) {
     device.type = 'mobile-phone';
   } else {
     device.type = 'desktop';
@@ -599,13 +614,3 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Polyfills
- * ------------------------------------------------------------------------------------------------------------------ */
-
-if (typeof Array.prototype.includes !== 'function') {
-  Array.prototype.includes = function (item) {
-    return Array.prototype.indexOf.call(this, item) > -1;
-  }
-}
