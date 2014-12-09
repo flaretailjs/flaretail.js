@@ -986,7 +986,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }
 
   // Fill the column database
-  this.data.columns = [...$header.querySelector('[role="row"]').cells].mapPar($cell => ({
+  this.data.columns = [...$header.querySelector('[role="row"]').cells].map($cell => ({
     'id': $cell.dataset.id,
     'type': $cell.dataset.type || 'string',
     'label': $cell.textContent,
@@ -996,7 +996,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   }));
 
   // Fill the row database
-  this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].mapPar($row => {
+  this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].map($row => {
     let row = { 'id': $row.id, '$element': $row, 'data': {} };
 
     for (let [index, $cell] of [...$row.cells].entries()) {
@@ -1122,7 +1122,7 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
 };
 
 FlareTail.widget.Grid.prototype.build_columnpicker = function () {
-  this.data.$$columnpicker.build(this.data.columns.mapPar(col => ({
+  this.data.$$columnpicker.build(this.data.columns.map(col => ({
     'id': `${this.view.$container.id}-columnpicker-${col.id}`,
     'label': col.label,
     'type': 'menuitemcheckbox',
@@ -1460,7 +1460,7 @@ FlareTail.widget.ListBox.prototype.build = function () {
 FlareTail.widget.ListBox.prototype.get_data = function () {
   let map = this.data.map = new Map();
 
-  this.data.structure = this.view.members.mapPar($item => {
+  this.data.structure = this.view.members.map($item => {
     let item = { '$element': $item, 'id': $item.id, 'label': $item.textContent };
 
     if (Object.keys($item.dataset).length) {
@@ -1788,7 +1788,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
   $_separator.setAttribute('role', 'separator');
   $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
 
-  this.data.structure = data.mapPar(item => {
+  this.data.structure = data.map(item => {
     if (item.type === 'separator') {
       $fragment.appendChild($_separator.cloneNode(true));
 
@@ -1810,7 +1810,7 @@ FlareTail.widget.Menu.prototype.build = function (data) {
     }
 
     return item;
-  }).filterPar(item => item !== null);
+  }).filter(item => item !== null);
 
   $container.appendChild($fragment);
 

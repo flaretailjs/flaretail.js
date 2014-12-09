@@ -39,7 +39,6 @@ FlareTail.util = {};
     'remove' in Element.prototype, // Firefox 23
     'parseInt' in Number, // Firefox 25
     'createTBody' in HTMLTableElement.prototype, // Firefox 25
-    'mapPar' in Array.prototype, // Firefox 25 (currently Nightly only)
     'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
     'URLSearchParams' in window, // Firefox 29
@@ -51,7 +50,6 @@ FlareTail.util = {};
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
     'iterator' in Symbol, // Firefox 36
-    'includes' in Array.prototype, // Firefox 36
   ];
 
   let compatible = true;
@@ -601,3 +599,13 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Polyfills
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+if (typeof Array.prototype.includes !== 'function') {
+  Array.prototype.includes = function (item) {
+    return Array.prototype.indexOf.call(this, item) > -1;
+  }
+}
