@@ -319,7 +319,7 @@ FlareTail.util.app.install = function (manifest) {
 
   return new Promise((resolve, reject) => {
     request.addEventListener('success', event => resolve());
-    request.addEventListener('error', event => reject(new Error()));
+    request.addEventListener('error', event => reject(new Error(request.error.name)));
   });
 };
 
