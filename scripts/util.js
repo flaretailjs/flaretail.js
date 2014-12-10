@@ -332,7 +332,9 @@ FlareTail.util.app.toggle_fullscreen = function ($element = document.body) {
 };
 
 FlareTail.util.app.auth_notification = function () {
-  Notification.requestPermission(permission => {});
+  if (Notification.permission !== 'granted') {
+    Notification.requestPermission(permission => {});
+  }
 };
 
 FlareTail.util.app.show_notification = function (title, options) {
