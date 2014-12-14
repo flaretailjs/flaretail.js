@@ -142,7 +142,13 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
 
   // Attributes
   for (let [attr, value] of Iterator(attrs)) {
-    for (let $item of $scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)) {
+    let $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
+
+    if ($scope.matches(`[data-attrs~="${CSS.escape(attr)}"]`)) {
+      $items.push($scope);
+    }
+
+    for (let $item of $items) {
       $item.setAttribute(attr, value);
     }
   }
