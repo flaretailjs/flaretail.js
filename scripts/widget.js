@@ -2459,10 +2459,23 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
       $content = document.createElement('div'),
       FTue = FlareTail.util.event;
 
+  this.view = { $owner, $content, $controller };
+  this.data = {};
+  this.options = { adjusted, arrow_keys_enabled };
+
   $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
 
   [for ($child of [...$owner.children]) $content.appendChild($child)];
   $content.className = 'scrollable-area-content';
+
+  // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
+  if (FlareTail.util.device.type.startsWith('mobile')) {
+    $owner.appendChild($content);
+    $owner.style.removeProperty('display');
+
+    return false;
+  }
+
   $content.appendChild(this.get_observer());
 
   $controller.tabIndex = 0;
@@ -2477,14 +2490,6 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
   $owner.appendChild($controller);
   $owner.appendChild(this.get_observer());
   $owner.style.removeProperty('display');
-
-  this.view = { $owner, $content, $controller };
-  this.data = {};
-  this.options = { adjusted, arrow_keys_enabled };
-
-  if (FlareTail.util.device.type.startsWith('mobile')) {
-    return false;
-  }
 
   FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
   FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
