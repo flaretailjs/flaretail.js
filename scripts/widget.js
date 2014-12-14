@@ -72,6 +72,13 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   return;
 };
 
+FlareTail.widget.RoleType.prototype.update_members = function () {
+  let selector = this.options.item_selector,
+      not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
+
+  this.view.members = [...this.view.$container.querySelectorAll(`${selector}${not_selector}`)];
+};
+
 // Catch-all event handler
 FlareTail.widget.RoleType.prototype.handleEvent = function (event) {
   (this[`on${event.type}_extend`] || this[`on${event.type}`]).call(this, event);
@@ -1541,8 +1548,7 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
 
   // TEMP: Update the members of the menu when the aria-hidden attribute is changed
   (new MutationObserver(mutations => {
-    this.view.members = [...$container.querySelectorAll('[role^="menuitem"]'
-                      + ':not([aria-disabled="true"]):not([aria-hidden="true"])')];
+    this.update_members();
   })).observe($container, {
     'subtree': true,
     'childList': true,
@@ -2290,7 +2296,7 @@ FlareTail.widget.TabList = function TabList ($container) {
 
   // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
   (new MutationObserver(mutations => {
-    this.view.members = [...$container.querySelectorAll('[role="tab"]:not([aria-hidden="true"])')];
+    this.update_members();
   })).observe($container, {
     'subtree': true,
     'childList': true,
