@@ -601,6 +601,54 @@ FlareTail.util.array = {};
 
 FlareTail.util.array.clone = array => [...array];
 
+FlareTail.util.array.sort = (array, cond) => {
+  // Normalization: ignore brackets for comparison
+  let nomalized_values = new Map(),
+      nomalize = str => {
+        let value = nomalized_values.get(str);
+
+        if (!value) {
+          value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
+          nomalized_values.set(str, value);
+        }
+
+        return value;
+      };
+
+  array.sort((a, b) => {
+    if (cond.order === 'descending') {
+      [a, b] = [b, a]; // reverse()
+    }
+
+    let a_val = a.data ? a.data[cond.key] : a[cond.key],
+        b_val = b.data ? b.data[cond.key] : b[cond.key];
+
+    if (!a_val || !b_val) {
+      return true;
+    }
+
+    switch (cond.type) {
+      case 'integer': {
+        return a_val > b_val;
+      }
+
+      case 'boolean': {
+        return a_val < b_val;
+      }
+
+      case 'time': {
+        return new Date(a_val) > new Date(b_val);
+      }
+
+      default: {
+        return nomalize(a_val) > nomalize(b_val);
+      }
+    }
+  });
+
+  return array;
+};
+
 /* ------------------------------------------------------------------------------------------------------------------
  * String
  * ------------------------------------------------------------------------------------------------------------------ */

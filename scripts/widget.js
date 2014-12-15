@@ -1039,11 +1039,17 @@ FlareTail.widget.Grid.prototype.get_data = function () {
 FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
   let $grid = this.view.$container,
       $tbody = this.view.$body.querySelector('tbody'),
-      $header = this.view.$header;
+      $header = this.view.$header,
+      $sorter;
 
   if (data_only) {
     cond.order = cond.order || 'ascending';
-  } else if (prop === 'order') {
+    FlareTail.util.array.sort(this.data.rows, cond);
+
+    return;
+  }
+
+  if (prop === 'order') {
     cond.order = value;
   } else if (prop === 'key' && cond.key === value) {
     // The same column is selected; change the order
@@ -1054,46 +1060,12 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
     $header.querySelector('[aria-sort]').removeAttribute('aria-sort');
   }
 
-  let $sorter = $header.querySelector(`[role="columnheader"][data-id="${CSS.escape(cond.key)}"]`),
-      type = $sorter.dataset.type;
+  $sorter = $header.querySelector(`[role="columnheader"][data-id="${CSS.escape(cond.key)}"]`);
+  cond.type = $sorter.dataset.type;
 
   $tbody.setAttribute('aria-busy', 'true'); // display: none
 
-  // Normalization: ignore brackets for comparison
-  let nomalized_values = new Map(),
-      nomalize = str => {
-        let value = nomalized_values.get(str);
-
-        if (!value) {
-          value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
-          nomalized_values.set(str, value);
-        }
-
-        return value;
-      };
-
-  this.data.rows.sort((a, b) => {
-    if (cond.order === 'descending') {
-      [a, b] = [b, a]; // reverse()
-    }
-
-    let a_val = a.data[cond.key],
-        b_val = b.data[cond.key];
-
-    switch (type) {
-      case 'integer': {
-        return a_val > b_val;
-      }
-
-      case 'boolean': {
-        return a_val < b_val;
-      }
-
-      default: {
-        return nomalize(a_val) > nomalize(b_val);
-      }
-    }
-  });
+  FlareTail.util.array.sort(this.data.rows, cond);
 
   $tbody.removeAttribute('aria-busy');
   $sorter.setAttribute('aria-sort', cond.order);
@@ -1108,7 +1080,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   let selected = this.view.selected;
 
-  if (!data_only && selected && selected.length) {
+  if (selected && selected.length) {
     this.ensure_row_visibility(selected[selected.length - 1]);
   }
 };
