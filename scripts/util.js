@@ -427,14 +427,10 @@ FlareTail.util.datetime.options = new Proxy({
 
     // Start or stop the timer if the relative option is changed
     if (prop === 'relative' || prop === 'updater_enabled') {
-      if (dt.options.relative && dt.options.updater_enabled) {
-        if (!dt.updater) {
-          dt.updater = window.setInterval(() => dt.update_elements(), dt.options.updater_interval * 1000);
-        }
+      if (!document.hidden && dt.options.relative && dt.options.updater_enabled && !dt.updater) {
+        dt.start_updater();
       } else if (dt.updater) {
-        window.clearInterval(dt.updater);
-
-        delete dt.updater;
+        dt.stop_updater();
       }
     }
   }
@@ -539,6 +535,27 @@ FlareTail.util.datetime.update_elements = function () {
     }
   }
 };
+
+FlareTail.util.datetime.start_updater = function () {
+  this.updater = window.setInterval(() => this.update_elements(), this.options.updater_interval * 1000);
+};
+
+FlareTail.util.datetime.stop_updater = function () {
+  window.clearInterval(this.updater);
+
+  delete this.updater;
+};
+
+document.addEventListener('visibilitychange', event => {
+  let dt = FlareTail.util.datetime;
+
+  if (!document.hidden && dt.options.relative && dt.options.updater_enabled && !dt.updater) {
+    dt.update_elements();
+    dt.start_updater();
+  } else if (dt.updater) {
+    dt.stop_updater();
+  }
+});
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Network
