@@ -43,12 +43,10 @@ FlareTail.util = {};
     'URLSearchParams' in window, // Firefox 29
     'escape' in CSS, // Firefox 31
     'getBoxQuads' in Element.prototype, // Firefox 31
-    Symbol.iterator in StyleSheetList.prototype, // Firefox 31
-    Symbol.iterator in CSSRuleList.prototype, // Firefox 32
-    'Symbol' in window, // Firefox 33
+    'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in StyleSheetList.prototype, // Firefox 31, 36
+    'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in CSSRuleList.prototype, // Firefox 32, 36
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
-    'iterator' in Symbol, // Firefox 36
   ];
 
   let compatible = true;
