@@ -500,8 +500,8 @@ FlareTail.util.datetime.get_shifted_date = function (date, offset) {
 FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
   if (!options) {
     options = {
-      'relative': $time.dataset.relative ? eval($time.dataset.relative) : undefined,
-      'simple': $time.dataset.simple ? eval($time.dataset.simple) : undefined
+      'relative': $time.dataset.relative ? JSON.parse($time.dataset.relative) : undefined,
+      'simple': $time.dataset.simple ? JSON.parse($time.dataset.simple) : undefined
     };
   }
 
