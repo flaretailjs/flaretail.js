@@ -40,8 +40,10 @@ FlareTail.app.Router.prototype.locate = function (path = location.pathname) {
   this.navigate(this.launch_path);
 };
 
-FlareTail.app.Router.prototype.navigate = function (path, data = {}, replace = false) {
-  let args = [data, 'Loading...', this.root + path]; // l10n
+FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = false) {
+  state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
+
+  let args = [state, 'Loading...', this.root + path]; // l10n
 
   replace ? history.replaceState(...args) : history.pushState(...args);
   window.dispatchEvent(new PopStateEvent('popstate'));
