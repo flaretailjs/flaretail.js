@@ -2924,6 +2924,8 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
 
         if (value === 'default') {
           value = null; // Reset the position
+        } else if (String(value).match(/^\d+\%$/)) {
+          // Keep the value
         } else if (value <= 0) {
           if (Number.parseInt(obj.position) === 0) {
             return;
@@ -2972,19 +2974,14 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
           value = outer.size - after.max;
         }
 
-        if (!Number.isNaN(value) && value !== null) {
-          value = this.data.flex ? `${(value / outer.size * 100).toFixed(2)}%` : `${value}px`;
-        }
+        if (value) {
+          if (String(value).match(/^\d+$/)) {
+            value = this.data.flex ? `${(value / outer.size * 100).toFixed(2)}%` : `${value}px`;
+          }
 
-        if (this.data.orientation === 'horizontal') {
-          $before.style.height = $splitter.style.top = $after.style.top = value;
-        } else {
-          $before.style.width = $splitter.style.left = $after.style.left = value;
+          $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
+          FlareTail.util.event.trigger($splitter, 'Resized', { 'detail': { 'position': value }});
         }
-
-        FlareTail.util.event.trigger($splitter, 'Resized', { 'detail': {
-          'position': value
-        }});
       }
 
       obj[prop] = value;
