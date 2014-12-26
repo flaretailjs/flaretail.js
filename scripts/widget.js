@@ -1525,7 +1525,7 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
     'subtree': true,
     'childList': true,
     'attributes': true,
-    'attributeFilter': ['aria-hidden']
+    'attributeFilter': ['aria-disabled', 'aria-hidden']
   });
 };
 
@@ -2273,7 +2273,7 @@ FlareTail.widget.TabList = function TabList ($container) {
     'subtree': true,
     'childList': true,
     'attributes': true,
-    'attributeFilter': ['aria-hidden']
+    'attributeFilter': ['aria-disabled', 'aria-hidden']
   });
 };
 
