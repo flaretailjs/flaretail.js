@@ -79,6 +79,10 @@ FlareTail.widget.RoleType.prototype.update_members = function () {
   this.view.members = [...this.view.$container.querySelectorAll(`${selector}${not_selector}`)];
 };
 
+FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
+  FlareTail.util.event.assign_key_bindings(this.view.$container, map);
+};
+
 // Catch-all event handler
 FlareTail.widget.RoleType.prototype.handleEvent = function (event) {
   (this[`on${event.type}_extend`] || this[`on${event.type}`]).call(this, event);
@@ -823,22 +827,6 @@ FlareTail.widget.Grid.prototype.onkeydown_extend = function (event) {
     case event.DOM_VK_SPACE: {
       // Handled by the ScrollBar widget
       return true;
-    }
-
-    case event.DOM_VK_B: {
-      if (!modifiers && focused_idx > 0) {
-        this.view.selected = this.view.$focused = items[focused_idx - 1];
-      }
-
-      break;
-    }
-
-    case event.DOM_VK_F: {
-      if (!modifiers && focused_idx < items.length - 1) {
-        this.view.selected = this.view.$focused = items[focused_idx + 1];
-      }
-
-      break;
     }
 
     default: {

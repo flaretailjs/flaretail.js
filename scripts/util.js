@@ -176,26 +176,63 @@ FlareTail.util.content.get_fragment = function (id, prefix = undefined) {
 
 FlareTail.util.event = {};
 
-FlareTail.util.event.set_keybind = function ($target, key, modifiers, command) {
+/* ------------------------------------------------------------------------------------------------------------------
+ * Assign a keyboard shortcut on a specific element
+ *
+ * @param   {Element} $target
+ * @param   {String} keybind: 'S', 'Shift+Meta+R', 'Ctrl+O', etc.
+ * @param   {Function} command: the function to be called
+ * @param   {Boolean} ignore: optional, if use event.preventDefault/stopPropagation
+ * ------------------------------------------------------------------------------------------------------------------ */
+FlareTail.util.event.assign_key_binding = function ($target, keybind, command) {
+  keybind = keybind.split('+');
+
+  let key = keybind.pop().toUpperCase(),
+      modifiers = [for (mod of keybind) mod.toLowerCase()];
+
   $target.addEventListener('keydown', event => {
     // Check the key code
     if (event.keyCode !== event[`DOM_VK_${key}`]) {
-      return;
+      return true;
     }
 
     // Check modifier keys
-    modifiers = modifiers ? modifiers.split(',') : [];
-
     for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
       if ((modifiers.includes(mod) && !event[`${mod}Key`]) ||
           (!modifiers.includes(mod) && event[`${mod}Key`])) {
-        return;
+        return true;
       }
     }
 
     // Execute command
     command(event);
+
+    return this.ignore(event);
   });
+};
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Assign keyboard shortcuts on a specific element
+ *
+ * @param   {Element} $target
+ * @param   {Object} map of keybind patterns (multiple pattern should be separated with '|') and function
+ * ------------------------------------------------------------------------------------------------------------------ */
+FlareTail.util.event.assign_key_bindings = function ($target, map) {
+  for (let [patterns, command] of Iterator(map)) {
+    for (let keybind of patterns.split('|')) {
+      this.assign_key_binding($target, keybind, command);
+    }
+  }
+};
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Fire a keydown event on a specific element
+ *
+ * @param   {Element} $target
+ * @param   {String} key
+ * ------------------------------------------------------------------------------------------------------------------ */
+FlareTail.util.event.dispatch_keydown = function ($target, key) {
+  $target.dispatchEvent(new KeyboardEvent('keydown', { 'keyCode': key }));
 };
 
 FlareTail.util.event.ignore = event => {
