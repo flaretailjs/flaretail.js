@@ -80,7 +80,7 @@ FlareTail.widget.RoleType.prototype.update_members = function () {
 };
 
 FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
-  FlareTail.util.event.assign_key_bindings(this.view.$container, map);
+  FlareTail.util.kbd.assign(this.view.$container, map);
 };
 
 // Catch-all event handler
