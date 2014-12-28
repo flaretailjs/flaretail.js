@@ -238,13 +238,19 @@ FlareTail.util.kbd = {};
  * Assign keyboard shortcuts on a specific element
  *
  * @param   {Element} $target
- * @param   {Object} map of keybind patterns ('S', 'Shift+Meta+R', 'Ctrl+O', etc.
+ * @param   {Object} map of keybind patterns ('S', 'ACCEL+SHIFT+R', 'CTRL+O', etc.
                      multiple pattern should be separated with '|') and function
  * ------------------------------------------------------------------------------------------------------------------ */
 FlareTail.util.kbd.assign = function ($target, map) {
-  let assign = (keybind, command) => {
-    let key = keybind.pop().toUpperCase(),
-        modifiers = [for (mod of keybind) mod.toLowerCase()];
+  let assign = (combo, command) => {
+    let key = combo.pop().toUpperCase(),
+        modifiers = new Set([for (mod of combo) mod.toLowerCase()]);
+
+    // Support the Accel key which is Command (Meta) on OS X and Ctrl on other platforms
+    if (modifiers.has('accel')) {
+      modifiers.add(FlareTail.util.ua.platform.macintosh ? 'meta' : 'ctrl');
+      modifiers.delete('accel');
+    }
 
     $target.addEventListener('keydown', event => {
       // Check the key code
@@ -254,8 +260,7 @@ FlareTail.util.kbd.assign = function ($target, map) {
 
       // Check modifier keys
       for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
-        if ((modifiers.includes(mod) && !event[`${mod}Key`]) ||
-            (!modifiers.includes(mod) && event[`${mod}Key`])) {
+        if (modifiers.has(mod) && !event[`${mod}Key`] || !modifiers.has(mod) && event[`${mod}Key`]) {
           return true;
         }
       }
@@ -267,9 +272,9 @@ FlareTail.util.kbd.assign = function ($target, map) {
     });
   };
 
-  for (let [patterns, command] of Iterator(map)) {
-    for (let keybind of patterns.split('|')) {
-      assign(keybind.split('+'), command);
+  for (let [combos, command] of Iterator(map)) {
+    for (let combo of combos.split('|')) {
+      assign(combo.split('+'), command);
     }
   }
 };
