@@ -304,30 +304,60 @@ FlareTail.util.Storage = function () {
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Device
+ * User Agent
+ *
+ * This utility only considers Gecko-based products for now
+ * https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.device = {
+FlareTail.util.ua = {
+  'device': {
+    'type': 'unknown',
+    'desktop': false,
+    'mobile': false,
+    'tablet': false,
+    'phone': false,
+  },
+  'platform': {
+    'name': 'unknown',
+    'windows': false,
+    'macintosh': false,
+    'linux': false,
+    'android': false,
+    'firefox': false,
+  },
   'touch': {
     'enabled': window.matchMedia('(-moz-touch-enabled: 1)').matches
   }
 };
 
 {
-  let ua = navigator.userAgent,
-      device = FlareTail.util.device;
+  let ua = FlareTail.util.ua,
+      ua_str = navigator.userAgent,
+      pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
-  // A device form factor
-  // https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
-  if (ua.includes('Tablet')) {
-    device.type = 'mobile-tablet';
-  } else if (ua.includes('Mobile')) {
-    device.type = 'mobile-phone';
+  // Device
+  if (ua_str.includes('Mobile')) {
+    ua.device.type = 'mobile-phone';
+    ua.device.mobile = true;
+    ua.device.phone = true;
+  } else if (ua_str.includes('Tablet')) {
+    ua.device.type = 'mobile-tablet';
+    ua.device.mobile = true;
+    ua.device.tablet = true;
   } else {
-    device.type = 'desktop';
+    ua.device.type = 'desktop';
+    ua.device.desktop = true;
   }
 
-  document.documentElement.setAttribute('data-device-type', device.type);
+  // Platform
+  if (pf_match) {
+    ua.platform.name = pf_match[0].toLowerCase();
+    ua.platform[ua.platform.name] = true;
+  }
+
+  document.documentElement.setAttribute('data-device', ua.device.type);
+  document.documentElement.setAttribute('data-platform', ua.platform.name);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------

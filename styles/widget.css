@@ -622,20 +622,20 @@ a[role="menuitem"] {
  * Mobile Support
  * ---------------------------------------------------------------------------------------------- */
 
-[data-device-type|="mobile"]:root {
+[data-device|="mobile"]:root {
   font-size: 12px;
 }
 
-[data-device-type|="mobile"]:root [role="grid"] .grid-body {
+[data-device|="mobile"]:root [role="grid"] .grid-body {
   overflow: scroll;
 }
 
-[data-device-type|="mobile"]:root .splitter,
-[data-device-type|="mobile"]:root [role="scrollbar"] {
+[data-device|="mobile"]:root .splitter,
+[data-device|="mobile"]:root [role="scrollbar"] {
   display: none;
 }
 
-[data-device-type|="mobile"]:root .scrollable-area-content {
+[data-device|="mobile"]:root .scrollable-area-content {
   overflow: auto !important; /* use native scrollbar */
   width: 100%;
   height: 100%;
