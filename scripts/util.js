@@ -318,6 +318,7 @@ FlareTail.util.Storage = function () {
 FlareTail.util.ua = {
   'device': {
     'type': 'unknown',
+    'tv': false,
     'desktop': false,
     'mobile': false,
     'tablet': false,
@@ -341,6 +342,12 @@ FlareTail.util.ua = {
       ua_str = navigator.userAgent,
       pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
+  // Platform
+  if (pf_match) {
+    ua.platform.name = pf_match[0].toLowerCase();
+    ua.platform[ua.platform.name] = true;
+  }
+
   // Device
   if (ua_str.includes('Mobile')) {
     ua.device.type = 'mobile-phone';
@@ -350,15 +357,12 @@ FlareTail.util.ua = {
     ua.device.type = 'mobile-tablet';
     ua.device.mobile = true;
     ua.device.tablet = true;
+  } else if (ua.platform.firefox) {
+    ua.device.type = 'tv';
+    ua.device.tv = true;
   } else {
     ua.device.type = 'desktop';
     ua.device.desktop = true;
-  }
-
-  // Platform
-  if (pf_match) {
-    ua.platform.name = pf_match[0].toLowerCase();
-    ua.platform[ua.platform.name] = true;
   }
 
   document.documentElement.setAttribute('data-device', ua.device.type);
