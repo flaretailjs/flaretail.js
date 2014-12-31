@@ -16,7 +16,8 @@ FlareTail.widget = {};
 FlareTail.widget.RoleType = function RoleType () {};
 
 FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
-  let $container = this.view.$container;
+  let FTue = FlareTail.util.event,
+      $container = this.view.$container;
 
   if (!$container) {
     throw new Error('The container element is not defined');
@@ -27,15 +28,10 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   this.options.selected_attr = this.options.selected_attr || 'aria-selected';
   this.options.multiselectable = $container.matches('[aria-multiselectable="true"]');
 
-  let FTue = FlareTail.util.event,
-      selector = this.options.item_selector,
-      not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
-      get_items = selector => [...$container.querySelectorAll(selector)],
-      members = this.view.members = get_items(`${selector}${not_selector}`),
-      selected = this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
+  this.update_members();
 
   // Focus Management
-  for (let [i, $item] of members.entries()) {
+  for (let [i, $item] of this.view.members.entries()) {
     $item.tabIndex = i === 0 ? 0 : -1;
   }
 
@@ -74,9 +70,12 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
 
 FlareTail.widget.RoleType.prototype.update_members = function () {
   let selector = this.options.item_selector,
-      not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
+      not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
+      get_items = selector => [...this.view.$container.querySelectorAll(selector)];
 
-  this.view.members = [...this.view.$container.querySelectorAll(`${selector}${not_selector}`)];
+  this.view.members = get_items(`${selector}${not_selector}`),
+  this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
+  this.view.$focused = null;
 };
 
 FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
