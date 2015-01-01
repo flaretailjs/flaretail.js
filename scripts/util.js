@@ -242,8 +242,11 @@ FlareTail.util.kbd = {};
                      multiple pattern should be separated with '|') and function
  * ------------------------------------------------------------------------------------------------------------------ */
 FlareTail.util.kbd.assign = function ($target, map) {
-  let assign = (combo, command) => {
-    let key = combo.pop().toUpperCase(),
+  let bindings = new Set();
+
+  for (let [_combos, command] of Iterator(map)) for (let _combo of _combos.split('|')) {
+    let combo = _combo.split('+'),
+        key = combo.pop().toUpperCase(),
         modifiers = new Set([for (mod of combo) mod.toLowerCase()]);
 
     // Support the Accel key which is Command (Meta) on OS X and Ctrl on other platforms
@@ -252,31 +255,34 @@ FlareTail.util.kbd.assign = function ($target, map) {
       modifiers.delete('accel');
     }
 
-    $target.addEventListener('keydown', event => {
+    bindings.add([key, modifiers, command]);
+  }
+
+  $target.addEventListener('keydown', event => {
+    let found = false;
+
+    outer: for (let [key, modifiers, command] of bindings) {
       // Check the key code
       if (event.keyCode !== event[`DOM_VK_${key}`]) {
-        return true;
+        continue;
       }
 
       // Check modifier keys
       for (let mod of ['shift', 'ctrl', 'meta', 'alt']) {
         if (modifiers.has(mod) && !event[`${mod}Key`] || !modifiers.has(mod) && event[`${mod}Key`]) {
-          return true;
+          continue outer;
         }
       }
 
       // Execute command
+      found = true;
       command(event);
 
-      return FlareTail.util.event.ignore(event);
-    });
-  };
-
-  for (let [combos, command] of Iterator(map)) {
-    for (let combo of combos.split('|')) {
-      assign(combo.split('+'), command);
+      break;
     }
-  }
+
+    return found ? FlareTail.util.event.ignore(event) : true;
+  });
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
