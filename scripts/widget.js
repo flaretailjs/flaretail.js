@@ -1507,7 +1507,9 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
 
   // TEMP: Update the members of the menu when the aria-hidden attribute is changed
   (new MutationObserver(mutations => {
-    this.update_members();
+    if (mutations[0].target.matches(this.options.item_selector)) {
+      this.update_members();
+    }
   })).observe($container, {
     'subtree': true,
     'childList': true,
@@ -2255,7 +2257,9 @@ FlareTail.widget.TabList = function TabList ($container) {
 
   // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
   (new MutationObserver(mutations => {
-    this.update_members();
+    if (mutations[0].target.matches(this.options.item_selector)) {
+      this.update_members();
+    }
   })).observe($container, {
     'subtree': true,
     'childList': true,
