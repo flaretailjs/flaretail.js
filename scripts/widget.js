@@ -2443,7 +2443,7 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
 
   $content.appendChild(this.get_observer());
 
-  $controller.tabIndex = 0;
+  $controller.tabIndex = -1;
   $controller.style.top = '2px';
   $controller.setAttribute('role', 'scrollbar');
   $controller.setAttribute('aria-controls', $owner.id);
@@ -2547,12 +2547,14 @@ FlareTail.widget.ScrollBar.prototype.onoverflow = function (event) {
   if (event.target === event.currentTarget) {
     this.set_height();
     this.view.$controller.setAttribute('aria-disabled', 'false');
+    this.view.$controller.tabIndex = 0;
   }
 };
 
 FlareTail.widget.ScrollBar.prototype.onunderflow = function (event) {
   if (event.target === event.currentTarget) {
     this.view.$controller.setAttribute('aria-disabled', 'true');
+    this.view.$controller.tabIndex = -1;
   }
 };
 
@@ -2667,12 +2669,14 @@ FlareTail.widget.ScrollBar.prototype.get_observer = function () {
     $doc.addEventListener('MozScrolledAreaChanged', event => {
       if (event.height === 0) {
         this.view.$controller.setAttribute('aria-disabled', 'true');
+        this.view.$controller.tabIndex = -1;
       }
 
       this.set_height();
     });
   });
   $iframe.className = 'scrollable-area-observer';
+  $iframe.tabIndex = -1;
   $iframe.src = 'about:blank';
 
   return $iframe;
