@@ -19,7 +19,7 @@ FlareTail.app.Router = function Router (app) {
   // Specify the launch path
   this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
   // Retrieve routes from app components
-  this.routes = new Map([for (component of Iterator(app)) if ('route' in component[1])
+  this.routes = new Map([for (component of Iterator(app.views)) if ('route' in component[1])
                           [new RegExp('^' + this.root + component[1].route + '$'), component[1].connect]]);
 
   window.addEventListener('popstate', event => this.locate());
