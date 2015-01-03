@@ -107,7 +107,7 @@ if (typeof String.prototype.includes !== 'function') {
 
 FlareTail.util.content = {};
 
-FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
+FlareTail.util.content.render = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
     for (let [prop, value] of Iterator(data)) {
       for (let $item of $scope.properties[prop] || []) {
