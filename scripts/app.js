@@ -19,18 +19,18 @@ FlareTail.app.Router = function Router (app) {
   // Specify the launch path
   this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
   // Retrieve routes from app components
-  this.routes = new Map([for (component of Iterator(app.views)) if ('route' in component[1])
-                          [new RegExp('^' + this.root + component[1].route + '$'), component[1].connect]]);
+  this.routes = new Map([for (component of Iterator(app.controllers)) if ('route' in component[1])
+                          [new RegExp('^' + this.root + component[1].route + '$'), component[1]]]);
 
   window.addEventListener('popstate', event => this.locate());
 };
 
 FlareTail.app.Router.prototype.locate = function (path = location.pathname) {
-  for (let [re, connect] of this.routes) {
+  for (let [re, constructor] of this.routes) {
     let match = path.match(re);
 
     if (match) {
-      connect(...match.slice(1));
+      new constructor(...match.slice(1));
 
       return;
     }
@@ -48,3 +48,34 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
   replace ? history.replaceState(...args) : history.pushState(...args);
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Model
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Model = function Model () {}
+
+FlareTail.app.Model.prototype = Object.create(Object.prototype);
+FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * View
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.View = function View () {}
+
+FlareTail.app.View.prototype = Object.create(Object.prototype);
+FlareTail.app.View.prototype.constructor = FlareTail.app.View;
+
+FlareTail.app.View.prototype.get_fragment = FlareTail.util.content.get_fragment;
+FlareTail.app.View.prototype.render = FlareTail.util.content.render;
+FlareTail.app.View.prototype.widget = FlareTail.widget;
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Controller
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Controller = function Controller () {}
+
+FlareTail.app.Controller.prototype = Object.create(Object.prototype);
+FlareTail.app.Controller.prototype.constructor = FlareTail.app.Controller;
