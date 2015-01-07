@@ -50,12 +50,29 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
+ * Events
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Events = function Events () {}
+
+FlareTail.app.Events.prototype = Object.create(Object.prototype);
+FlareTail.app.Events.prototype.constructor = FlareTail.app.Events;
+
+FlareTail.app.Events.prototype.publish = function (topic, data = {}) {
+  FlareTail.util.event.trigger(window, topic, { 'detail': data });
+};
+
+FlareTail.app.Events.prototype.subscribe = function (topic, callback) {
+  window.addEventListener(topic, event => callback(event.detail));
+};
+
+/* ------------------------------------------------------------------------------------------------------------------
  * Model
  * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.app.Model = function Model () {}
 
-FlareTail.app.Model.prototype = Object.create(Object.prototype);
+FlareTail.app.Model.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -64,11 +81,11 @@ FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
 
 FlareTail.app.View = function View () {}
 
-FlareTail.app.View.prototype = Object.create(Object.prototype);
+FlareTail.app.View.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.View.prototype.constructor = FlareTail.app.View;
 
 FlareTail.app.View.prototype.get_fragment = FlareTail.util.content.get_fragment;
-FlareTail.app.View.prototype.render = FlareTail.util.content.render;
+FlareTail.app.View.prototype.fill = FlareTail.util.content.fill;
 FlareTail.app.View.prototype.widget = FlareTail.widget;
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -77,5 +94,16 @@ FlareTail.app.View.prototype.widget = FlareTail.widget;
 
 FlareTail.app.Controller = function Controller () {}
 
-FlareTail.app.Controller.prototype = Object.create(Object.prototype);
+FlareTail.app.Controller.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Controller.prototype.constructor = FlareTail.app.Controller;
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Auto Activation
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+window.addEventListener('DOMContentLoaded', event => {
+  let app = window[document.querySelector('meta[name="application-name"]').content];
+
+  // Activate router
+  app.router = new FlareTail.app.Router(app);
+});
