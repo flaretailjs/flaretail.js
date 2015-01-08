@@ -53,16 +53,19 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
  * Events
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.app.Events = function Events () {}
+FlareTail.app.Events = function Events () {};
 
 FlareTail.app.Events.prototype = Object.create(Object.prototype);
 FlareTail.app.Events.prototype.constructor = FlareTail.app.Events;
 
 FlareTail.app.Events.prototype.publish = function (topic, data = {}) {
-  FlareTail.util.event.trigger(window, topic, { 'detail': data });
+  FlareTail.util.event.trigger(window, topic.replace(/^\:/, this.constructor.name + ':'), { 'detail': data });
 };
 
 FlareTail.app.Events.prototype.subscribe = function (topic, callback) {
+  topic = topic.replace(/^V\:/, this.constructor.name.replace(/(.*)Controller$/, `$1View:`));
+  topic = topic.replace(/^C\:/, this.constructor.name.replace(/(.*)View$/, `$1Controller:`));
+
   window.addEventListener(topic, event => callback(event.detail));
 };
 
@@ -70,7 +73,7 @@ FlareTail.app.Events.prototype.subscribe = function (topic, callback) {
  * Model
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.app.Model = function Model () {}
+FlareTail.app.Model = function Model () {};
 
 FlareTail.app.Model.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
@@ -79,7 +82,7 @@ FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
  * View
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.app.View = function View () {}
+FlareTail.app.View = function View () {};
 
 FlareTail.app.View.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.View.prototype.constructor = FlareTail.app.View;
@@ -92,7 +95,7 @@ FlareTail.app.View.prototype.widget = FlareTail.widget;
  * Controller
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.app.Controller = function Controller () {}
+FlareTail.app.Controller = function Controller () {};
 
 FlareTail.app.Controller.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Controller.prototype.constructor = FlareTail.app.Controller;
