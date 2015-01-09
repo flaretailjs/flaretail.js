@@ -381,7 +381,7 @@ FlareTail.util.ua = {
 
 FlareTail.util.app = {};
 
-FlareTail.util.app.can_install = function (manifest) {
+FlareTail.util.app.can_install = function (manifest = location.origin + '/manifest.webapp') {
   let apps = navigator.mozApps;
 
   return new Promise((resolve, reject) => {
@@ -397,12 +397,18 @@ FlareTail.util.app.can_install = function (manifest) {
   });
 };
 
-FlareTail.util.app.install = function (manifest) {
+FlareTail.util.app.install = function (manifest = location.origin + '/manifest.webapp') {
   let request = navigator.mozApps.install(manifest);
 
   return new Promise((resolve, reject) => {
-    request.addEventListener('success', event => resolve());
-    request.addEventListener('error', event => reject(new Error(request.error.name)));
+    request.addEventListener('success', event => {
+      FlareTail.util.event.trigger(window, 'AppInstalled');
+      resolve();
+    });
+    request.addEventListener('error', event => {
+      FlareTail.util.event.trigger(window, 'AppInstallFailed');
+      reject(new Error(request.error.name));
+    });
   });
 };
 
