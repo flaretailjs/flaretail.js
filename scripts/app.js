@@ -58,7 +58,8 @@ FlareTail.app.Events = function Events () {};
 FlareTail.app.Events.prototype = Object.create(Object.prototype);
 FlareTail.app.Events.prototype.constructor = FlareTail.app.Events;
 
-FlareTail.app.Events.prototype.publish = function (topic, data = {}) {
+// Publish
+FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
   if (topic.match(/^:/)) {
     topic = this.constructor.name + topic;
     topic += this.id ? ':' + this.id : '';
@@ -67,7 +68,8 @@ FlareTail.app.Events.prototype.publish = function (topic, data = {}) {
   FlareTail.util.event.trigger(window, topic, { 'detail': data });
 };
 
-FlareTail.app.Events.prototype.subscribe = function (topic, callback) {
+// Subscribe
+FlareTail.app.Events.prototype.on = function (topic, callback) {
   if (topic.match(/^[VC]:/)) {
     topic = topic.replace(/^V:/, this.constructor.name.replace(/(.*)Controller$/, '$1View:'));
     topic = topic.replace(/^C:/, this.constructor.name.replace(/(.*)View$/, '$1Controller:'));
