@@ -713,6 +713,15 @@ FlareTail.util.array = {};
 
 FlareTail.util.array.clone = array => [...array];
 
+FlareTail.util.array.join = (set, tag = undefined) => {
+  let open_tag = tag ? `<${tag}>` : '',
+      close_tag = tag ? `</${tag}>` : '',
+      array = [for (item of set) open_tag + FlareTail.util.string.sanitize(item) + close_tag],
+      last = array.pop();
+
+  return array.length ? array.join(', ') + ' and ' + last : last; // l10n
+};
+
 FlareTail.util.array.sort = (array, cond) => {
   // Normalization: ignore brackets for comparison
   let nomalized_values = new Map(),
