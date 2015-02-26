@@ -2083,11 +2083,11 @@ FlareTail.widget.Tree.prototype.build = function () {
       map = this.data.map = new WeakMap(),
       level = 1;
 
-  $outer.setAttribute('role', 'presentation');
+  $outer.setAttribute('role', 'none');
   $treeitem.setAttribute('role', 'treeitem');
   $treeitem.appendChild(document.createElement('label'));
   $expander.className = 'expander';
-  $expander.setAttribute('role', 'presentation');
+  $expander.setAttribute('role', 'none');
   $group.setAttribute('role', 'group');
 
   let get_item = obj => {
