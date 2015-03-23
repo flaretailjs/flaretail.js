@@ -1224,11 +1224,11 @@ FlareTail.widget.Grid.prototype.ensure_row_visibility = function ($row) {
       roh = $row.offsetHeight;
 
   if (ost > rot) {
-    $row.scrollIntoView(true);
+    $row.scrollIntoView({ 'block': 'start', 'behavior': 'smooth' });
   }
 
   if (ost + ooh < rot + roh) {
-    $row.scrollIntoView(false);
+    $row.scrollIntoView({ 'block': 'end', 'behavior': 'smooth' });
   }
 };
 
