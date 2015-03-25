@@ -795,3 +795,12 @@ FlareTail.util.string.strip_tags = str => {
 
   return $p.textContent;
 };
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * RegExp
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.util.regexp = {};
+
+// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
+FlareTail.util.regexp.escape = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
