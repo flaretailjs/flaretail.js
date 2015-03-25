@@ -1415,9 +1415,109 @@ FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
  * ComboBox extends Select
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Combobox = function Combobox () {};
-FlareTail.widget.Combobox.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.Combobox.prototype.constructor = FlareTail.widget.Combobox;
+FlareTail.widget.ComboBox = function ComboBox ($container) {
+  this.$container = $container;
+  this.$input = this.$container.querySelector('[role="searchbox"]');
+  this.$listbox = this.$container.querySelector('[role="listbox"]');
+  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox, []);
+
+  this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
+  this.$input.addEventListener('input', event => this.input_oninput(event));
+  this.$input.addEventListener('blur', event => this.input_onblur(event));
+  this.$listbox.addEventListener('mouseover', event => this.listbox_onmouseover(event));
+  this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
+  this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
+};
+
+FlareTail.widget.ComboBox.prototype = Object.create(FlareTail.widget.Select.prototype);
+FlareTail.widget.ComboBox.prototype.constructor = FlareTail.widget.ComboBox;
+
+FlareTail.widget.ComboBox.prototype.bind = function (...args) {
+  this.$container.addEventListener(...args);
+};
+
+FlareTail.widget.ComboBox.prototype.show_results = function ($fragment = undefined) {
+  if ($fragment) {
+    this.$listbox.appendChild($fragment);
+    this.$$listbox.update_members();
+    this.$$listbox.get_data();
+    this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[0];
+  }
+
+  this.$input.focus(); // Keep focus on <input>
+  this.$container.setAttribute('aria-expanded', 'true');
+};
+
+FlareTail.widget.ComboBox.prototype.hide_results = function () {
+  this.$container.setAttribute('aria-expanded', 'false');
+  this.$container.removeAttribute('aria-activedescendant');
+};
+
+FlareTail.widget.ComboBox.prototype.clear_results = function () {
+  this.$listbox.innerHTML = '';
+};
+
+FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
+  if (this.$$listbox.view.members.length) {
+    if (event.key.match(/^Arrow(Up|Down)$/)) {
+      FlareTail.util.kbd.dispatch(this.$listbox, event.key);
+      this.show_results();
+    }
+
+    if (event.key === 'Escape') {
+      this.hide_results();
+    }
+
+    if (event.key === 'Enter') {
+      this.listbox_onmousedown(event);
+    }
+  }
+
+  event.stopPropagation();
+};
+
+FlareTail.widget.ComboBox.prototype.input_oninput = function (event) {
+  let value = this.$input.value.trim();
+
+  this.clear_results();
+
+  if (!value.match(/\S/)) {
+    this.hide_results();
+
+    return;
+  }
+
+  FlareTail.util.event.trigger(this.$container, 'Input', { 'detail': { value, 'target': this.$input }});
+};
+
+FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
+  // Use a timer in case of the listbox getting focus for a second
+  window.setTimeout(() => {
+    if (!this.$input.matches(':focus')) {
+      this.hide_results();
+    }
+  }, 50);
+};
+
+// Based on Menu.prototype.onmouseover
+FlareTail.widget.ComboBox.prototype.listbox_onmouseover = function (event) {
+  if (this.$$listbox.view.members.includes(event.target)) {
+    this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
+    this.show_results();
+  }
+
+  FlareTail.util.event.ignore(event);
+};
+
+FlareTail.widget.ComboBox.prototype.listbox_onmousedown = function (event) {
+  this.hide_results();
+  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { 'target': this.$$listbox.view.selected[0] }});
+  FlareTail.util.event.ignore(event);
+};
+
+FlareTail.widget.ComboBox.prototype.listbox_onselect = function (event) {
+  this.$container.setAttribute('aria-activedescendant', event.detail.ids[0]);
+};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * ListBox extends Select
