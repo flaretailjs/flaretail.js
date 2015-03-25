@@ -1453,6 +1453,10 @@ FlareTail.widget.ComboBox.prototype.hide_results = function () {
   this.$container.removeAttribute('aria-activedescendant');
 };
 
+FlareTail.widget.ComboBox.prototype.clear_input = function () {
+  this.$input.value = '';
+};
+
 FlareTail.widget.ComboBox.prototype.clear_results = function () {
   this.$listbox.innerHTML = '';
 };
@@ -1487,7 +1491,7 @@ FlareTail.widget.ComboBox.prototype.input_oninput = function (event) {
     return;
   }
 
-  FlareTail.util.event.trigger(this.$container, 'Input', { 'detail': { value, 'target': this.$input }});
+  FlareTail.util.event.trigger(this.$container, 'Input', { 'detail': { value, '$target': this.$input }});
 };
 
 FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
@@ -1510,8 +1514,12 @@ FlareTail.widget.ComboBox.prototype.listbox_onmouseover = function (event) {
 };
 
 FlareTail.widget.ComboBox.prototype.listbox_onmousedown = function (event) {
+  let $target = this.$$listbox.view.selected[0];
+
   this.hide_results();
-  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { 'target': this.$$listbox.view.selected[0] }});
+  this.$input.value = $target.dataset.value;
+
+  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target }});
   FlareTail.util.event.ignore(event);
 };
 
