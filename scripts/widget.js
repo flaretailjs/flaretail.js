@@ -79,7 +79,7 @@ FlareTail.widget.RoleType.prototype.update_members = function () {
 
   this.view.members = get_items(`${selector}${not_selector}`),
   this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
-  this.view.$focused = null;
+  this.view.$focused = this.view.selected.length ? this.view.selected[0] : null;
 };
 
 FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
@@ -1415,90 +1415,219 @@ FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
  * ComboBox extends Select
  * ------------------------------------------------------------------------------------------------------------------ */
 
+// TODO: Support aria-autocomplete="inline" and "both"
+// TODO: Add more HTMLSelectElement-compatible attributes
+// TODO: Add test cases
+
 FlareTail.widget.ComboBox = function ComboBox ($container) {
   this.$container = $container;
-  this.$input = this.$container.querySelector('[role="searchbox"]');
+  this.$button = this.$container.querySelector('[role="button"]');
+  this.$input = this.$container.querySelector('[role="textbox"], [role="searchbox"]');
   this.$listbox = this.$container.querySelector('[role="listbox"]');
-  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox, []);
 
+  this.autocomplete = this.$container.getAttribute('aria-autocomplete') || 'none';
+  this.autoexpand = this.$container.matches('[data-autoexpand="true"]');
+  this.nobutton = this.$container.matches('[data-nobutton="true"]');
+
+  if (!this.$button && !this.nobutton) {
+    this.$button = this.$container.appendChild(document.createElement('span'));
+    this.$button.setAttribute('role', 'button');
+  }
+
+  if (this.$button) {
+    this.$button.tabIndex = 0;
+    this.$button.addEventListener('mousedown', event => this.button_onmousedown(event));
+  }
+
+  if (!this.$input) {
+    this.$input = this.$container.insertBefore(document.createElement('span'), this.$container.firstElementChild);
+    this.$input.setAttribute('role', 'textbox');
+    this.$input.setAttribute('aria-readonly', this.$container.matches('[aria-readonly="true"]'));
+  }
+
+  this.readonly = this.$input.matches('[aria-readonly="true"]');
+
+  this.$input.tabIndex = 0;
+  this.$input.contentEditable = !this.readonly;
   this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
   this.$input.addEventListener('input', event => this.input_oninput(event));
   this.$input.addEventListener('blur', event => this.input_onblur(event));
+  this.$$input = new FlareTail.widget.TextBox(this.$input);
+
+  if (!this.$listbox) {
+    this.$listbox = this.$container.appendChild(document.createElement('ul'));
+    this.$listbox.setAttribute('role', 'listbox');
+  }
+
   this.$listbox.addEventListener('mouseover', event => this.listbox_onmouseover(event));
   this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
+  this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
   this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
+  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox);
+
+  let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
+
+  if ($selected) {
+    this.$$input.value = $selected.dataset.value || $selected.textContent;
+  }
+
+  Object.defineProperties(this, {
+    'options': {
+      'enumerable': true,
+      'get': () => [...this.$listbox.querySelectorAll('[role="option"]')],
+    },
+    'selected': {
+      'enumerable': true,
+      'get': () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
+    },
+    'selectedIndex': {
+      'enumerable': true,
+      'get': () => this.$$listbox.view.members.indexOf(this.$$listbox.view.selected[0]),
+      'set': index => {
+        let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[index];
+
+        this.$$input.value = $selected.dataset.value || $selected.textContent;
+      },
+    },
+  });
 };
 
 FlareTail.widget.ComboBox.prototype = Object.create(FlareTail.widget.Select.prototype);
 FlareTail.widget.ComboBox.prototype.constructor = FlareTail.widget.ComboBox;
 
-FlareTail.widget.ComboBox.prototype.bind = function (...args) {
+FlareTail.widget.ComboBox.prototype.on = function (...args) {
   this.$container.addEventListener(...args);
 };
 
-FlareTail.widget.ComboBox.prototype.show_results = function ($fragment = undefined) {
-  if ($fragment) {
-    this.$listbox.appendChild($fragment);
-    this.$$listbox.update_members();
-    this.$$listbox.get_data();
-    this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[0];
+FlareTail.widget.ComboBox.prototype.show_dropdown = function () {
+  if (!this.$$listbox.view.members.length) {
+    return;
   }
 
-  this.$input.focus(); // Keep focus on <input>
+  let input = this.$input.getBoundingClientRect(),
+      listbox = this.$listbox.getBoundingClientRect(),
+      adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height;
+
   this.$container.setAttribute('aria-expanded', 'true');
+  this.$container.setAttribute('aria-activedescendant', this.$$listbox.view.selected[0].id);
+  this.$input.focus(); // Keep focus on <input>
+  this.$listbox.dataset.position = adjusted ? 'above' : 'below';
 };
 
-FlareTail.widget.ComboBox.prototype.hide_results = function () {
+FlareTail.widget.ComboBox.prototype.hide_dropdown = function () {
   this.$container.setAttribute('aria-expanded', 'false');
   this.$container.removeAttribute('aria-activedescendant');
 };
 
-FlareTail.widget.ComboBox.prototype.clear_input = function () {
-  this.$input.value = '';
+FlareTail.widget.ComboBox.prototype.toggle_dropdown = function () {
+  if (this.$container.getAttribute('aria-expanded') === 'false') {
+    this.show_dropdown();
+  } else {
+    this.hide_dropdown();
+  }
 };
 
-FlareTail.widget.ComboBox.prototype.clear_results = function () {
+FlareTail.widget.ComboBox.prototype.fill_dropdown = function ($element, addition = true) {
+  if (!addition) {
+    this.clear_dropdown();
+  }
+
+  this.$listbox.appendChild($element);
+  this.$$listbox.update_members();
+  this.$$listbox.get_data();
+
+  let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[0];
+
+  if (this.autocomplete === 'list') {
+    this.$$input.value = $selected.dataset.value || $selected.textContent;
+  }
+};
+
+FlareTail.widget.ComboBox.prototype.add = function (value, selected = false) {
+  let $option = document.createElement('li');
+
+  $option.dataset.value = $option.textContent = value;
+  $option.setAttribute('role', 'option');
+  $option.setAttribute('aria-selected', selected);
+
+  this.fill_dropdown($option);
+};
+
+FlareTail.widget.ComboBox.prototype.clear_dropdown = function () {
   this.$listbox.innerHTML = '';
 };
 
+FlareTail.widget.ComboBox.prototype.clear_input = function () {
+  this.$$input.clear();
+};
+
+FlareTail.widget.ComboBox.prototype.button_onmousedown = function (event) {
+  this.toggle_dropdown();
+  event.preventDefault();
+};
+
 FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
+  if (event.key === 'Tab') {
+    return true;
+  }
+
   if (this.$$listbox.view.members.length) {
-    if (event.key.match(/^Arrow(Up|Down)$/)) {
-      FlareTail.util.kbd.dispatch(this.$listbox, event.key);
-      this.show_results();
-    }
-
     if (event.key === 'Escape') {
-      this.hide_results();
-    }
-
-    if (event.key === 'Enter') {
+      this.hide_dropdown();
+    } else if (event.key === ' ') { // Space
+      this.toggle_dropdown();
+    } else if (event.key === 'Enter') {
       this.listbox_onmousedown(event);
+    } else {
+      FlareTail.util.kbd.dispatch(this.$listbox, event.key);
+
+      if (event.key.match(/^Arrow(Up|Down)$/)) {
+
+        if (this.autoexpand) {
+          this.show_dropdown();
+        }
+
+        let $target = this.$$listbox.view.selected[0],
+            value = $target.dataset.value || $target.textContent;
+
+        if (this.autocomplete === 'list') {
+          this.$$input.value = value;
+          FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
+        }
+
+        this.$input.focus(); // Keep focus on <input>
+      }
     }
+  }
+
+  if (this.readonly) {
+    event.preventDefault();
   }
 
   event.stopPropagation();
 };
 
 FlareTail.widget.ComboBox.prototype.input_oninput = function (event) {
-  let value = this.$input.value.trim();
+  let value = this.$$input.value.trim();
 
-  this.clear_results();
+  this.clear_dropdown();
 
   if (!value.match(/\S/)) {
-    this.hide_results();
+    this.hide_dropdown();
 
     return;
   }
 
   FlareTail.util.event.trigger(this.$container, 'Input', { 'detail': { value, '$target': this.$input }});
+
+  event.stopPropagation();
 };
 
 FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
   // Use a timer in case of the listbox getting focus for a second
   window.setTimeout(() => {
     if (!this.$input.matches(':focus')) {
-      this.hide_results();
+      this.hide_dropdown();
     }
   }, 50);
 };
@@ -1507,19 +1636,21 @@ FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
 FlareTail.widget.ComboBox.prototype.listbox_onmouseover = function (event) {
   if (this.$$listbox.view.members.includes(event.target)) {
     this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
-    this.show_results();
+    this.show_dropdown();
   }
 
   FlareTail.util.event.ignore(event);
 };
 
 FlareTail.widget.ComboBox.prototype.listbox_onmousedown = function (event) {
-  let $target = this.$$listbox.view.selected[0];
+  let $target = this.$$listbox.view.selected[0],
+      value = $target.dataset.value || $target.textContent;
 
-  this.hide_results();
-  this.$input.value = $target.dataset.value;
+  this.hide_dropdown();
+  this.$$input.value = value;
+  this.$input.focus();
 
-  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target }});
+  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
   FlareTail.util.event.ignore(event);
 };
 
@@ -2562,6 +2693,46 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
 FlareTail.widget.Input = function Input () {};
 FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototype);
 FlareTail.widget.Input.prototype.constructor = FlareTail.widget.Input;
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * TextBox extends Input
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.widget.TextBox = function TextBox ($textbox, richtext = false) {
+  this.$textbox = $textbox;
+  this.richtext = richtext;
+
+  Object.defineProperties(this, {
+    'value': {
+      'enumerable': true,
+      'get': () => this.$textbox.textContent,
+      'set': str => this.$textbox.textContent = str
+    },
+  });
+
+  FlareTail.util.event.bind(this, this.$textbox, ['copy', 'paste']);
+};
+
+FlareTail.widget.TextBox.prototype = Object.create(FlareTail.widget.Input.prototype);
+FlareTail.widget.TextBox.prototype.constructor = FlareTail.widget.TextBox;
+
+FlareTail.widget.TextBox.prototype.oncopy = function (event) {
+  if (!this.richtext) {
+    event.clipboardData.setData('text/plain', window.getSelection().toString());
+    event.preventDefault();
+  }
+};
+
+FlareTail.widget.TextBox.prototype.onpaste = function (event) {
+  if (!this.richtext) {
+    this.$textbox.textContent = event.clipboardData.getData('text/plain');
+    event.preventDefault();
+  }
+};
+
+FlareTail.widget.TextBox.prototype.clear = function () {
+  this.$textbox.textContent = '';
+};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Checkbox extends Input
