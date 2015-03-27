@@ -79,7 +79,7 @@ FlareTail.widget.RoleType.prototype.update_members = function () {
 
   this.view.members = get_items(`${selector}${not_selector}`),
   this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
-  this.view.$focused = this.view.selected.length ? this.view.selected[0] : null;
+  this.view.$focused = null;
 };
 
 FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
@@ -1421,6 +1421,8 @@ FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
 
 FlareTail.widget.ComboBox = function ComboBox ($container) {
   this.$container = $container;
+  this.$container.setAttribute('aria-expanded', 'false');
+
   this.$button = this.$container.querySelector('[role="button"]');
   this.$input = this.$container.querySelector('[role="textbox"], [role="searchbox"]');
   this.$listbox = this.$container.querySelector('[role="listbox"]');
@@ -1506,10 +1508,12 @@ FlareTail.widget.ComboBox.prototype.show_dropdown = function () {
 
   let input = this.$input.getBoundingClientRect(),
       listbox = this.$listbox.getBoundingClientRect(),
-      adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height;
+      adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height,
+      $selected = this.$$listbox.view.selected[0];
 
   this.$container.setAttribute('aria-expanded', 'true');
-  this.$container.setAttribute('aria-activedescendant', this.$$listbox.view.selected[0].id);
+  this.$container.setAttribute('aria-activedescendant', $selected.id);
+  this.$$listbox.view.$focused = $selected;
   this.$input.focus(); // Keep focus on <input>
   this.$listbox.dataset.position = adjusted ? 'above' : 'below';
 };
