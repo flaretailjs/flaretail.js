@@ -1540,9 +1540,9 @@ FlareTail.widget.ComboBox.prototype.fill_dropdown = function ($element, addition
   this.$$listbox.update_members();
   this.$$listbox.get_data();
 
-  let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[0];
+  let $selected = this.$$listbox.view.selected[0];
 
-  if (this.autocomplete === 'list') {
+  if (this.autocomplete === 'list' && $selected) {
     this.$$input.value = $selected.dataset.value || $selected.textContent;
   }
 };
