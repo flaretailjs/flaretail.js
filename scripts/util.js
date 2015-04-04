@@ -650,16 +650,12 @@ document.addEventListener('visibilitychange', event => {
 
 FlareTail.util.network = {};
 
-FlareTail.util.network.json = (url, data = null) => {
-  let xhr = new XMLHttpRequest();
-
-  return new Promise((resolve, reject) => {
-    xhr.open(data ? 'POST' : 'GET', url, true);
-    xhr.setRequestHeader('Accept', 'application/json');
-    xhr.addEventListener('load', event => resolve(JSON.parse(event.target.responseText)));
-    xhr.addEventListener('error', event => reject(event));
-    xhr.send(data);
-  });
+FlareTail.util.network.json = (url, body = undefined) => {
+  return window.fetch(new Request(url, {
+    'method': body ? 'POST' : 'GET',
+    'headers': new Headers({ 'Accept': 'application/json' }),
+    body,
+  })).then(response => response.json());
 };
 
 FlareTail.util.network.jsonp = url => {
