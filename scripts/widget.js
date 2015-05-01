@@ -269,7 +269,7 @@ FlareTail.widget.Composite.prototype.onblur = function (event) {
 };
 
 FlareTail.widget.Composite.prototype.onmousedown = function (event) {
-  if (!this.view.members.includes(event.target) || event.buttons !== 1) {
+  if (!this.view.members.includes(event.target) || event.buttons > 1) {
     return;
   }
 
@@ -824,7 +824,7 @@ FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
   let $target = event.target;
 
   if ($target.matches('[role="columnheader"]')) {
-    if (event.buttons === 1 && this.options.reorderable) {
+    if (event.buttons <= 1 && this.options.reorderable) {
       FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
     }
 
@@ -1888,14 +1888,14 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
 
 FlareTail.widget.Menu.prototype.onmousedown = function (event) {
   // Open link in a new tab
-  if (event.target.href && event.buttons === 1) {
+  if (event.target.href && event.buttons <= 1) {
     event.stopPropagation();
     event.target.target = '_blank';
 
     return;
   }
 
-  if (event.buttons !== 1) {
+  if (event.buttons > 1) {
     FlareTail.util.event.ignore(event);
 
     return;
@@ -2191,7 +2191,7 @@ FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototy
 FlareTail.widget.MenuBar.prototype.constructor = FlareTail.widget.MenuBar;
 
 FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
-  if (event.buttons !== 1) {
+  if (event.buttons > 1) {
     FlareTail.util.event.ignore(event);
 
     return;
@@ -3394,7 +3394,7 @@ FlareTail.widget.Splitter.prototype = Object.create(FlareTail.widget.Separator.p
 FlareTail.widget.Splitter.prototype.constructor = FlareTail.widget.Splitter;
 
 FlareTail.widget.Splitter.prototype.onmousedown = function (event) {
-  if (event.buttons !== 1) {
+  if (event.buttons > 1) {
     event.preventDefault();
 
     return;
