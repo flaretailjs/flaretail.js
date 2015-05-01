@@ -474,7 +474,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
         break;
       }
 
-      if (ctrl || !options.search_enabled) {
+      if (ctrl || !options.search_enabled || !key.match(/^\S$/)) {
         break;
       }
 
@@ -507,7 +507,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
       };
 
       for (let i = focused_idx + 1; ; i++) {
-        if (i === items.length) {
+        if (items.length > 1 && i === items.length) {
           i = 0; // Continue from top
         }
 
@@ -1465,7 +1465,7 @@ FlareTail.widget.ComboBox = function ComboBox ($container) {
   this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
   this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
   this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
-  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox);
+  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox, undefined, { 'search_enabled': false });
 
   let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
 
@@ -1510,6 +1510,10 @@ FlareTail.widget.ComboBox.prototype.show_dropdown = function () {
       listbox = this.$listbox.getBoundingClientRect(),
       adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height,
       $selected = this.$$listbox.view.selected[0];
+
+  if (!$selected) {
+    $selected = this.$$listbox.view.selected = this.$$listbox.view.members[0];
+  }
 
   this.$container.setAttribute('aria-expanded', 'true');
   this.$container.setAttribute('aria-activedescendant', $selected.id);
@@ -1672,13 +1676,13 @@ FlareTail.widget.ComboBox.prototype.listbox_onselect = function (event) {
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.ListBox = function ListBox ($container, data) {
+FlareTail.widget.ListBox = function ListBox ($container, data = undefined, options = {}) {
   this.view = { $container };
 
   this.options = {
     'item_roles': ['option'],
     'item_selector': '[role="option"]',
-    'search_enabled': true
+    'search_enabled': options.search_enabled !== undefined ? options.search_enabled : true
   };
 
   this.handler = {
