@@ -93,6 +93,15 @@ FlareTail.app.Model.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
 
 /* ------------------------------------------------------------------------------------------------------------------
+ * Collection
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Collection = function Collection () {};
+
+FlareTail.app.Collection.prototype = Object.create(FlareTail.app.Events.prototype);
+FlareTail.app.Collection.prototype.constructor = FlareTail.app.Collection;
+
+/* ------------------------------------------------------------------------------------------------------------------
  * View
  * ------------------------------------------------------------------------------------------------------------------ */
 
