@@ -84,26 +84,66 @@ FlareTail.app.Events.prototype.on = function (topic, callback) {
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Model
+ * DataSource
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.app.Model = function Model () {};
+FlareTail.app.DataSource = function DataSource () {};
 
-FlareTail.app.Model.prototype = Object.create(FlareTail.app.Events.prototype);
-FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
+FlareTail.app.DataSource.prototype = Object.create(FlareTail.app.Events.prototype);
+FlareTail.app.DataSource.prototype.constructor = FlareTail.app.DataSource;
 
-FlareTail.app.Model.prototype.get_transaction = function (db_name, store_name) {
-  let app = window[document.querySelector('meta[name="application-name"]').content]; // FIXME
+/* ------------------------------------------------------------------------------------------------------------------
+ * DataSource: IndexedDB
+ * ------------------------------------------------------------------------------------------------------------------ */
 
-  return app.models[db_name].database.transaction(store_name, 'readwrite');
+FlareTail.app.DataSource.IndexedDB = function IDBDataSource () {};
+
+FlareTail.app.DataSource.IndexedDB.prototype = Object.create(FlareTail.app.DataSource.prototype);
+FlareTail.app.DataSource.IndexedDB.prototype.constructor = FlareTail.app.DataSource.IndexedDB;
+
+/*
+ * Open a local IndexedDB database by name, and return it.
+ *
+ * [argument] name (String) name of the database
+ * [return] database (Promise -> IDBDatabase or Error) the target database
+ */
+FlareTail.app.DataSource.IndexedDB.prototype.open_database = function (name) {
+  let request = indexedDB.open(name);
+
+  return new Promise((resolve, reject) => {
+    // Create object stores when the database is created or upgraded
+    request.addEventListener('upgradeneeded', event => {
+      if (typeof this.onupgradeneeded === 'function') {
+        this.onupgradeneeded(event);
+      }
+    });
+
+    request.addEventListener('success', event => {
+      this.database = event.target.result;
+      resolve(event.target.result);
+    });
+
+    request.addEventListener('error', event => {
+      reject(new Error('Failed to open the database. \
+                        Make sure you’re not using private browsing mode or IndexedDB doesn’t work.'))
+    });
+  });
 };
 
-FlareTail.app.Model.prototype.get_store = function (db_name, store_name) {
-  let store = this.get_transaction(db_name, store_name).objectStore(store_name),
-      send = request => new Promise((resolve, reject) => {
-        request.addEventListener('success', event => resolve(event.target.result));
-        request.addEventListener('error', event => reject(event.target.error));
-      });
+/*
+ * Get a IndexedDB store in a convenient way.
+ *
+ * [argument] name (String) name of the object store
+ * [argument] return_request (Boolean) if true, operation methods return IDBRequest instead of result Array
+ * [return] store (Object) set of operation methods that return a Promise
+ */
+FlareTail.app.DataSource.IndexedDB.prototype.get_store = function (name, return_request = false) {
+  let store = this.database.transaction(name, 'readwrite').objectStore(name);
+
+  let send = request => new Promise((resolve, reject) => {
+    request.addEventListener('success', event => resolve(return_request ? event.target : event.target.result));
+    request.addEventListener('error', event => reject(event.target.error));
+  });
 
   return {
     'save': obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
@@ -114,13 +154,14 @@ FlareTail.app.Model.prototype.get_store = function (db_name, store_name) {
   };
 };
 
-FlareTail.app.Model.prototype.open_database = function (req) {
-  return new Promise((resolve, reject) => {
-    req.addEventListener('success', event => resolve(event.target.result));
-    req.addEventListener('error', event => reject(new Error('Failed to open the database. Make sure you’re not using \
-                                                             private browsing mode or IndexedDB doesn’t work.')));
-  });
-};
+/* ------------------------------------------------------------------------------------------------------------------
+ * Model
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Model = function Model () {};
+
+FlareTail.app.Model.prototype = Object.create(FlareTail.app.Events.prototype);
+FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
 
 /*
  * Get a proxified 'this' object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop
@@ -153,7 +194,7 @@ FlareTail.app.Model.prototype.cache = function (data) {
     'get': (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
     'set': (obj, prop, value) => {
       obj[prop] = value;
-      this.store.save(obj);
+      this.datasource.get_store(this.store_name).save(obj);
 
       return true; // The set trap must return true (Bug 1132522)
     },
@@ -171,50 +212,17 @@ FlareTail.app.Model.prototype.save = function (data = undefined) {
     this.cache(data);
   }
 
-  return this.store.save(this.data).then(() => Promise.resolve(this.proxy()));
+  return this.datasource.get_store(this.store_name).save(this.data).then(() => Promise.resolve(this.proxy()));
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Collection
+ * Collection, a set of Models
  * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.app.Collection = function Collection () {};
 
 FlareTail.app.Collection.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Collection.prototype.constructor = FlareTail.app.Collection;
-
-FlareTail.app.Collection.prototype.key_name = 'id';
-FlareTail.app.Collection.prototype.map = new Map();
-
-FlareTail.app.Collection.prototype.get_transaction = function (db_name, store_name) {
-  let app = window[document.querySelector('meta[name="application-name"]').content]; // FIXME
-
-  return app.models[db_name].database.transaction(store_name, 'readwrite');
-};
-
-FlareTail.app.Collection.prototype.get_store = function (db_name, store_name) {
-  let store = this.get_transaction(db_name, store_name).objectStore(store_name),
-      send = request => new Promise((resolve, reject) => {
-        request.addEventListener('success', event => resolve(event.target.result));
-        request.addEventListener('error', event => reject(event.target.error));
-      });
-
-  return {
-    'save': obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
-    'get': key => send(store.get(key)),
-    'get_all': () => send(store.mozGetAll()),
-    'delete': key => send(store.delete(key)),
-    'clear': () => send(store.clear()),
-  };
-};
-
-FlareTail.app.Collection.prototype.open_database = function (req) {
-  return new Promise((resolve, reject) => {
-    req.addEventListener('success', event => resolve(event.target.result));
-    req.addEventListener('error', event => reject(new Error('Failed to open the database. Make sure you’re not using \
-                                                             private browsing mode or IndexedDB doesn’t work.')));
-  });
-};
 
 /*
  * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
@@ -224,40 +232,33 @@ FlareTail.app.Collection.prototype.open_database = function (req) {
  * [return] items (Promise -> Map(String or Number, Proxy)) new instances of the model object
  */
 FlareTail.app.Collection.prototype.load = function () {
-  return this.get_store(this.db_name, this.store_name).get_all().then(items => {
-    this.map = new Map([for (item of items) [item[this.key_name], new this.model(item)]]);
+  // Get IDBRequest instead of the result array
+  return this.datasource.get_store(this.store_name, true).get_all().then(request => {
+    this.map = new Map([for (item of request.result)
+      [item[request.source.keyPath], this.model ? new this.model(item) : item]]);
 
     return Promise.resolve(this.map);
   });
 };
 
 /*
- * Add an item data to the database.
- *
- * [argument] data (Object) raw data object
- * [return] item (Proxy) new instance of the model object
- */
-FlareTail.app.Collection.prototype.add = function (data) {
-  let item = new this.model(data);
-
-  item.save();
-  this.map.set(item[this.key_name], item);
-
-  return item;
-};
-
-/*
- * Check if an item with a specific key is in the database.
+ * Set or add an item data to the database.
  *
  * [argument] key (Number or String) key of the item
- * [return] result (Boolean) whether the item exists
+ * [argument] value (Object) raw data object
+ * [return] item (Proxy) new instance of the model object
  */
-FlareTail.app.Collection.prototype.has = function (key) {
-  if (typeof key === 'string' && key.match(/^\d+$/)) {
-    key = Number.parseInt(key);
+FlareTail.app.Collection.prototype.set = function (key, value) {
+  if (this.model) {
+    value = new this.model(value);
+    value.save();
+  } else {
+    this.datasource.get_store(this.store_name).save(value);
   }
 
-  return this.map.has(key);
+  this.map.set(key, value);
+
+  return value;
 };
 
 /*
@@ -268,18 +269,12 @@ FlareTail.app.Collection.prototype.has = function (key) {
  * [return] item (Proxy or undefined) new instance of the model object
  */
 FlareTail.app.Collection.prototype.get = function (key, fallback_data = undefined) {
-  if (typeof key === 'string' && key.match(/^\d+$/)) {
-    key = Number.parseInt(key);
-  }
-
   if (this.has(key)) {
     return this.map.get(key);
   }
 
   if (fallback_data) {
-    fallback_data[this.key_name] = key;
-
-    return this.add(fallback_data);
+    return this.set(key, fallback_data);
   }
 
   return undefined;
@@ -303,6 +298,29 @@ FlareTail.app.Collection.prototype.get_some = function (keys) {
  */
 FlareTail.app.Collection.prototype.get_all = function () {
   return this.map;
+};
+
+/*
+ * Check if an item with a specific key is in the database.
+ *
+ * [argument] key (Number or String) key of the item
+ * [return] result (Boolean) whether the item exists
+ */
+FlareTail.app.Collection.prototype.has = function (key) {
+  return this.map.has(key);
+};
+
+/*
+ * Delete an item by a specific key.
+ *
+ * [argument] key (Number or String) key of the item
+ * [return] result (Boolean) true
+ */
+FlareTail.app.Collection.prototype.delete = function (key) {
+  this.datasource.get_store(this.store_name).delete(key);
+  this.map.delete(key);
+
+  return true;
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
