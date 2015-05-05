@@ -62,25 +62,56 @@ FlareTail.app.Events = function Events () {};
 FlareTail.app.Events.prototype = Object.create(Object.prototype);
 FlareTail.app.Events.prototype.constructor = FlareTail.app.Events;
 
-// Publish
+/*
+ * Publish an event asynchronously on a separate thread.
+ *
+ * [argument] topic (String) An event name. Shorthand syntax is supported: :Updated in BugModel means BugModel:Updated,
+ *                  :Error in SessionController means SessionController:Error, and so on.
+ * [argument] data (Object, optional) Data to pass the subscribers. If the instance has set the id property, that id
+ *                  will be automatically appended to the data
+ * [return] none
+ */
 FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
   if (topic.match(/^:/)) {
     topic = this.constructor.name + topic;
-    topic += this.id ? ':' + this.id : '';
+  }
+
+  if (!data.id && this.id) {
+    data.id = this.id;
   }
 
   FlareTail.util.event.trigger(window, topic, { 'detail': data });
 };
 
-// Subscribe
+/*
+ * Subscribe an event.
+ *
+ * [argument] topic (String) An event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
+ *                  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on. When
+ *                  shorthand syntax is used, the callback function will be fired only when both the event detail object
+ *                  and the instance have the same id property
+ * [argument] callback (Function) A function called whenever the specified event is fired
+ * [return] none
+ */
 FlareTail.app.Events.prototype.on = function (topic, callback) {
-  if (topic.match(/^[VC]:/)) {
-    topic = topic.replace(/^V:/, this.constructor.name.replace(/(.*)Controller$/, '$1View:'));
-    topic = topic.replace(/^C:/, this.constructor.name.replace(/(.*)View$/, '$1Controller:'));
-    topic += this.id ? ':' + this.id : '';
-  }
+  let identity = false;
 
-  window.addEventListener(topic, event => callback(event.detail));
+  topic = topic.replace(/^([MVC]):/, (match, prefix) => {
+    identity = true;
+
+    return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
+            + { 'M': 'Model', 'C': 'View', 'C': 'Controller' }[prefix] + ':';
+  });
+
+  window.addEventListener(topic, event => {
+    if (identity && event.detail && event.detail.id && event.detail.id !== this.id) {
+      return false;
+    }
+
+    callback(event.detail);
+
+    return true;
+  });
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -232,7 +263,7 @@ FlareTail.app.Collection.prototype.constructor = FlareTail.app.Collection;
  * [return] items (Promise -> Map(String or Number, Proxy)) new instances of the model object
  */
 FlareTail.app.Collection.prototype.load = function () {
-  // Get IDBRequest instead of the result array
+  // Get IDBRequest instead of the result array to get the keyPath
   return this.datasource.get_store(this.store_name, true).get_all().then(request => {
     this.map = new Map([for (item of request.result)
       [item[request.source.keyPath], this.model ? new this.model(item) : item]]);
