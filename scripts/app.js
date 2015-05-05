@@ -100,7 +100,7 @@ FlareTail.app.Events.prototype.on = function (topic, callback) {
     identity = true;
 
     return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-            + { 'M': 'Model', 'C': 'View', 'C': 'Controller' }[prefix] + ':';
+            + { 'M': 'Model', 'V': 'View', 'C': 'Controller' }[prefix] + ':';
   });
 
   window.addEventListener(topic, event => {
