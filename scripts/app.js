@@ -177,6 +177,7 @@ FlareTail.app.DataSource.IndexedDB.prototype.get_store = function (name, return_
   });
 
   return {
+    'obj': store, // IDBObjectStore
     'save': obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
     'get': key => send(store.get(key)),
     'get_all': () => send(store.mozGetAll()),
@@ -263,10 +264,26 @@ FlareTail.app.Collection.prototype.constructor = FlareTail.app.Collection;
  * [return] items (Promise -> Map(String or Number, Proxy)) new instances of the model object
  */
 FlareTail.app.Collection.prototype.load = function () {
-  // Get IDBRequest instead of the result array to get the keyPath
-  return this.datasource.get_store(this.store_name, true).get_all().then(request => {
-    this.map = new Map([for (item of request.result)
-      [item[request.source.keyPath], this.model ? new this.model(item) : item]]);
+  let store = this.datasource.get_store(this.store_name);
+
+  return store.get_all().then(items => {
+    this.map = new Map(items.map(item => {
+      let key = item[store.obj.keyPath],
+          value;
+
+      if (this.model) {
+        // Get a new instance
+        value = new this.model(item);
+      } else if (this.store_type === 'simple' && item.value) {
+        // Use the value only
+        value = item.value;
+      } else {
+        // Use the object as is
+        value = item;
+      }
+
+      return [key, value];
+    }));
 
     return Promise.resolve(this.map);
   });
@@ -276,7 +293,7 @@ FlareTail.app.Collection.prototype.load = function () {
  * Set or add an item data to the database.
  *
  * [argument] key (Number or String) key of the item
- * [argument] value (Object) raw data object
+ * [argument] value (Mixed) raw data object or any value
  * [return] item (Proxy) new instance of the model object
  */
 FlareTail.app.Collection.prototype.set = function (key, value) {
@@ -284,7 +301,10 @@ FlareTail.app.Collection.prototype.set = function (key, value) {
     value = new this.model(value);
     value.save();
   } else {
-    this.datasource.get_store(this.store_name).save(value);
+    let store = this.datasource.get_store(this.store_name);
+
+    // Support simple key-value data
+    store.save(this.store_type === 'simple' ? { [store.obj.keyPath]: key, value } : value);
   }
 
   this.map.set(key, value);
