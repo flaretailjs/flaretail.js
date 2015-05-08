@@ -108,7 +108,7 @@ FlareTail.app.Events.prototype.on = function (topic, callback) {
   });
 
   window.addEventListener(topic, event => {
-    if (identity && event.detail && event.detail.id && event.detail.id !== this.id) {
+    if (identity && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
       return false;
     }
 
