@@ -95,11 +95,10 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
  *                  shorthand syntax is used, the callback function will be fired only when both the event detail object
  *                  and the instance have the same id property
  * [argument] callback (Function) A function called whenever the specified event is fired
+ * [argument] identity (Boolean, optional) Whether to check the identity as described above
  * [return] none
  */
-FlareTail.app.Events.prototype.on = function (topic, callback) {
-  let identity = false;
-
+FlareTail.app.Events.prototype.on = function (topic, callback, identity = false) {
   topic = topic.replace(/^([MVC]):/, (match, prefix) => {
     identity = true;
 
