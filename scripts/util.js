@@ -11,6 +11,9 @@
 
 let FlareTail = FlareTail || {};
 
+FlareTail.debug = 'URLSearchParams' in window &&
+                    (new URLSearchParams(location.search.substr(1))).get('debug') === 'true';
+
 FlareTail.util = {};
 
 /* ------------------------------------------------------------------------------------------------------------------

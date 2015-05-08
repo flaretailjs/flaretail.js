@@ -80,6 +80,10 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
     data.id = this.id;
   }
 
+  if (FlareTail.debug) {
+    console.info('Event triggered:', topic, data);
+  }
+
   FlareTail.util.event.trigger(window, topic, { 'detail': data });
 };
 
