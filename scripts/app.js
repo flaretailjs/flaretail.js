@@ -391,6 +391,19 @@ FlareTail.app.View.prototype.fill = FlareTail.util.content.fill;
 FlareTail.app.View.prototype.widget = FlareTail.widget;
 
 /* ------------------------------------------------------------------------------------------------------------------
+ * Helper
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.app.Helper = function Helper () {};
+
+FlareTail.app.Helper.prototype = Object.create(FlareTail.app.Events.prototype);
+FlareTail.app.Helper.prototype.constructor = FlareTail.app.Helper;
+
+FlareTail.app.Helper.prototype.get_fragment = FlareTail.util.content.get_fragment;
+FlareTail.app.Helper.prototype.fill = FlareTail.util.content.fill;
+FlareTail.app.Helper.prototype.widget = FlareTail.widget;
+
+/* ------------------------------------------------------------------------------------------------------------------
  * Controller
  * ------------------------------------------------------------------------------------------------------------------ */
 
