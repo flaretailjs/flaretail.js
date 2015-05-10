@@ -45,6 +45,7 @@ FlareTail.util = {};
     'remove' in Element.prototype, // Firefox 23
     'parseInt' in Number, // Firefox 25
     'createTBody' in HTMLTableElement.prototype, // Firefox 25
+    'find' in Array.prototype, // Firefox 25
     'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
     'URLSearchParams' in window, // Firefox 29
@@ -80,13 +81,16 @@ FlareTail.util = {};
     // ES6 shorthand properties in object literals (Firefox 33)
     let a = 1, b = 2, c = { a, b };
 
+    // ES6 computed property names (Firefox 34)
+    let k = 'id', d = { [k]: a };
+
     // ES6 Template Literals (Firefox 34)
-    let d = `a: ${a}, b: ${b}`;
+    let e = `a: ${a}, b: ${b}`;
   } catch (ex) {
     compatible = false;
   }
 
-  Object.defineProperty(FlareTail.util, 'compatible', {
+  Object.defineProperty(FlareTail, 'compatible', {
     'enumerable': true,
     'value': compatible
   });
