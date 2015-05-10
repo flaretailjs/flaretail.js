@@ -128,23 +128,20 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
  * Subscribe an event.
  *
  * [argument] topic (String) An event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
- *                  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on. When
- *                  shorthand syntax is used, the callback function will be fired only when both the event detail object
- *                  and the instance have the same id property
+ *                  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on
  * [argument] callback (Function) A function called whenever the specified event is fired
- * [argument] identity (Boolean, optional) Whether to check the identity as described above
+ * [argument] global (Boolean, optional) If true, the callback function will be fired even when the event detail object
+ *                  and the instance have different id properties. Otherwise, the identity will be respected
  * [return] none
  */
-FlareTail.app.Events.prototype.on = function (topic, callback, identity = false) {
+FlareTail.app.Events.prototype.on = function (topic, callback, global = false) {
   topic = topic.replace(/^([MVC]):/, (match, prefix) => {
-    identity = true;
-
     return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
             + { 'M': 'Model', 'V': 'View', 'C': 'Controller' }[prefix] + ':';
   });
 
   window.addEventListener(topic, event => {
-    if (identity && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
+    if (!global && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
       return false;
     }
 
