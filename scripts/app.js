@@ -17,33 +17,59 @@ FlareTail.app = {};
  * Router
  * ------------------------------------------------------------------------------------------------------------------ */
 
+/*
+ * Get a Router instance. The routes can be defined on the app's controllers using regular expressions, e.g.
+ * BzDeck.controllers.DetailsPage.route = '/bug/(\\d+)';
+ *
+ * [argument] app (Object) app namespace containing configurations and controllers
+ * [return] router (Object) a new Router, when called with `new`
+ */
 FlareTail.app.Router = function Router (app) {
   // Specify the base URL of the app, without a trailing slash
   this.root = app.config.app.root.match(/(.*)\/$/)[1] || '';
   // Specify the launch path
   this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
-  // Retrieve routes from app components
+  // Retrieve routes from app controllers
   this.routes = new Map([for (component of Iterator(app.controllers)) if ('route' in component[1])
                           [new RegExp('^' + this.root + component[1].route + '$'), component[1]]]);
 
   window.addEventListener('popstate', event => this.locate());
 };
 
+/*
+ * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
+ * specified pathname is invalid, so nativate to the app's launch path instead.
+ *
+ * [argument] path (String, optional) URL pathname used to find a route
+ * [return] result (Boolean) whether a route is found
+ */
 FlareTail.app.Router.prototype.locate = function (path = location.pathname) {
   for (let [re, constructor] of this.routes) {
     let match = path.match(re);
 
     if (match) {
-      new constructor(...match.slice(1));
+      // Call the constructor when a route is found
+      // Pass arguments based on the RegExp pattern, taking numeric arguments into account
+      new constructor(...[for (arg of match.slice(1)) isNaN(arg) ? arg : Number(arg)]);
 
-      return;
+      return true;
     }
   }
 
   // Couldn't find a route; go to the launch path
   this.navigate(this.launch_path);
+
+  return false;
 };
 
+/*
+ * Navigate to the specified URL pathname by manipulating the browser history.
+ *
+ * [argument] path (String) URL pathname to go
+ * [argument] state (Object, optional) history state object
+ * [argument] replace (Boolean, optional) if true, the current history state will be replaced, otherwise appended
+ * [return] none
+ */
 FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = false) {
   state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
 
@@ -52,6 +78,17 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
   replace ? history.replaceState(...args) : history.pushState(...args);
   window.dispatchEvent(new PopStateEvent('popstate'));
 };
+
+/*
+ * Automatically activate the app's Router when the page is loaded. The app namespace should be specified with the meta
+ * element, e.g. <meta name="application-name" content="BzDeck">
+ */
+window.addEventListener('DOMContentLoaded', event => {
+  let app = window[document.querySelector('meta[name="application-name"]').content];
+
+  // Activate router
+  app.router = new FlareTail.app.Router(app);
+});
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Events
@@ -411,14 +448,3 @@ FlareTail.app.Controller = function Controller () {};
 
 FlareTail.app.Controller.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Controller.prototype.constructor = FlareTail.app.Controller;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Auto Activation
- * ------------------------------------------------------------------------------------------------------------------ */
-
-window.addEventListener('DOMContentLoaded', event => {
-  let app = window[document.querySelector('meta[name="application-name"]').content];
-
-  // Activate router
-  app.router = new FlareTail.app.Router(app);
-});
