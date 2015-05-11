@@ -127,7 +127,7 @@ FlareTail.widget.Command.prototype.constructor = FlareTail.widget.Command;
  * [return] widget (Object)
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Row = function Row ($node) {
+FlareTail.widget.Row = function Row ($node = undefined) {
   if (!$node) {
     $node = document.createElement('tr');
     $node.tabIndex = -1;
@@ -137,6 +137,7 @@ FlareTail.widget.Row = function Row ($node) {
   }
 
   this.$node = $node;
+  this.child_class = FlareTail.widget.GridCell;
 };
 
 FlareTail.widget.Row.prototype = Object.create(FlareTail.widget.Widget.prototype);
@@ -145,6 +146,7 @@ FlareTail.widget.Row.prototype.constructor = FlareTail.widget.Row;
 FlareTail.widget.Row.prototype.add_cell = function (header = false) {
   let cell = header ? new FlareTail.widget.RowHeader() : new FlareTail.widget.GridCell();
 
+  this.members.push(cell);
   this.$node.appendChild(cell.$node);
 
   return cell;
@@ -508,7 +510,7 @@ FlareTail.widget.Composite.prototype._get_instance = function ($node) {
     'option': 'Option', // Parent: ListBox
     'treeitem': 'TreeItem', // Parent: Tree
     'radio': 'RadioGroup', // Parent: RadioGroup
-    'row': 'Row', // Parent: Grid, RowGroup
+    'row': 'Row', // Parent: Grid
     'columnheader': 'ColumnHeader', // Parent: Row
     'rowheader': 'RowHeader', // Parent: Row
     'gridcell': 'GridCell', // Parent: Row
@@ -537,9 +539,19 @@ FlareTail.widget.Composite.prototype._get_items = function (nodelist) {
     'find': { 'value': $node => Array.prototype.find.call(items, instance => instance.$node === $node) },
     'indexOf': { 'value': $node => Array.prototype.findIndex.call(items, instance => instance.$node === $node) },
     'filter': { 'value': selector => Array.prototype.filter.call(items, instance => instance.$node.matches(selector)) },
+    'insert': { 'value': (index, item) => {
+      this.$node.insertBefore(item.$option, index > -1 ? items[index].$node : null);
+      items.splice(index, 0, item);
+    }},
+    'remove': { 'value': (index) => {
+      items[index].$node.remove();
+      items.splice(index, 1);
+      // TODO: update selection
+    }},
     'update': { 'value': nodelist => {
       items.length = 0; // Clear the Array
       items.push(...[for ($node of nodelist) this._get_instance($node)]);
+      // TODO: update selection
     }},
   });
 
@@ -851,6 +863,7 @@ FlareTail.widget.Grid = function Grid ($node, data = undefined, options = {}) {
     throw new Error('Unimplemented role: gridcell');
   }
 
+  this.child_class = FlareTail.widget.Row;
   this.date_options = options.date;
   this.sortable = !!dataset.sortable || !!options.sortable;
   this.reorderable = !!dataset.reorderable || !!options.reorderable;
@@ -1566,8 +1579,29 @@ FlareTail.widget.Select = function Select () {};
 FlareTail.widget.Select.prototype = Object.create(FlareTail.widget.Composite.prototype);
 FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
 
-FlareTail.widget.Select.prototype.append_item = function () {
-  this.$node
+FlareTail.widget.Select.prototype.append_item = function (label, value) {
+  return this.insert_item_at(-1, label, value);
+};
+
+FlareTail.widget.Select.prototype.insert_item_at = function (index, label, value) {
+  let item = new this.child_class(),
+      $item = item.$node;
+
+  $item.appendChild(document.createElement('label')).textContent = label;
+  $item.id = `${this.$node.id}--${value}`;
+  $item.dataset.value = value;
+
+  this.members.insert(index, instance);
+
+  return item;
+};
+
+FlareTail.widget.Select.prototype.remove_item_at = function (index) {
+  let item = this.members[index];
+
+  this.members.remove(index);
+
+  return item;
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -1836,6 +1870,7 @@ FlareTail.widget.ListBox = function ListBox ($node = undefined, data = undefined
   }
 
   this.$node = $node;
+  this.child_class = FlareTail.widget.Option;
   this.item_selector = '[role="option"]';
   this.search_enabled = options.search_enabled !== undefined ? options.search_enabled : true;
 
@@ -1948,6 +1983,7 @@ FlareTail.widget.Menu = function Menu ($node = undefined, data = []) {
   }
 
   this.$node = $node;
+  this.child_class = FlareTail.widget.MenuItem;
   this.item_selector = '[role^="menuitem"]';
   this.focus_cycling = true;
 
@@ -2282,6 +2318,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
 
 FlareTail.widget.MenuBar = function MenuBar ($node, data) {
   this.$node = $node;
+  this.child_class = FlareTail.widget.MenuItem;
   this.item_selector = '[role^="menuitem"]';
   this.focus_cycling = true;
 
@@ -2384,6 +2421,7 @@ FlareTail.widget.MenuBar.prototype.close = function () {
 
 FlareTail.widget.RadioGroup = function RadioGroup ($node, data) {
   this.$node = $node;
+  this.child_class = FlareTail.widget.Radio;
   this.item_selector = '[role="radio"]';
   this.selected_attr: 'aria-checked';
   this.focus_cycling = true;
@@ -2404,6 +2442,7 @@ FlareTail.widget.RadioGroup.prototype.constructor = FlareTail.widget.RadioGroup;
 
 FlareTail.widget.Tree = function Tree ($node, data) {
   this.$node = $node;
+  this.child_class = FlareTail.widget.TreeItem;
   this.item_selector = '[role="treeitem"]';
   this.search_enabled = true;
 
@@ -2631,6 +2670,7 @@ FlareTail.widget.TabList = function TabList ($node) {
   }
 
   this.$node = $node;
+  this.child_class = FlareTail.widget.Option;
   this.focus_cycling = true;
   this.item_selector = '[role="tab"]';
   this.reorderable = this.$node.dataset.reorderable === 'true';
@@ -2740,7 +2780,7 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
  * Tab extends Widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Tab = function Tab ($node) {
+FlareTail.widget.Tab = function Tab ($node = undefined) {
   if (!$node) {
     $node = document.createElement('li');
     $node.setAttribute('role', 'tab');
@@ -2799,7 +2839,7 @@ FlareTail.widget.Option.prototype.constructor = FlareTail.widget.Option;
  * TreeItem extends Option
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.TreeItem = function TreeItem ($node) {
+FlareTail.widget.TreeItem = function TreeItem ($node = undefined) {
   if (!$node) {
     $node = document.createElement('span');
     $node.setAttribute('role', 'treeitem');
@@ -2815,7 +2855,7 @@ FlareTail.widget.TreeItem.prototype.constructor = FlareTail.widget.TreeItem;
  * TextBox extends Input
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.TextBox = function TextBox ($node, richtext = false) {
+FlareTail.widget.TextBox = function TextBox ($node = undefined, richtext = false) {
   if (!$node) {
     $node = document.createElement('span');
     $node.tabIndex = 0;
