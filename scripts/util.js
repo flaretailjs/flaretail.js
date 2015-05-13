@@ -194,7 +194,6 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
 
   // Support simple if-else switches
   for (let $if of $scope.querySelectorAll('[data-if]')) {
-    console.log($if, $if.getAttribute('data-if'), data[$if.getAttribute('data-if')], data);
     // Hide the element if the data is undefined
     let hidden = $if.hidden = !data[$if.getAttribute('data-if')],
         $next = $if.nextElementSibling;
