@@ -118,6 +118,36 @@ if (typeof String.prototype.includes !== 'function') {
 
 FlareTail.util.content = {};
 
+/*
+ * Fill DOM nodes with data using the Microdata API, and optionally set arbitrary attributes. This method also supports
+ * simple if-else switches in the markup; use the data-if and data-else attributes.
+ *
+ * Markup example:
+ *  <span itemprop="creator" itemscope itemtype="http://schema.org/Person" data-attrs="title data-id">
+ *    <meta itemprop="email">
+ *    <span itemprop="name"></span>
+ *    <span data-if="image">
+ *      <img itemprop="image" alt="">
+ *    </span>
+ *    <span data-else>
+ *      No image provided.
+ *    </span>
+ *  </span>
+ *
+ * JavaScript example:
+ *  FlareTail.util.content.fill($bug.querySelector('[itemprop="creator"]'), {
+ *    // Schema.org data
+ *    'name': 'Kohei Yoshino', 'email': 'kohei.yoshino@gmail.com', 'image': 'kohei.png'
+ *  }, {
+ *    // Attributes
+ *    'title': 'Kohei Yoshino\nkohei.yoshino@gmail.com', 'data-id': 232883
+ *  });
+ *
+ * [argument] $scope (Element) an DOM element with the itemscope attribute
+ * [argument] data (Object) keys are the itemprop attribute
+ * [argument] attrs (Object) attributes to be set according to the data-attrs attribute
+ * [return] $scope (Element)
+ */
 FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
     for (let [prop, value] of Iterator(data)) {
@@ -159,6 +189,18 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
 
     for (let $item of $items) {
       $item.setAttribute(attr, value);
+    }
+  }
+
+  // Support simple if-else switches
+  for (let $if of $scope.querySelectorAll('[data-if]')) {
+    console.log($if, $if.getAttribute('data-if'), data[$if.getAttribute('data-if')], data);
+    // Hide the element if the data is undefined
+    let hidden = $if.hidden = !data[$if.getAttribute('data-if')],
+        $next = $if.nextElementSibling;
+
+    if ($next && $next.hasAttribute('data-else')) {
+      $next.hidden = !hidden;
     }
   }
 
