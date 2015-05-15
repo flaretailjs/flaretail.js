@@ -260,7 +260,6 @@ FlareTail.app.Model.prototype.cache = function (data) {
   data = Object.assign({}, data);
 
   return this.data = new Proxy(data, {
-    'get': (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
     'set': (obj, prop, value) => {
       obj[prop] = value;
       this.datasource.get_store(this.store_name).save(obj);

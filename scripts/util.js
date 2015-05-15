@@ -549,7 +549,6 @@ FlareTail.util.datetime.options = new Proxy({
   'updater_enabled': false,
   'updater_interval': 60 // seconds
 }, {
-  'get': (obj, prop) => obj[prop], // Always require the get trap (Bug 895223)
   'set': (obj, prop, value) => {
     let dt = FlareTail.util.datetime;
 
