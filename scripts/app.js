@@ -77,6 +77,10 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
 
   replace ? history.replaceState(...args) : history.pushState(...args);
   window.dispatchEvent(new PopStateEvent('popstate'));
+
+  if (FlareTail.debug) {
+    console.info(replace ? 'History replaced:' : 'History added:', path, state);
+  }
 };
 
 /*
@@ -280,7 +284,13 @@ FlareTail.app.Model.prototype.save = function (data = undefined) {
     this.cache(data);
   }
 
-  return this.datasource.get_store(this.store_name).save(this.data).then(() => Promise.resolve(this.proxy()));
+  return this.datasource.get_store(this.store_name).save(this.data).then(() => {
+    if (FlareTail.debug) {
+      console.info('Data saved:', this.constructor.name, this.data);
+    }
+
+    return Promise.resolve(this.proxy());
+  });
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -341,6 +351,10 @@ FlareTail.app.Collection.prototype.set = function (key, value) {
 
     // Support simple key-value data
     store.save(this.store_type === 'simple' ? { [store.obj.keyPath]: key, value } : value);
+
+    if (FlareTail.debug) {
+      console.info('Data saved:', this.constructor.name, key, value);
+    }
   }
 
   this.map.set(key, value);
