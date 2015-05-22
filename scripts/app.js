@@ -415,13 +415,12 @@ FlareTail.app.Collection.prototype.has = function (key) {
  * Delete an item by a specific key.
  *
  * [argument] key (Number or String) key of the item
- * [return] result (Boolean) true
+ * [return] result (Promise -> undefined)
  */
 FlareTail.app.Collection.prototype.delete = function (key) {
-  this.datasource.get_store(this.store_name).delete(key);
   this.map.delete(key);
 
-  return true;
+  return this.datasource.get_store(this.store_name).delete(key);
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
