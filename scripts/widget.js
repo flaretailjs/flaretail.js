@@ -568,6 +568,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
     }
 
     FlareTail.util.event.trigger(this.view.$container, 'Selected', { 'detail': {
+      oldval,
       'items': newval || [],
       'ids': [for ($item of newval || []) $item.dataset.id || $item.id],
       'labels': [for ($item of newval || []) $item.textContent]
