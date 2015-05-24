@@ -320,7 +320,7 @@ FlareTail.app.Collection.prototype.load = function () {
       if (this.model) {
         // Get a new instance
         value = new this.model(item);
-      } else if (this.store_type === 'simple' && item.value) {
+      } else if (this.store_type === 'simple') {
         // Use the value only
         value = item.value;
       } else {
