@@ -224,14 +224,18 @@ FlareTail.widget.Button.prototype.activate_popup = function () {
   if (this.view.$popup.matches('[role="menu"]')) {
     this.view.$menu = this.view.$popup;
     this.view.$$menu = new FlareTail.widget.Menu(this.view.$menu);
-    this.view.$$menu.bind('MenuItemSelected', event => this.view.$button.focus());
+
+    // Use a timer to avoid conflict with the following Pressed event
+    this.view.$$menu.bind('MenuClosed', event => window.setTimeout(() => {
+      this.view.$button.focus();
+      this.data.pressed = false;
+    }, 50));
 
     this.bind('Pressed', event => {
       if (event.detail.pressed) {
         this.view.$$menu.open();
       } else {
         this.view.$$menu.close();
-        this.view.$button.focus();
       }
     });
   } else {
