@@ -366,7 +366,7 @@ FlareTail.util.Storage = function () {
  * https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.ua = {
+FlareTail.util.env = {
   'device': {
     'type': 'unknown',
     'tv': false,
@@ -389,35 +389,35 @@ FlareTail.util.ua = {
 };
 
 {
-  let ua = FlareTail.util.ua,
+  let env = FlareTail.util.env,
       ua_str = navigator.userAgent,
       pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
   // Platform
   if (pf_match) {
-    ua.platform.name = pf_match[0].toLowerCase();
-    ua.platform[ua.platform.name] = true;
+    env.platform.name = pf_match[0].toLowerCase();
+    env.platform[env.platform.name] = true;
   }
 
   // Device
   if (ua_str.includes('Mobile')) {
-    ua.device.type = 'mobile-phone';
-    ua.device.mobile = true;
-    ua.device.phone = true;
+    env.device.type = 'mobile-phone';
+    env.device.mobile = true;
+    env.device.phone = true;
   } else if (ua_str.includes('Tablet')) {
-    ua.device.type = 'mobile-tablet';
-    ua.device.mobile = true;
-    ua.device.tablet = true;
-  } else if (ua.platform.firefox) {
-    ua.device.type = 'tv';
-    ua.device.tv = true;
+    env.device.type = 'mobile-tablet';
+    env.device.mobile = true;
+    env.device.tablet = true;
+  } else if (env.platform.firefox) {
+    env.device.type = 'tv';
+    env.device.tv = true;
   } else {
-    ua.device.type = 'desktop';
-    ua.device.desktop = true;
+    env.device.type = 'desktop';
+    env.device.desktop = true;
   }
 
-  document.documentElement.setAttribute('data-device', ua.device.type);
-  document.documentElement.setAttribute('data-platform', ua.platform.name);
+  document.documentElement.setAttribute('data-device', env.device.type);
+  document.documentElement.setAttribute('data-platform', env.platform.name);
 }
 
 /* ------------------------------------------------------------------------------------------------------------------

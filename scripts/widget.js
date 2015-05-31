@@ -814,7 +814,7 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   let $$scrollbar = this.view.$$scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
       option = this.options.adjust_scrollbar;
 
-  $$scrollbar.options.adjusted = option === undefined ? FlareTail.util.ua.device.desktop : option;
+  $$scrollbar.options.adjusted = option === undefined ? FlareTail.util.env.device.desktop : option;
 };
 
 FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
@@ -2806,7 +2806,7 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
   $content.className = 'scrollable-area-content';
 
   // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
-  if (FlareTail.util.ua.device.mobile) {
+  if (FlareTail.util.env.device.mobile) {
     $owner.appendChild($content);
     $owner.style.removeProperty('display');
 
