@@ -9,7 +9,7 @@ let FlareTail = FlareTail || {};
 FlareTail.debug = 'URLSearchParams' in window &&
                     (new URLSearchParams(location.search.substr(1))).get('debug') === 'true';
 
-FlareTail.util = {};
+FlareTail.helpers = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Compatibility
@@ -111,7 +111,7 @@ if (typeof String.prototype.includes !== 'function') {
  * Content
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.content = {};
+FlareTail.helpers.content = {};
 
 /*
  * Fill DOM nodes with data using the Microdata API, and optionally set arbitrary attributes. This method also supports
@@ -130,7 +130,7 @@ FlareTail.util.content = {};
  *  </span>
  *
  * JavaScript example:
- *  FlareTail.util.content.fill($bug.querySelector('[itemprop="creator"]'), {
+ *  FlareTail.helpers.content.fill($bug.querySelector('[itemprop="creator"]'), {
  *    // Schema.org data
  *    'name': 'Kohei Yoshino', 'email': 'kohei.yoshino@gmail.com', 'image': 'kohei.png'
  *  }, {
@@ -143,7 +143,7 @@ FlareTail.util.content = {};
  * [argument] attrs (Object) attributes to be set according to the data-attrs attribute
  * [return] $scope (Element)
  */
-FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
+FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
     for (let [prop, value] of Iterator(data)) {
       for (let $item of $scope.properties[prop] || []) {
@@ -166,7 +166,7 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
     }
   };
 
-  let fill = ($item, value) => $item.dateTime !== undefined ? FlareTail.util.datetime.fill_element($item, value)
+  let fill = ($item, value) => $item.dateTime !== undefined ? FlareTail.helpers.datetime.fill_element($item, value)
                                                             : $item.itemValue = value;
 
   $scope.setAttribute('aria-busy', 'true');
@@ -203,7 +203,7 @@ FlareTail.util.content.fill = function ($scope, data, attrs = {}) {
   return $scope;
 };
 
-FlareTail.util.content.get_fragment = function (id, prefix = undefined) {
+FlareTail.helpers.content.get_fragment = function (id, prefix = undefined) {
   let $fragment = document.getElementById(id).content.cloneNode(true);
 
   if (prefix) {
@@ -221,9 +221,9 @@ FlareTail.util.content.get_fragment = function (id, prefix = undefined) {
  * Event
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.event = {};
+FlareTail.helpers.event = {};
 
-FlareTail.util.event.ignore = event => {
+FlareTail.helpers.event.ignore = event => {
   event.preventDefault();
   event.stopPropagation();
 
@@ -231,7 +231,7 @@ FlareTail.util.event.ignore = event => {
 };
 
 // This function allows to set multiple event listeners as once
-FlareTail.util.event.bind = function (that, $target, types, use_capture = false, unbind = false) {
+FlareTail.helpers.event.bind = function (that, $target, types, use_capture = false, unbind = false) {
   if (!$target) {
     return false;
   }
@@ -247,12 +247,12 @@ FlareTail.util.event.bind = function (that, $target, types, use_capture = false,
   return true;
 };
 
-FlareTail.util.event.unbind = function (that, $target, types, use_capture = false) {
+FlareTail.helpers.event.unbind = function (that, $target, types, use_capture = false) {
   this.bind(that, $target, types, use_capture, true);
 };
 
 // Async event handling using postMessage
-FlareTail.util.event.async = function (callback) {
+FlareTail.helpers.event.async = function (callback) {
   if (this.queue === undefined) {
     this.queue = [];
 
@@ -268,7 +268,7 @@ FlareTail.util.event.async = function (callback) {
 };
 
 // Custom event dispatcher. The async option is enabled by default
-FlareTail.util.event.trigger = function ($target, type, options = {}, async = true) {
+FlareTail.helpers.event.trigger = function ($target, type, options = {}, async = true) {
   let callback = () => $target.dispatchEvent(new CustomEvent(type, options));
 
   // Local files have no origin (Bug 878297)
@@ -279,7 +279,7 @@ FlareTail.util.event.trigger = function ($target, type, options = {}, async = tr
  * Keyboard
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.kbd = {};
+FlareTail.helpers.kbd = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Assign keyboard shortcuts on a specific element
@@ -291,7 +291,7 @@ FlareTail.util.kbd = {};
                      https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key
                      https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState
  * ------------------------------------------------------------------------------------------------------------------ */
-FlareTail.util.kbd.assign = function ($target, map) {
+FlareTail.helpers.kbd.assign = function ($target, map) {
   let bindings = new Set();
 
   for (let [_combos, command] of Iterator(map)) for (let _combo of _combos.split('|')) {
@@ -326,7 +326,7 @@ FlareTail.util.kbd.assign = function ($target, map) {
       break;
     }
 
-    return found ? FlareTail.util.event.ignore(event) : true;
+    return found ? FlareTail.helpers.event.ignore(event) : true;
   });
 };
 
@@ -336,7 +336,7 @@ FlareTail.util.kbd.assign = function ($target, map) {
  * @param   {Element} $target
  * @param   {Integer} key
  * ------------------------------------------------------------------------------------------------------------------ */
-FlareTail.util.kbd.dispatch = function ($target, key) {
+FlareTail.helpers.kbd.dispatch = function ($target, key) {
   $target.dispatchEvent(new KeyboardEvent('keydown', { key }));
 };
 
@@ -344,13 +344,13 @@ FlareTail.util.kbd.dispatch = function ($target, key) {
  * Preferences
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.prefs = {};
+FlareTail.helpers.prefs = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Storage
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.Storage = function () {
+FlareTail.helpers.Storage = function () {
   let req = this.request = indexedDB.open('MyTestDatabase', 1),
       db = this.db = null;
 
@@ -366,7 +366,7 @@ FlareTail.util.Storage = function () {
  * https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.env = {
+FlareTail.helpers.env = {
   'device': {
     'type': 'unknown',
     'tv': false,
@@ -389,7 +389,7 @@ FlareTail.util.env = {
 };
 
 {
-  let env = FlareTail.util.env,
+  let env = FlareTail.helpers.env,
       ua_str = navigator.userAgent,
       pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
@@ -424,9 +424,9 @@ FlareTail.util.env = {
  * App
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.app = {};
+FlareTail.helpers.app = {};
 
-FlareTail.util.app.can_install = function (manifest = location.origin + '/manifest.webapp') {
+FlareTail.helpers.app.can_install = function (manifest = location.origin + '/manifest.webapp') {
   let apps = navigator.mozApps;
 
   return new Promise((resolve, reject) => {
@@ -442,36 +442,36 @@ FlareTail.util.app.can_install = function (manifest = location.origin + '/manife
   });
 };
 
-FlareTail.util.app.install = function (manifest = location.origin + '/manifest.webapp') {
+FlareTail.helpers.app.install = function (manifest = location.origin + '/manifest.webapp') {
   let request = navigator.mozApps.install(manifest);
 
   return new Promise((resolve, reject) => {
     request.addEventListener('success', event => {
-      FlareTail.util.event.trigger(window, 'AppInstalled');
+      FlareTail.helpers.event.trigger(window, 'AppInstalled');
       resolve();
     });
     request.addEventListener('error', event => {
-      FlareTail.util.event.trigger(window, 'AppInstallFailed');
+      FlareTail.helpers.event.trigger(window, 'AppInstallFailed');
       reject(new Error(request.error.name));
     });
   });
 };
 
-FlareTail.util.app.fullscreen_enabled = function () {
+FlareTail.helpers.app.fullscreen_enabled = function () {
   return document.mozFullScreenEnabled;
 };
 
-FlareTail.util.app.toggle_fullscreen = function ($element = document.body) {
+FlareTail.helpers.app.toggle_fullscreen = function ($element = document.body) {
   document.mozFullScreenElement ? document.mozCancelFullScreen() : $element.mozRequestFullScreen();
 };
 
-FlareTail.util.app.auth_notification = function () {
+FlareTail.helpers.app.auth_notification = function () {
   if (Notification.permission !== 'granted') {
     Notification.requestPermission(permission => {});
   }
 };
 
-FlareTail.util.app.show_notification = function (title, options) {
+FlareTail.helpers.app.show_notification = function (title, options) {
   let notification = new Notification(title, options);
 
   return new Promise(resolve => notification.addEventListener('click', event => resolve(event)));
@@ -481,9 +481,9 @@ FlareTail.util.app.show_notification = function (title, options) {
  * Theme
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.theme = {};
+FlareTail.helpers.theme = {};
 
-Object.defineProperties(FlareTail.util.theme, {
+Object.defineProperties(FlareTail.helpers.theme, {
   'list': {
     'enumerable': true,
     'get': () => document.styleSheetSets
@@ -499,7 +499,7 @@ Object.defineProperties(FlareTail.util.theme, {
   }
 });
 
-FlareTail.util.theme.preload_images = function () {
+FlareTail.helpers.theme.preload_images = function () {
   let pattern = 'url\\("(.+?)"\\)',
       images = new Set();
 
@@ -536,16 +536,16 @@ FlareTail.util.theme.preload_images = function () {
  * Date & Time
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.datetime = {};
+FlareTail.helpers.datetime = {};
 
-FlareTail.util.datetime.options = new Proxy({
+FlareTail.helpers.datetime.options = new Proxy({
   'relative': false,
   'timezone': 'local',
   'updater_enabled': false,
   'updater_interval': 60 // seconds
 }, {
   'set': (obj, prop, value) => {
-    let dt = FlareTail.util.datetime;
+    let dt = FlareTail.helpers.datetime;
 
     obj[prop] = value;
 
@@ -565,7 +565,7 @@ FlareTail.util.datetime.options = new Proxy({
   }
 });
 
-FlareTail.util.datetime.format = function (str, options = {}) {
+FlareTail.helpers.datetime.format = function (str, options = {}) {
   options.relative = options.relative !== undefined ? options.relative : this.options.relative;
   options.simple = options.simple || false;
   options.timezone = options.timezone || this.options.timezone;
@@ -619,7 +619,7 @@ FlareTail.util.datetime.format = function (str, options = {}) {
   return (shifted_date || date).toLocaleFormat(options.simple ? '%b %e' : '%Y-%m-%d %R');
 };
 
-FlareTail.util.datetime.get_shifted_date = function (date, offset) {
+FlareTail.helpers.datetime.get_shifted_date = function (date, offset) {
   let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
                      (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
                       > date.getTimezoneOffset(),
@@ -628,7 +628,7 @@ FlareTail.util.datetime.get_shifted_date = function (date, offset) {
   return new Date(utc + offset * 3600000);
 };
 
-FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
+FlareTail.helpers.datetime.fill_element = function ($time, value, options = null) {
   if (!options) {
     options = {
       'relative': $time.dataset.relative ? JSON.parse($time.dataset.relative) : undefined,
@@ -637,7 +637,7 @@ FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
   }
 
   $time.dateTime = value;
-  $time.textContent = this.format(value, FlareTail.util.object.clone(options));
+  $time.textContent = this.format(value, FlareTail.helpers.object.clone(options));
   $time.title = (new Date(value)).toString();
 
   if (options.relative !== undefined) {
@@ -651,7 +651,7 @@ FlareTail.util.datetime.fill_element = function ($time, value, options = null) {
   return $time;
 };
 
-FlareTail.util.datetime.update_elements = function () {
+FlareTail.helpers.datetime.update_elements = function () {
   for (let $time of document.querySelectorAll('time')) {
     let data = $time.dataset,
         time = this.format($time.dateTime, {
@@ -665,18 +665,18 @@ FlareTail.util.datetime.update_elements = function () {
   }
 };
 
-FlareTail.util.datetime.start_updater = function () {
+FlareTail.helpers.datetime.start_updater = function () {
   this.updater = window.setInterval(() => this.update_elements(), this.options.updater_interval * 1000);
 };
 
-FlareTail.util.datetime.stop_updater = function () {
+FlareTail.helpers.datetime.stop_updater = function () {
   window.clearInterval(this.updater);
 
   delete this.updater;
 };
 
 document.addEventListener('visibilitychange', event => {
-  let dt = FlareTail.util.datetime;
+  let dt = FlareTail.helpers.datetime;
 
   if (!document.hidden && dt.options.relative && dt.options.updater_enabled && !dt.updater) {
     dt.update_elements();
@@ -690,9 +690,9 @@ document.addEventListener('visibilitychange', event => {
  * Network
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.network = {};
+FlareTail.helpers.network = {};
 
-FlareTail.util.network.json = (url, body = undefined) => {
+FlareTail.helpers.network.json = (url, body = undefined) => {
   return window.fetch(new Request(url, {
     'method': body ? 'POST' : 'GET',
     'headers': new Headers({ 'Accept': 'application/json' }),
@@ -700,7 +700,7 @@ FlareTail.util.network.json = (url, body = undefined) => {
   })).then(response => response.json());
 };
 
-FlareTail.util.network.jsonp = url => {
+FlareTail.helpers.network.jsonp = url => {
   let $script = document.body.appendChild(document.createElement('script')),
       callback_id = 'jsonp_' + Date.now(),
       cleanup = () => { $script.remove(); delete window[callback_id]; };
@@ -717,54 +717,54 @@ FlareTail.util.network.jsonp = url => {
  * History
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.history = {};
+FlareTail.helpers.history = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Localization
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.l10n = {};
+FlareTail.helpers.l10n = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Internationalization
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.i18n = {};
+FlareTail.helpers.i18n = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Style
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.style = {};
+FlareTail.helpers.style = {};
 
-FlareTail.util.style.get = ($element, property) => window.getComputedStyle($element, null).getPropertyValue(property);
+FlareTail.helpers.style.get = ($element, property) => window.getComputedStyle($element, null).getPropertyValue(property);
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Object
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.object = {};
+FlareTail.helpers.object = {};
 
-FlareTail.util.object.clone = obj => Object.assign({}, obj);
+FlareTail.helpers.object.clone = obj => Object.assign({}, obj);
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Array
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.array = {};
+FlareTail.helpers.array = {};
 
-FlareTail.util.array.clone = array => [...array];
+FlareTail.helpers.array.clone = array => [...array];
 
-FlareTail.util.array.join = (set, tag = undefined) => {
+FlareTail.helpers.array.join = (set, tag = undefined) => {
   let open_tag = tag ? `<${tag}>` : '',
       close_tag = tag ? `</${tag}>` : '',
-      array = [for (item of set) open_tag + FlareTail.util.string.sanitize(item) + close_tag],
+      array = [for (item of set) open_tag + FlareTail.helpers.string.sanitize(item) + close_tag],
       last = array.pop();
 
   return array.length ? array.join(', ') + ' and ' + last : last; // l10n
 };
 
-FlareTail.util.array.sort = (array, cond) => {
+FlareTail.helpers.array.sort = (array, cond) => {
   // Normalization: ignore brackets for comparison
   let nomalized_values = new Map(),
       nomalize = str => {
@@ -816,9 +816,9 @@ FlareTail.util.array.sort = (array, cond) => {
  * String
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.string = {};
+FlareTail.helpers.string = {};
 
-FlareTail.util.string.sanitize = str => {
+FlareTail.helpers.string.sanitize = str => {
   let $p = document.createElement('p');
 
   $p.textContent = str;
@@ -826,7 +826,7 @@ FlareTail.util.string.sanitize = str => {
   return $p.innerHTML;
 };
 
-FlareTail.util.string.strip_tags = str => {
+FlareTail.helpers.string.strip_tags = str => {
   let $p = document.createElement('p');
 
   $p.innerHTML = str;
@@ -838,7 +838,7 @@ FlareTail.util.string.strip_tags = str => {
  * RegExp
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.util.regexp = {};
+FlareTail.helpers.regexp = {};
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
-FlareTail.util.regexp.escape = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+FlareTail.helpers.regexp.escape = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

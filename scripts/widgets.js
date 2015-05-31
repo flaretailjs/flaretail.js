@@ -6,16 +6,16 @@
 
 let FlareTail = FlareTail || {};
 
-FlareTail.widget = {};
+FlareTail.widgets = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * RoleType (top level abstract role)
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.RoleType = function RoleType () {};
+FlareTail.widgets.RoleType = function RoleType () {};
 
-FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
-  let FTue = FlareTail.util.event,
+FlareTail.widgets.RoleType.prototype.activate = function (rebuild) {
+  let FTue = FlareTail.helpers.event,
       $container = this.view.$container;
 
   if (!$container) {
@@ -67,7 +67,7 @@ FlareTail.widget.RoleType.prototype.activate = function (rebuild) {
   return;
 };
 
-FlareTail.widget.RoleType.prototype.update_members = function () {
+FlareTail.widgets.RoleType.prototype.update_members = function () {
   let selector = this.options.item_selector,
       not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       get_items = selector => [...this.view.$container.querySelectorAll(selector)];
@@ -77,21 +77,21 @@ FlareTail.widget.RoleType.prototype.update_members = function () {
   this.view.$focused = null;
 };
 
-FlareTail.widget.RoleType.prototype.assign_key_bindings = function (map) {
-  FlareTail.util.kbd.assign(this.view.$container, map);
+FlareTail.widgets.RoleType.prototype.assign_key_bindings = function (map) {
+  FlareTail.helpers.kbd.assign(this.view.$container, map);
 };
 
 // Catch-all event handler
-FlareTail.widget.RoleType.prototype.handleEvent = function (event) {
+FlareTail.widgets.RoleType.prototype.handleEvent = function (event) {
   (this[`on${event.type}_extend`] || this[`on${event.type}`]).call(this, event);
 };
 
-FlareTail.widget.RoleType.prototype.oncontextmenu = function (event) {
+FlareTail.widgets.RoleType.prototype.oncontextmenu = function (event) {
   // Disable browser's context menu
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.RoleType.prototype.bind = function (...args) {
+FlareTail.widgets.RoleType.prototype.bind = function (...args) {
   this.view.$container.addEventListener(...args);
 };
 
@@ -99,39 +99,39 @@ FlareTail.widget.RoleType.prototype.bind = function (...args) {
  * Structure (abstract role) extends RoleType
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Structure = function Structure () {};
-FlareTail.widget.Structure.prototype = Object.create(FlareTail.widget.RoleType.prototype);
-FlareTail.widget.Structure.prototype.constructor = FlareTail.widget.Structure;
+FlareTail.widgets.Structure = function Structure () {};
+FlareTail.widgets.Structure.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
+FlareTail.widgets.Structure.prototype.constructor = FlareTail.widgets.Structure;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Section (abstract role) extends Structure
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Section = function Section () {};
-FlareTail.widget.Section.prototype = Object.create(FlareTail.widget.Structure.prototype);
-FlareTail.widget.Section.prototype.constructor = FlareTail.widget.Section;
+FlareTail.widgets.Section = function Section () {};
+FlareTail.widgets.Section.prototype = Object.create(FlareTail.widgets.Structure.prototype);
+FlareTail.widgets.Section.prototype.constructor = FlareTail.widgets.Section;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Widget (abstract role) extends RoleType
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Widget = function Widget () {};
-FlareTail.widget.Widget.prototype = Object.create(FlareTail.widget.RoleType.prototype);
-FlareTail.widget.Widget.prototype.constructor = FlareTail.widget.Widget;
+FlareTail.widgets.Widget = function Widget () {};
+FlareTail.widgets.Widget.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
+FlareTail.widgets.Widget.prototype.constructor = FlareTail.widgets.Widget;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Command (abstract role) extends Widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Command = function Command () {};
-FlareTail.widget.Command.prototype = Object.create(FlareTail.widget.Widget.prototype);
-FlareTail.widget.Command.prototype.constructor = FlareTail.widget.Command;
+FlareTail.widgets.Command = function Command () {};
+FlareTail.widgets.Command.prototype = Object.create(FlareTail.widgets.Widget.prototype);
+FlareTail.widgets.Command.prototype.constructor = FlareTail.widgets.Command;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Button extends Command
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Button = function Button ($button) {
+FlareTail.widgets.Button = function Button ($button) {
   this.view = { $button };
 
   this.data = new Proxy({
@@ -154,20 +154,20 @@ FlareTail.widget.Button = function Button ($button) {
     'toggle': $button.hasAttribute('aria-pressed')
   };
 
-  FlareTail.util.event.bind(this, $button, ['click', 'keydown']);
+  FlareTail.helpers.event.bind(this, $button, ['click', 'keydown']);
 
   if ($button.matches('[aria-haspopup="true"]')) {
     this.activate_popup();
   }
 };
 
-FlareTail.widget.Button.prototype = Object.create(FlareTail.widget.Command.prototype);
-FlareTail.widget.Button.prototype.constructor = FlareTail.widget.Button;
+FlareTail.widgets.Button.prototype = Object.create(FlareTail.widgets.Command.prototype);
+FlareTail.widgets.Button.prototype.constructor = FlareTail.widgets.Button;
 
-FlareTail.widget.Button.prototype.onclick = function (event) {
+FlareTail.widgets.Button.prototype.onclick = function (event) {
   let pressed = false;
 
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 
   if (this.data.disabled) {
     return;
@@ -177,10 +177,10 @@ FlareTail.widget.Button.prototype.onclick = function (event) {
     pressed = this.data.pressed = !this.data.pressed;
   }
 
-  FlareTail.util.event.trigger(this.view.$button, 'Pressed', { 'detail': { pressed }});
+  FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { 'detail': { pressed }});
 };
 
-FlareTail.widget.Button.prototype.onkeydown = function (event) {
+FlareTail.widgets.Button.prototype.onkeydown = function (event) {
   let key = event.key;
 
   if (key === ' ' || key === 'Enter') { // Space or Enter
@@ -207,18 +207,18 @@ FlareTail.widget.Button.prototype.onkeydown = function (event) {
   }
 };
 
-FlareTail.widget.Button.prototype.bind = function (...args) {
+FlareTail.widgets.Button.prototype.bind = function (...args) {
   this.view.$button.addEventListener(...args);
 };
 
-FlareTail.widget.Button.prototype.activate_popup = function () {
+FlareTail.widgets.Button.prototype.activate_popup = function () {
   this.view.$popup = document.getElementById(this.view.$button.getAttribute('aria-owns'));
 
   // Implement menu button
   // http://www.w3.org/TR/wai-aria-practices/#menubutton
   if (this.view.$popup.matches('[role="menu"]')) {
     this.view.$menu = this.view.$popup;
-    this.view.$$menu = new FlareTail.widget.Menu(this.view.$menu);
+    this.view.$$menu = new FlareTail.widgets.Menu(this.view.$menu);
 
     // Use a timer to avoid conflict with the following Pressed event
     this.view.$$menu.bind('MenuClosed', event => window.setTimeout(() => {
@@ -250,11 +250,11 @@ FlareTail.widget.Button.prototype.activate_popup = function () {
  * Composite (abstract role) extends Widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Composite = function Composite () {};
-FlareTail.widget.Composite.prototype = Object.create(FlareTail.widget.Widget.prototype);
-FlareTail.widget.Composite.prototype.constructor = FlareTail.widget.Composite;
+FlareTail.widgets.Composite = function Composite () {};
+FlareTail.widgets.Composite.prototype = Object.create(FlareTail.widgets.Widget.prototype);
+FlareTail.widgets.Composite.prototype.constructor = FlareTail.widgets.Composite;
 
-FlareTail.widget.Composite.prototype.onfocus = function (event) {
+FlareTail.widgets.Composite.prototype.onfocus = function (event) {
   if (this.view.members.includes(event.target) && event.target.id) {
     this.view.$container.setAttribute('aria-activedescendant', event.target.id);
   } else {
@@ -262,12 +262,12 @@ FlareTail.widget.Composite.prototype.onfocus = function (event) {
   }
 };
 
-FlareTail.widget.Composite.prototype.onblur = function (event) {
+FlareTail.widgets.Composite.prototype.onblur = function (event) {
   this.view.$container.removeAttribute('aria-activedescendant');
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.Composite.prototype.onmousedown = function (event) {
+FlareTail.widgets.Composite.prototype.onmousedown = function (event) {
   if (!this.view.members.includes(event.target) || event.buttons > 1) {
     return;
   }
@@ -275,11 +275,11 @@ FlareTail.widget.Composite.prototype.onmousedown = function (event) {
   this.select_with_mouse(event);
 };
 
-FlareTail.widget.Composite.prototype.onkeydown = function (event) {
+FlareTail.widgets.Composite.prototype.onkeydown = function (event) {
   this.select_with_keyboard(event);
 };
 
-FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
+FlareTail.widgets.Composite.prototype.select_with_mouse = function (event) {
   let $target = event.target,
       $container = this.view.$container,
       items = this.view.members,
@@ -307,7 +307,7 @@ FlareTail.widget.Composite.prototype.select_with_mouse = function (event) {
   this.view.$focused = selected[selected.length - 1];
 };
 
-FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
+FlareTail.widgets.Composite.prototype.select_with_keyboard = function (event) {
   let key = event.key;
 
   // Focus shift with tab key
@@ -317,7 +317,7 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
 
   // Do nothing if Alt key is pressed
   if (event.altKey) {
-    return FlareTail.util.event.ignore(event);
+    return FlareTail.helpers.event.ignore(event);
   }
 
   let items = this.view.members,
@@ -542,10 +542,10 @@ FlareTail.widget.Composite.prototype.select_with_keyboard = function (event) {
     }
   }
 
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) {
+FlareTail.widgets.Composite.prototype.update_view = function (obj, prop, newval) {
   let attr = this.options.selected_attr,
       oldval = obj[prop];
 
@@ -566,7 +566,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
       }
     }
 
-    FlareTail.util.event.trigger(this.view.$container, 'Selected', { 'detail': {
+    FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { 'detail': {
       oldval,
       'items': newval || [],
       'ids': [for ($item of newval || []) $item.dataset.id || $item.id],
@@ -615,7 +615,7 @@ FlareTail.widget.Composite.prototype.update_view = function (obj, prop, newval) 
  * @returns {Object} the widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Grid = function Grid ($container, data, options) {
+FlareTail.widgets.Grid = function Grid ($container, data, options) {
   // What can be selected on the grid
   let dataset = $container.dataset,
       role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
@@ -671,10 +671,10 @@ FlareTail.widget.Grid = function Grid ($container, data, options) {
   this.activate_extend();
 };
 
-FlareTail.widget.Grid.prototype = Object.create(FlareTail.widget.Composite.prototype);
-FlareTail.widget.Grid.prototype.constructor = FlareTail.widget.Grid;
+FlareTail.widgets.Grid.prototype = Object.create(FlareTail.widgets.Composite.prototype);
+FlareTail.widgets.Grid.prototype.constructor = FlareTail.widgets.Grid;
 
-FlareTail.widget.Grid.prototype.activate_extend = function () {
+FlareTail.widgets.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
     'set': (obj, prop, value) => {
       switch (prop) {
@@ -714,7 +714,7 @@ FlareTail.widget.Grid.prototype.activate_extend = function () {
   this.activate_rows();
 };
 
-FlareTail.widget.Grid.prototype.activate_columns = function () {
+FlareTail.widgets.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
     // Default behavior, or find column by id
     'get': (obj, prop) => prop in obj ? obj[prop] : [for (col of obj) if (col.id === prop) col][0]
@@ -733,7 +733,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
         }
 
         case 'width': {
-          value = Number.parseInt(FlareTail.util.style.get(obj.$element, 'width'));
+          value = Number.parseInt(FlareTail.helpers.style.get(obj.$element, 'width'));
 
           break;
         }
@@ -755,7 +755,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
       switch (prop) {
         case 'hidden': {
           // Fire an event
-          FlareTail.util.event.trigger(this.view.$container, 'ColumnModified', { 'detail': { columns }});
+          FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { 'detail': { columns }});
 
           // Reflect the change of row's visibility to UI
           value === true ? this.hide_column(obj) : this.show_column(obj);
@@ -775,7 +775,7 @@ FlareTail.widget.Grid.prototype.activate_columns = function () {
   }
 };
 
-FlareTail.widget.Grid.prototype.activate_rows = function () {
+FlareTail.widgets.Grid.prototype.activate_rows = function () {
   let handler = {
     'set': (obj, prop, value) => {
       // Reflect Data change into View
@@ -811,18 +811,18 @@ FlareTail.widget.Grid.prototype.activate_rows = function () {
   });
 
   // Custom scrollbar
-  let $$scrollbar = this.view.$$scrollbar = new FlareTail.widget.ScrollBar($grid_body, true, false),
+  let $$scrollbar = this.view.$$scrollbar = new FlareTail.widgets.ScrollBar($grid_body, true, false),
       option = this.options.adjust_scrollbar;
 
-  $$scrollbar.options.adjusted = option === undefined ? FlareTail.util.env.device.desktop : option;
+  $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
 };
 
-FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
+FlareTail.widgets.Grid.prototype.onmousedown_extend = function (event) {
   let $target = event.target;
 
   if ($target.matches('[role="columnheader"]')) {
     if (event.buttons <= 1 && this.options.reorderable) {
-      FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
+      FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
     }
 
     if (event.buttons === 2) {
@@ -840,20 +840,20 @@ FlareTail.widget.Grid.prototype.onmousedown_extend = function (event) {
 
     this.data.rows[index].data[id] = value;
 
-    return FlareTail.util.event.ignore(event);
+    return FlareTail.helpers.event.ignore(event);
   }
 
   // The default behavior
   this.onmousedown(event);
 };
 
-FlareTail.widget.Grid.prototype.onmousemove = function (event) {
+FlareTail.widgets.Grid.prototype.onmousemove = function (event) {
   !this.data.drag ? this.start_column_reordering(event) : this.continue_column_reordering(event);
 };
 
-FlareTail.widget.Grid.prototype.onmouseup = function (event) {
-  FlareTail.util.event.ignore(event);
-  FlareTail.util.event.unbind(this, window, ['mousemove', 'mouseup']);
+FlareTail.widgets.Grid.prototype.onmouseup = function (event) {
+  FlareTail.helpers.event.ignore(event);
+  FlareTail.helpers.event.unbind(this, window, ['mousemove', 'mouseup']);
 
   if (event.button !== 0) {  // event.buttons is 0 since this is a mouseup event handler
     return;
@@ -873,7 +873,7 @@ FlareTail.widget.Grid.prototype.onmouseup = function (event) {
   }
 };
 
-FlareTail.widget.Grid.prototype.onkeydown_extend = function (event) {
+FlareTail.widgets.Grid.prototype.onkeydown_extend = function (event) {
   let key = event.key;
 
   // Focus shift with tab key
@@ -905,10 +905,10 @@ FlareTail.widget.Grid.prototype.onkeydown_extend = function (event) {
     }
   }
 
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.Grid.prototype.build_header = function () {
+FlareTail.widgets.Grid.prototype.build_header = function () {
   let $grid = this.view.$container,
       $grid_header = this.view.$header = document.createElement('header'),
       $table = $grid_header.appendChild(document.createElement('table')),
@@ -950,7 +950,7 @@ FlareTail.widget.Grid.prototype.build_header = function () {
   $grid.appendChild($grid_header);
 };
 
-FlareTail.widget.Grid.prototype.build_body = function (row_data) {
+FlareTail.widgets.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     // Refresh the tbody with the passed data
     this.data.rows = row_data;
@@ -1019,7 +1019,7 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
       if (column.type === 'boolean') {
         $child.setAttribute('aria-checked', value === true);
       } else if (column.type === 'time') {
-        FlareTail.util.datetime.fill_element($child, value, this.options.date);
+        FlareTail.helpers.datetime.fill_element($child, value, this.options.date);
       } else {
         $child.textContent = value;
       }
@@ -1034,11 +1034,11 @@ FlareTail.widget.Grid.prototype.build_body = function (row_data) {
   if (row_data) {
     this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
     this.activate_rows();
-    FlareTail.util.event.trigger($grid, 'Rebuilt');
+    FlareTail.helpers.event.trigger($grid, 'Rebuilt');
   }
 };
 
-FlareTail.widget.Grid.prototype.get_data = function () {
+FlareTail.widgets.Grid.prototype.get_data = function () {
   let $header = this.view.$header,
       $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
 
@@ -1094,7 +1094,7 @@ FlareTail.widget.Grid.prototype.get_data = function () {
   });
 };
 
-FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
+FlareTail.widgets.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
   let $grid = this.view.$container,
       $tbody = this.view.$body.querySelector('tbody'),
       $header = this.view.$header,
@@ -1102,7 +1102,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   if (data_only) {
     cond.order = cond.order || 'ascending';
-    FlareTail.util.array.sort(this.data.rows, cond);
+    FlareTail.helpers.array.sort(this.data.rows, cond);
 
     return true;
   }
@@ -1123,7 +1123,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
 
   $tbody.setAttribute('aria-busy', 'true'); // display: none
 
-  FlareTail.util.array.sort(this.data.rows, cond);
+  FlareTail.helpers.array.sort(this.data.rows, cond);
 
   $tbody.removeAttribute('aria-busy');
   $sorter.setAttribute('aria-sort', cond.order);
@@ -1132,8 +1132,8 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
   // Fire an event
-  FlareTail.util.event.trigger($grid, 'Sorted', { 'detail': {
-    'conditions': FlareTail.util.object.clone(cond) // Clone cond as it's a proxyfied object
+  FlareTail.helpers.event.trigger($grid, 'Sorted', { 'detail': {
+    'conditions': FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
   }});
 
   let selected = this.view.selected;
@@ -1145,7 +1145,7 @@ FlareTail.widget.Grid.prototype.sort = function (cond, prop, value, receiver, da
   return true;
 };
 
-FlareTail.widget.Grid.prototype.init_columnpicker = function () {
+FlareTail.widgets.Grid.prototype.init_columnpicker = function () {
   let $picker = this.view.$columnpicker = document.createElement('ul'),
       $header = this.view.$header;
 
@@ -1155,12 +1155,12 @@ FlareTail.widget.Grid.prototype.init_columnpicker = function () {
   $header.appendChild($picker);
   $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
 
-  let $$picker = this.data.$$columnpicker = new FlareTail.widget.Menu($picker);
+  let $$picker = this.data.$$columnpicker = new FlareTail.widgets.Menu($picker);
 
   $$picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
 };
 
-FlareTail.widget.Grid.prototype.build_columnpicker = function () {
+FlareTail.widgets.Grid.prototype.build_columnpicker = function () {
   this.data.$$columnpicker.build(this.data.columns.map(col => ({
     'id': `${this.view.$container.id}-columnpicker-${col.id}`,
     'label': col.label,
@@ -1171,14 +1171,14 @@ FlareTail.widget.Grid.prototype.build_columnpicker = function () {
   })));
 };
 
-FlareTail.widget.Grid.prototype.toggle_column = function (id) {
+FlareTail.widgets.Grid.prototype.toggle_column = function (id) {
   // Find column by id, thanks to Proxy
   let col = this.data.columns[id];
 
   col.hidden = !col.hidden;
 };
 
-FlareTail.widget.Grid.prototype.show_column = function (col) {
+FlareTail.widgets.Grid.prototype.show_column = function (col) {
   let $grid = this.view.$container,
       attr = `[data-id="${col.id}"]`;
 
@@ -1193,7 +1193,7 @@ FlareTail.widget.Grid.prototype.show_column = function (col) {
   }
 };
 
-FlareTail.widget.Grid.prototype.hide_column = function (col) {
+FlareTail.widgets.Grid.prototype.hide_column = function (col) {
   let $grid = this.view.$container,
       attr = `[data-id="${col.id}"]`;
 
@@ -1208,7 +1208,7 @@ FlareTail.widget.Grid.prototype.hide_column = function (col) {
   }
 };
 
-FlareTail.widget.Grid.prototype.ensure_row_visibility = function ($row) {
+FlareTail.widgets.Grid.prototype.ensure_row_visibility = function ($row) {
   let $outer = this.view.$container.querySelector('.grid-body');
 
   if (!$outer) {
@@ -1229,7 +1229,7 @@ FlareTail.widget.Grid.prototype.ensure_row_visibility = function ($row) {
   }
 };
 
-FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
+FlareTail.widgets.Grid.prototype.start_column_reordering = function (event) {
   let $grid = this.view.$container,
       $container = document.createElement('div'),
       $_image = document.createElement('canvas'),
@@ -1296,7 +1296,7 @@ FlareTail.widget.Grid.prototype.start_column_reordering = function (event) {
   $grid.querySelector('[role="scrollbar"]').setAttribute('aria-hidden', 'true')
 };
 
-FlareTail.widget.Grid.prototype.continue_column_reordering = function (event) {
+FlareTail.widgets.Grid.prototype.continue_column_reordering = function (event) {
   let drag = this.data.drag,
       pos = event.clientX - drag.start_left,
       index = drag.current_index,
@@ -1332,7 +1332,7 @@ FlareTail.widget.Grid.prototype.continue_column_reordering = function (event) {
   }
 };
 
-FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
+FlareTail.widgets.Grid.prototype.stop_column_reordering = function (event) {
   let drag = this.data.drag,
       start_idx = drag.start_index,
       current_idx = drag.current_index,
@@ -1359,7 +1359,7 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   }
 
   // Fire an event
-  FlareTail.util.event.trigger($grid, 'ColumnModified', { 'detail': { columns }});
+  FlareTail.helpers.event.trigger($grid, 'ColumnModified', { 'detail': { columns }});
 
   // Cleanup
   drag.$header.removeAttribute('data-grabbed');
@@ -1369,7 +1369,7 @@ FlareTail.widget.Grid.prototype.stop_column_reordering = function (event) {
   delete this.data.drag;
 };
 
-FlareTail.widget.Grid.prototype.filter = function (ids) {
+FlareTail.widgets.Grid.prototype.filter = function (ids) {
   let $grid_body = this.view.$body,
       selected = [...this.view.selected];
 
@@ -1397,16 +1397,16 @@ FlareTail.widget.Grid.prototype.filter = function (ids) {
   $grid_body.scrollTop = 0;
   $grid_body.removeAttribute('aria-busy');
 
-  FlareTail.util.event.trigger(this.view.$container, 'Filtered');
+  FlareTail.helpers.event.trigger(this.view.$container, 'Filtered');
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Select (abstract role) extends Composite
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Select = function Select () {};
-FlareTail.widget.Select.prototype = Object.create(FlareTail.widget.Composite.prototype);
-FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
+FlareTail.widgets.Select = function Select () {};
+FlareTail.widgets.Select.prototype = Object.create(FlareTail.widgets.Composite.prototype);
+FlareTail.widgets.Select.prototype.constructor = FlareTail.widgets.Select;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * ComboBox extends Select
@@ -1416,7 +1416,7 @@ FlareTail.widget.Select.prototype.constructor = FlareTail.widget.Select;
 // TODO: Add more HTMLSelectElement-compatible attributes
 // TODO: Add test cases
 
-FlareTail.widget.ComboBox = function ComboBox ($container) {
+FlareTail.widgets.ComboBox = function ComboBox ($container) {
   this.$container = $container;
   this.$container.setAttribute('aria-expanded', 'false');
 
@@ -1451,7 +1451,7 @@ FlareTail.widget.ComboBox = function ComboBox ($container) {
   this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
   this.$input.addEventListener('input', event => this.input_oninput(event));
   this.$input.addEventListener('blur', event => this.input_onblur(event));
-  this.$$input = new FlareTail.widget.TextBox(this.$input);
+  this.$$input = new FlareTail.widgets.TextBox(this.$input);
 
   if (!this.$listbox) {
     this.$listbox = this.$container.appendChild(document.createElement('ul'));
@@ -1462,7 +1462,7 @@ FlareTail.widget.ComboBox = function ComboBox ($container) {
   this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
   this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
   this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
-  this.$$listbox = new FlareTail.widget.ListBox(this.$listbox, undefined, { 'search_enabled': false });
+  this.$$listbox = new FlareTail.widgets.ListBox(this.$listbox, undefined, { 'search_enabled': false });
 
   let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
 
@@ -1491,14 +1491,14 @@ FlareTail.widget.ComboBox = function ComboBox ($container) {
   });
 };
 
-FlareTail.widget.ComboBox.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.ComboBox.prototype.constructor = FlareTail.widget.ComboBox;
+FlareTail.widgets.ComboBox.prototype = Object.create(FlareTail.widgets.Select.prototype);
+FlareTail.widgets.ComboBox.prototype.constructor = FlareTail.widgets.ComboBox;
 
-FlareTail.widget.ComboBox.prototype.on = function (...args) {
+FlareTail.widgets.ComboBox.prototype.on = function (...args) {
   this.$container.addEventListener(...args);
 };
 
-FlareTail.widget.ComboBox.prototype.show_dropdown = function () {
+FlareTail.widgets.ComboBox.prototype.show_dropdown = function () {
   if (!this.$$listbox.view.members.length) {
     return;
   }
@@ -1519,12 +1519,12 @@ FlareTail.widget.ComboBox.prototype.show_dropdown = function () {
   this.$listbox.dataset.position = adjusted ? 'above' : 'below';
 };
 
-FlareTail.widget.ComboBox.prototype.hide_dropdown = function () {
+FlareTail.widgets.ComboBox.prototype.hide_dropdown = function () {
   this.$container.setAttribute('aria-expanded', 'false');
   this.$container.removeAttribute('aria-activedescendant');
 };
 
-FlareTail.widget.ComboBox.prototype.toggle_dropdown = function () {
+FlareTail.widgets.ComboBox.prototype.toggle_dropdown = function () {
   if (this.$container.getAttribute('aria-expanded') === 'false') {
     this.show_dropdown();
   } else {
@@ -1532,7 +1532,7 @@ FlareTail.widget.ComboBox.prototype.toggle_dropdown = function () {
   }
 };
 
-FlareTail.widget.ComboBox.prototype.fill_dropdown = function ($element, addition = true) {
+FlareTail.widgets.ComboBox.prototype.fill_dropdown = function ($element, addition = true) {
   if (!addition) {
     this.clear_dropdown();
   }
@@ -1548,7 +1548,7 @@ FlareTail.widget.ComboBox.prototype.fill_dropdown = function ($element, addition
   }
 };
 
-FlareTail.widget.ComboBox.prototype.add = function (value, selected = false) {
+FlareTail.widgets.ComboBox.prototype.add = function (value, selected = false) {
   let $option = document.createElement('li');
 
   $option.dataset.value = $option.textContent = value;
@@ -1558,20 +1558,20 @@ FlareTail.widget.ComboBox.prototype.add = function (value, selected = false) {
   this.fill_dropdown($option);
 };
 
-FlareTail.widget.ComboBox.prototype.clear_dropdown = function () {
+FlareTail.widgets.ComboBox.prototype.clear_dropdown = function () {
   this.$listbox.innerHTML = '';
 };
 
-FlareTail.widget.ComboBox.prototype.clear_input = function () {
+FlareTail.widgets.ComboBox.prototype.clear_input = function () {
   this.$$input.clear();
 };
 
-FlareTail.widget.ComboBox.prototype.button_onmousedown = function (event) {
+FlareTail.widgets.ComboBox.prototype.button_onmousedown = function (event) {
   this.toggle_dropdown();
   event.preventDefault();
 };
 
-FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
+FlareTail.widgets.ComboBox.prototype.input_onkeydown = function (event) {
   if (event.key === 'Tab') {
     return true;
   }
@@ -1584,7 +1584,7 @@ FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
     } else if (event.key === 'Enter') {
       this.listbox_onmousedown(event);
     } else {
-      FlareTail.util.kbd.dispatch(this.$listbox, event.key);
+      FlareTail.helpers.kbd.dispatch(this.$listbox, event.key);
 
       if (event.key.match(/^Arrow(Up|Down)$/)) {
 
@@ -1597,7 +1597,7 @@ FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
 
         if (this.autocomplete === 'list') {
           this.$$input.value = value;
-          FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
+          FlareTail.helpers.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
         }
 
         this.$input.focus(); // Keep focus on <input>
@@ -1612,7 +1612,7 @@ FlareTail.widget.ComboBox.prototype.input_onkeydown = function (event) {
   event.stopPropagation();
 };
 
-FlareTail.widget.ComboBox.prototype.input_oninput = function (event) {
+FlareTail.widgets.ComboBox.prototype.input_oninput = function (event) {
   let value = this.$$input.value.trim();
 
   this.clear_dropdown();
@@ -1623,12 +1623,12 @@ FlareTail.widget.ComboBox.prototype.input_oninput = function (event) {
     return;
   }
 
-  FlareTail.util.event.trigger(this.$container, 'Input', { 'detail': { value, '$target': this.$input }});
+  FlareTail.helpers.event.trigger(this.$container, 'Input', { 'detail': { value, '$target': this.$input }});
 
   event.stopPropagation();
 };
 
-FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
+FlareTail.widgets.ComboBox.prototype.input_onblur = function (event) {
   // Use a timer in case of the listbox getting focus for a second
   window.setTimeout(() => {
     if (!this.$input.matches(':focus')) {
@@ -1638,16 +1638,16 @@ FlareTail.widget.ComboBox.prototype.input_onblur = function (event) {
 };
 
 // Based on Menu.prototype.onmouseover
-FlareTail.widget.ComboBox.prototype.listbox_onmouseover = function (event) {
+FlareTail.widgets.ComboBox.prototype.listbox_onmouseover = function (event) {
   if (this.$$listbox.view.members.includes(event.target)) {
     this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
     this.show_dropdown();
   }
 
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.ComboBox.prototype.listbox_onmousedown = function (event) {
+FlareTail.widgets.ComboBox.prototype.listbox_onmousedown = function (event) {
   let $target = this.$$listbox.view.selected[0],
       value = $target.dataset.value || $target.textContent;
 
@@ -1655,11 +1655,11 @@ FlareTail.widget.ComboBox.prototype.listbox_onmousedown = function (event) {
   this.$$input.value = value;
   this.$input.focus();
 
-  FlareTail.util.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
+  FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.ComboBox.prototype.listbox_onselect = function (event) {
+FlareTail.widgets.ComboBox.prototype.listbox_onselect = function (event) {
   this.$container.setAttribute('aria-activedescendant', event.detail.ids[0]);
 };
 
@@ -1673,7 +1673,7 @@ FlareTail.widget.ComboBox.prototype.listbox_onselect = function (event) {
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.ListBox = function ListBox ($container, data = undefined, options = {}) {
+FlareTail.widgets.ListBox = function ListBox ($container, data = undefined, options = {}) {
   this.view = { $container };
 
   this.options = {
@@ -1715,10 +1715,10 @@ FlareTail.widget.ListBox = function ListBox ($container, data = undefined, optio
   }
 };
 
-FlareTail.widget.ListBox.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.ListBox.prototype.constructor = FlareTail.widget.ListBox;
+FlareTail.widgets.ListBox.prototype = Object.create(FlareTail.widgets.Select.prototype);
+FlareTail.widgets.ListBox.prototype.constructor = FlareTail.widgets.ListBox;
 
-FlareTail.widget.ListBox.prototype.build = function () {
+FlareTail.widgets.ListBox.prototype.build = function () {
   let map = this.data.map = new Map(),
       $fragment = new DocumentFragment(),
       $_item = document.createElement('li');
@@ -1747,7 +1747,7 @@ FlareTail.widget.ListBox.prototype.build = function () {
   this.view.$container.appendChild($fragment);
 };
 
-FlareTail.widget.ListBox.prototype.get_data = function () {
+FlareTail.widgets.ListBox.prototype.get_data = function () {
   let map = this.data.map = new Map();
 
   this.data.structure = this.view.members.map($item => {
@@ -1768,7 +1768,7 @@ FlareTail.widget.ListBox.prototype.get_data = function () {
   });
 };
 
-FlareTail.widget.ListBox.prototype.filter = function (list) {
+FlareTail.widgets.ListBox.prototype.filter = function (list) {
   let $container = this.view.$container;
 
   $container.setAttribute('aria-busy', 'true'); // Prevent reflows
@@ -1794,7 +1794,7 @@ FlareTail.widget.ListBox.prototype.filter = function (list) {
  * Menu extends Select
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Menu = function Menu ($container, data = []) {
+FlareTail.widgets.Menu = function Menu ($container, data = []) {
   this.view = { $container };
 
   this.options = {
@@ -1818,7 +1818,7 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
 
   if ($owner && !$owner.matches('[role="menuitem"]')) {
     this.view.$owner = $owner;
-    FlareTail.util.event.bind(this, $owner, ['contextmenu', 'keydown']);
+    FlareTail.helpers.event.bind(this, $owner, ['contextmenu', 'keydown']);
   }
 
   Object.defineProperties(this, {
@@ -1842,10 +1842,10 @@ FlareTail.widget.Menu = function Menu ($container, data = []) {
   });
 };
 
-FlareTail.widget.Menu.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.Menu.prototype.constructor = FlareTail.widget.Menu;
+FlareTail.widgets.Menu.prototype = Object.create(FlareTail.widgets.Select.prototype);
+FlareTail.widgets.Menu.prototype.constructor = FlareTail.widgets.Menu;
 
-FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
+FlareTail.widgets.Menu.prototype.activate_extend = function (rebuild = false) {
   // Redefine items
   let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
       selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`,
@@ -1855,7 +1855,7 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   for (let $item of items) {
     if ($item.hasAttribute('aria-owns')) {
       let $menu = document.getElementById($item.getAttribute('aria-owns')),
-          $$menu = new FlareTail.widget.Menu($menu);
+          $$menu = new FlareTail.widgets.Menu($menu);
 
       $$menu.data.parent = this;
       menus.set($item, $$menu);
@@ -1887,7 +1887,7 @@ FlareTail.widget.Menu.prototype.activate_extend = function (rebuild = false) {
   });
 }
 
-FlareTail.widget.Menu.prototype.onmousedown = function (event) {
+FlareTail.widgets.Menu.prototype.onmousedown = function (event) {
   // Open link in a new tab
   if (event.target.href && event.buttons <= 1) {
     event.stopPropagation();
@@ -1897,7 +1897,7 @@ FlareTail.widget.Menu.prototype.onmousedown = function (event) {
   }
 
   if (event.buttons > 1) {
-    FlareTail.util.event.ignore(event);
+    FlareTail.helpers.event.ignore(event);
 
     return;
   }
@@ -1916,18 +1916,18 @@ FlareTail.widget.Menu.prototype.onmousedown = function (event) {
     this.close(true);
   }
 
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.Menu.prototype.onmouseover = function (event) {
+FlareTail.widgets.Menu.prototype.onmouseover = function (event) {
   if (this.view.members.includes(event.target)) {
     this.view.selected = this.view.$focused = event.target;
   }
 
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 }
 
-FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
+FlareTail.widgets.Menu.prototype.oncontextmenu = function (event) {
   let $owner = this.view.$owner,
       $container = this.view.$container;
 
@@ -1947,10 +1947,10 @@ FlareTail.widget.Menu.prototype.oncontextmenu = function (event) {
     }
   }
 
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
+FlareTail.widgets.Menu.prototype.onkeydown_extend = function (event) {
   let parent = this.data.parent,
       menus = this.data.menus,
       has_submenu = menus.has(event.target),
@@ -1997,7 +1997,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
     return;
   }
 
-  FlareTail.util.event.ignore(event);
+  FlareTail.helpers.event.ignore(event);
 
   switch (key) {
     case 'ArrowRight': {
@@ -2054,7 +2054,7 @@ FlareTail.widget.Menu.prototype.onkeydown_extend = function (event) {
   }
 };
 
-FlareTail.widget.Menu.prototype.onblur_extend = function (event) {
+FlareTail.widgets.Menu.prototype.onblur_extend = function (event) {
   if (event.currentTarget === window) {
     this.close(true);
   }
@@ -2063,7 +2063,7 @@ FlareTail.widget.Menu.prototype.onblur_extend = function (event) {
   this.onblur(event);
 };
 
-FlareTail.widget.Menu.prototype.build = function (data) {
+FlareTail.widgets.Menu.prototype.build = function (data) {
   let $container = this.view.$container,
       $fragment = new DocumentFragment(),
       $_separator = document.createElement('li'),
@@ -2113,12 +2113,12 @@ FlareTail.widget.Menu.prototype.build = function (data) {
   }
 };
 
-FlareTail.widget.Menu.prototype.open = function () {
+FlareTail.widgets.Menu.prototype.open = function () {
   let $container = this.view.$container;
 
   $container.setAttribute('aria-expanded', 'true');
   $container.removeAttribute('aria-activedescendant');
-  FlareTail.util.event.trigger($container, 'MenuOpened');
+  FlareTail.helpers.event.trigger($container, 'MenuOpened');
 
   let parent = this.data.parent;
 
@@ -2128,11 +2128,11 @@ FlareTail.widget.Menu.prototype.open = function () {
     $container.classList.add('dir-left');
   }
 
-  FlareTail.util.event.bind(this, window, ['mousedown', 'blur']);
+  FlareTail.helpers.event.bind(this, window, ['mousedown', 'blur']);
 };
 
-FlareTail.widget.Menu.prototype.select = function (event) {
-  FlareTail.util.event.trigger(this.view.$container, 'MenuItemSelected', {
+FlareTail.widgets.Menu.prototype.select = function (event) {
+  FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
     'bubbles': true,
     'cancelable': false,
     'detail': {
@@ -2142,15 +2142,15 @@ FlareTail.widget.Menu.prototype.select = function (event) {
   });
 }
 
-FlareTail.widget.Menu.prototype.close = function (propagation) {
-  FlareTail.util.event.unbind(this, window, ['mousedown', 'blur']);
+FlareTail.widgets.Menu.prototype.close = function (propagation) {
+  FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
 
   let $container = this.view.$container,
       parent = this.data.parent;
 
   $container.setAttribute('aria-expanded', 'false');
   $container.removeAttribute('aria-activedescendant');
-  FlareTail.util.event.trigger($container, 'MenuClosed');
+  FlareTail.helpers.event.trigger($container, 'MenuClosed');
   this.view.selected = [];
 
   if (parent) {
@@ -2175,7 +2175,7 @@ FlareTail.widget.Menu.prototype.close = function (propagation) {
  * MenuBar extends Menu
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.MenuBar = function MenuBar ($container, data) {
+FlareTail.widgets.MenuBar = function MenuBar ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -2188,12 +2188,12 @@ FlareTail.widget.MenuBar = function MenuBar ($container, data) {
   this.activate_extend();
 };
 
-FlareTail.widget.MenuBar.prototype = Object.create(FlareTail.widget.Menu.prototype);
-FlareTail.widget.MenuBar.prototype.constructor = FlareTail.widget.MenuBar;
+FlareTail.widgets.MenuBar.prototype = Object.create(FlareTail.widgets.Menu.prototype);
+FlareTail.widgets.MenuBar.prototype.constructor = FlareTail.widgets.MenuBar;
 
-FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
+FlareTail.widgets.MenuBar.prototype.onmousedown = function (event) {
   if (event.buttons > 1) {
-    FlareTail.util.event.ignore(event);
+    FlareTail.helpers.event.ignore(event);
 
     return;
   }
@@ -2203,19 +2203,19 @@ FlareTail.widget.MenuBar.prototype.onmousedown = function (event) {
   } else if (this.view.selected.length) {
     this.close();
   } else {
-    FlareTail.util.event.ignore(event);
+    FlareTail.helpers.event.ignore(event);
   }
 };
 
-FlareTail.widget.MenuBar.prototype.onmouseover = function (event) {
+FlareTail.widgets.MenuBar.prototype.onmouseover = function (event) {
   if (this.view.selected.length && this.view.members.includes(event.target)) {
     this.view.selected = this.view.$focused = event.target;
   }
 
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.MenuBar.prototype.onkeydown_extend = function (event) {
+FlareTail.widgets.MenuBar.prototype.onkeydown_extend = function (event) {
   let menu = this.data.menus.get(event.target).view,
       menuitems = menu.members;
 
@@ -2265,15 +2265,15 @@ FlareTail.widget.MenuBar.prototype.onkeydown_extend = function (event) {
     }
   }
 
-  return FlareTail.util.event.ignore(event);
+  return FlareTail.helpers.event.ignore(event);
 };
 
-FlareTail.widget.MenuBar.prototype.open = function (event) {
+FlareTail.widgets.MenuBar.prototype.open = function (event) {
   this.select_with_mouse(event);
 };
 
-FlareTail.widget.MenuBar.prototype.close = function () {
-  FlareTail.util.event.unbind(this, window, ['mousedown', 'blur']);
+FlareTail.widgets.MenuBar.prototype.close = function () {
+  FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
 
   this.view.selected = [];
 };
@@ -2282,7 +2282,7 @@ FlareTail.widget.MenuBar.prototype.close = function () {
  * RadioGroup extends Select
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.RadioGroup = function RadioGroup ($container, data) {
+FlareTail.widgets.RadioGroup = function RadioGroup ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -2295,8 +2295,8 @@ FlareTail.widget.RadioGroup = function RadioGroup ($container, data) {
   this.activate();
 };
 
-FlareTail.widget.RadioGroup.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.RadioGroup.prototype.constructor = FlareTail.widget.RadioGroup;
+FlareTail.widgets.RadioGroup.prototype = Object.create(FlareTail.widgets.Select.prototype);
+FlareTail.widgets.RadioGroup.prototype.constructor = FlareTail.widgets.RadioGroup;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Tree extends Select
@@ -2306,7 +2306,7 @@ FlareTail.widget.RadioGroup.prototype.constructor = FlareTail.widget.RadioGroup;
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Tree = function Tree ($container, data) {
+FlareTail.widgets.Tree = function Tree ($container, data) {
   this.view = { $container };
 
   this.options = {
@@ -2329,10 +2329,10 @@ FlareTail.widget.Tree = function Tree ($container, data) {
   }
 };
 
-FlareTail.widget.Tree.prototype = Object.create(FlareTail.widget.Select.prototype);
-FlareTail.widget.Tree.prototype.constructor = FlareTail.widget.Tree;
+FlareTail.widgets.Tree.prototype = Object.create(FlareTail.widgets.Select.prototype);
+FlareTail.widgets.Tree.prototype.constructor = FlareTail.widgets.Tree;
 
-FlareTail.widget.Tree.prototype.onmousedown_extend = function (event) {
+FlareTail.widgets.Tree.prototype.onmousedown_extend = function (event) {
   if (event.target.matches('.expander')) {
     this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
   } else {
@@ -2341,7 +2341,7 @@ FlareTail.widget.Tree.prototype.onmousedown_extend = function (event) {
   }
 };
 
-FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
+FlareTail.widgets.Tree.prototype.onkeydown_extend = function (event) {
   let $item = event.target,
       items = this.view.members;
 
@@ -2388,13 +2388,13 @@ FlareTail.widget.Tree.prototype.onkeydown_extend = function (event) {
   }
 };
 
-FlareTail.widget.Tree.prototype.ondblclick = function (event) {
+FlareTail.widgets.Tree.prototype.ondblclick = function (event) {
   if (event.target.hasAttribute('aria-expanded')) {
     this.expand(event.target);
   }
 };
 
-FlareTail.widget.Tree.prototype.build = function () {
+FlareTail.widgets.Tree.prototype.build = function () {
   let $tree = this.view.$container,
       $fragment = new DocumentFragment(),
       $outer = document.createElement('li'),
@@ -2462,7 +2462,7 @@ FlareTail.widget.Tree.prototype.build = function () {
   $tree.appendChild($fragment);
 };
 
-FlareTail.widget.Tree.prototype.get_data = function () {
+FlareTail.widgets.Tree.prototype.get_data = function () {
   let map = this.data.map = new WeakMap(),
       structure = this.data.structure = [];
 
@@ -2491,7 +2491,7 @@ FlareTail.widget.Tree.prototype.get_data = function () {
   };
 };
 
-FlareTail.widget.Tree.prototype.expand = function ($item) {
+FlareTail.widgets.Tree.prototype.expand = function ($item) {
   let expanded = $item.matches('[aria-expanded="true"]'),
       items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
       selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`,
@@ -2526,9 +2526,9 @@ FlareTail.widget.Tree.prototype.expand = function ($item) {
  * TreeGrid extends Tree and Grid
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.TreeGrid = function TreeGrid () {};
-FlareTail.widget.TreeGrid.prototype = Object.create(FlareTail.widget.Grid.prototype);
-FlareTail.widget.TreeGrid.prototype.constructor = FlareTail.widget.TreeGrid;
+FlareTail.widgets.TreeGrid = function TreeGrid () {};
+FlareTail.widgets.TreeGrid.prototype = Object.create(FlareTail.widgets.Grid.prototype);
+FlareTail.widgets.TreeGrid.prototype.constructor = FlareTail.widgets.TreeGrid;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * TabList extends Composite
@@ -2545,7 +2545,7 @@ FlareTail.widget.TreeGrid.prototype.constructor = FlareTail.widget.TreeGrid;
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.TabList = function TabList ($container) {
+FlareTail.widgets.TabList = function TabList ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
   if ($container.matches('[aria-multiselectable="true"]')) {
@@ -2596,16 +2596,16 @@ FlareTail.widget.TabList = function TabList ($container) {
   });
 };
 
-FlareTail.widget.TabList.prototype = Object.create(FlareTail.widget.Composite.prototype);
-FlareTail.widget.TabList.prototype.constructor = FlareTail.widget.TabList;
+FlareTail.widgets.TabList.prototype = Object.create(FlareTail.widgets.Composite.prototype);
+FlareTail.widgets.TabList.prototype.constructor = FlareTail.widgets.TabList;
 
-FlareTail.widget.TabList.prototype.onclick = function (event) {
+FlareTail.widgets.TabList.prototype.onclick = function (event) {
   if (event.currentTarget === this.view.$container && event.target.matches('.close')) {
     this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
   }
 };
 
-FlareTail.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $new_tab) {
+FlareTail.widgets.TabList.prototype.switch_tabpanel = function ($current_tab, $new_tab) {
   let $panel;
 
   // Current tabpanel
@@ -2619,7 +2619,7 @@ FlareTail.widget.TabList.prototype.switch_tabpanel = function ($current_tab, $ne
   $panel.setAttribute('aria-hidden', 'false');
 };
 
-FlareTail.widget.TabList.prototype.set_close_button = function ($tab) {
+FlareTail.widgets.TabList.prototype.set_close_button = function ($tab) {
   let $button = document.createElement('span');
 
   $button.className = 'close';
@@ -2629,7 +2629,7 @@ FlareTail.widget.TabList.prototype.set_close_button = function ($tab) {
   $tab.appendChild($button);
 };
 
-FlareTail.widget.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
+FlareTail.widgets.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
   let items = this.view.members,
       $tab = items[0].cloneNode(true),
       $selected = this.view.selected[0],
@@ -2672,7 +2672,7 @@ FlareTail.widget.TabList.prototype.add_tab = function (name, title, label, $pane
   return $tab;
 };
 
-FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
+FlareTail.widgets.TabList.prototype.close_tab = function ($tab) {
   let items = this.view.members,
       index = items.indexOf($tab);
 
@@ -2695,15 +2695,15 @@ FlareTail.widget.TabList.prototype.close_tab = function ($tab) {
  * Input (abstract role) extends Widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Input = function Input () {};
-FlareTail.widget.Input.prototype = Object.create(FlareTail.widget.Widget.prototype);
-FlareTail.widget.Input.prototype.constructor = FlareTail.widget.Input;
+FlareTail.widgets.Input = function Input () {};
+FlareTail.widgets.Input.prototype = Object.create(FlareTail.widgets.Widget.prototype);
+FlareTail.widgets.Input.prototype.constructor = FlareTail.widgets.Input;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * TextBox extends Input
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.TextBox = function TextBox ($textbox, richtext = false) {
+FlareTail.widgets.TextBox = function TextBox ($textbox, richtext = false) {
   this.$textbox = $textbox;
   this.richtext = richtext;
 
@@ -2715,27 +2715,27 @@ FlareTail.widget.TextBox = function TextBox ($textbox, richtext = false) {
     },
   });
 
-  FlareTail.util.event.bind(this, this.$textbox, ['copy', 'paste']);
+  FlareTail.helpers.event.bind(this, this.$textbox, ['copy', 'paste']);
 };
 
-FlareTail.widget.TextBox.prototype = Object.create(FlareTail.widget.Input.prototype);
-FlareTail.widget.TextBox.prototype.constructor = FlareTail.widget.TextBox;
+FlareTail.widgets.TextBox.prototype = Object.create(FlareTail.widgets.Input.prototype);
+FlareTail.widgets.TextBox.prototype.constructor = FlareTail.widgets.TextBox;
 
-FlareTail.widget.TextBox.prototype.oncopy = function (event) {
+FlareTail.widgets.TextBox.prototype.oncopy = function (event) {
   if (!this.richtext) {
     event.clipboardData.setData('text/plain', window.getSelection().toString());
     event.preventDefault();
   }
 };
 
-FlareTail.widget.TextBox.prototype.onpaste = function (event) {
+FlareTail.widgets.TextBox.prototype.onpaste = function (event) {
   if (!this.richtext) {
     this.$textbox.textContent = event.clipboardData.getData('text/plain');
     event.preventDefault();
   }
 };
 
-FlareTail.widget.TextBox.prototype.clear = function () {
+FlareTail.widgets.TextBox.prototype.clear = function () {
   this.$textbox.textContent = '';
 };
 
@@ -2743,7 +2743,7 @@ FlareTail.widget.TextBox.prototype.clear = function () {
  * Checkbox extends Input
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Checkbox = function Checkbox ($checkbox) {
+FlareTail.widgets.Checkbox = function Checkbox ($checkbox) {
   this.view = { $checkbox };
 
   $checkbox.tabIndex = 0;
@@ -2754,31 +2754,31 @@ FlareTail.widget.Checkbox = function Checkbox ($checkbox) {
       'get': () => $checkbox.getAttribute('aria-checked') === 'true',
       'set': checked => {
         $checkbox.setAttribute('aria-checked', checked);
-        FlareTail.util.event.trigger($checkbox, 'Toggled', { 'detail': { checked }});
+        FlareTail.helpers.event.trigger($checkbox, 'Toggled', { 'detail': { checked }});
       }
     }
   });
 
-  FlareTail.util.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+  FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
 };
 
-FlareTail.widget.Checkbox.prototype = Object.create(FlareTail.widget.Input.prototype);
-FlareTail.widget.Checkbox.prototype.constructor = FlareTail.widget.Checkbox;
+FlareTail.widgets.Checkbox.prototype = Object.create(FlareTail.widgets.Input.prototype);
+FlareTail.widgets.Checkbox.prototype.constructor = FlareTail.widgets.Checkbox;
 
-FlareTail.widget.Checkbox.prototype.onkeydown = function (event) {
+FlareTail.widgets.Checkbox.prototype.onkeydown = function (event) {
   if (event.key === ' ') { // Space
     this.view.$checkbox.click();
   }
 }
 
-FlareTail.widget.Checkbox.prototype.onclick = function (event) {
+FlareTail.widgets.Checkbox.prototype.onclick = function (event) {
   this.checked = !this.checked;
   this.view.$checkbox.focus();
 
   return false;
 };
 
-FlareTail.widget.Checkbox.prototype.bind = function (...args) {
+FlareTail.widgets.Checkbox.prototype.bind = function (...args) {
   this.view.$checkbox.addEventListener(...args);
 };
 
@@ -2791,10 +2791,10 @@ FlareTail.widget.Checkbox.prototype.bind = function (...args) {
  *                    Scroll with up/down arrow keys. Should be false on Grid, Tree, ListBox
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
+FlareTail.widgets.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
       $content = document.createElement('div'),
-      FTue = FlareTail.util.event;
+      FTue = FlareTail.helpers.event;
 
   this.view = { $owner, $content, $controller };
   this.data = {};
@@ -2806,7 +2806,7 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
   $content.className = 'scrollable-area-content';
 
   // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
-  if (FlareTail.util.env.device.mobile) {
+  if (FlareTail.helpers.env.device.mobile) {
     $owner.appendChild($content);
     $owner.style.removeProperty('display');
 
@@ -2834,22 +2834,22 @@ FlareTail.widget.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow
   this.set_height();
 };
 
-FlareTail.widget.ScrollBar.prototype = Object.create(FlareTail.widget.Input.prototype);
-FlareTail.widget.ScrollBar.prototype.constructor = FlareTail.widget.ScrollBar;
+FlareTail.widgets.ScrollBar.prototype = Object.create(FlareTail.widgets.Input.prototype);
+FlareTail.widgets.ScrollBar.prototype.constructor = FlareTail.widgets.ScrollBar;
 
-FlareTail.widget.ScrollBar.prototype.onmousedown = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onmousedown = function (event) {
   this.scroll_with_mouse(event);
 };
 
-FlareTail.widget.ScrollBar.prototype.onmousemove = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onmousemove = function (event) {
   this.scroll_with_mouse(event);
 };
 
-FlareTail.widget.ScrollBar.prototype.onmouseup = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onmouseup = function (event) {
   this.scroll_with_mouse(event);
 };
 
-FlareTail.widget.ScrollBar.prototype.onwheel = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onwheel = function (event) {
   event.preventDefault();
 
   let $owner = this.view.$owner,
@@ -2868,7 +2868,7 @@ FlareTail.widget.ScrollBar.prototype.onwheel = function (event) {
   }
 };
 
-FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onscroll = function (event) {
   let $owner = this.view.$owner,
       $controller = this.view.$controller;
 
@@ -2911,11 +2911,11 @@ FlareTail.widget.ScrollBar.prototype.onscroll = function (event) {
   $controller.style.top = `${st + 2 + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
 };
 
-FlareTail.widget.ScrollBar.prototype.onkeydown = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onkeydown = function (event) {
   this.scroll_with_keyboard(event);
 };
 
-FlareTail.widget.ScrollBar.prototype.onoverflow = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onoverflow = function (event) {
   if (event.target === event.currentTarget) {
     this.set_height();
     this.view.$controller.setAttribute('aria-disabled', 'false');
@@ -2923,16 +2923,16 @@ FlareTail.widget.ScrollBar.prototype.onoverflow = function (event) {
   }
 };
 
-FlareTail.widget.ScrollBar.prototype.onunderflow = function (event) {
+FlareTail.widgets.ScrollBar.prototype.onunderflow = function (event) {
   if (event.target === event.currentTarget) {
     this.view.$controller.setAttribute('aria-disabled', 'true');
     this.view.$controller.tabIndex = -1;
   }
 };
 
-FlareTail.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
+FlareTail.widgets.ScrollBar.prototype.scroll_with_mouse = function (event) {
   let $owner = this.view.$owner,
-      FTue = FlareTail.util.event;
+      FTue = FlareTail.helpers.event;
 
   if (event.type === 'mousedown') {
     this.data.rect = {
@@ -2970,7 +2970,7 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_mouse = function (event) {
   }
 };
 
-FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
+FlareTail.widgets.ScrollBar.prototype.scroll_with_keyboard = function (event) {
   let $owner = this.view.$owner,
       $controller = this.view.$controller,
       adjusted = this.options.adjusted,
@@ -3011,13 +3011,13 @@ FlareTail.widget.ScrollBar.prototype.scroll_with_keyboard = function (event) {
   }
 
   if (event.target === $controller) {
-    return FlareTail.util.event.ignore(event);
+    return FlareTail.helpers.event.ignore(event);
   }
 
   return true;
 };
 
-FlareTail.widget.ScrollBar.prototype.set_height = function () {
+FlareTail.widgets.ScrollBar.prototype.set_height = function () {
   let $owner = this.view.$owner,
       $controller = this.view.$controller,
       sh = $owner.scrollHeight,
@@ -3031,7 +3031,7 @@ FlareTail.widget.ScrollBar.prototype.set_height = function () {
   this.onscroll();
 };
 
-FlareTail.widget.ScrollBar.prototype.get_observer = function () {
+FlareTail.widgets.ScrollBar.prototype.get_observer = function () {
   let $iframe = document.createElement('iframe');
 
   $iframe.addEventListener('load', event => {
@@ -3054,7 +3054,7 @@ FlareTail.widget.ScrollBar.prototype.get_observer = function () {
   return $iframe;
 };
 
-FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
+FlareTail.widgets.ScrollBar.prototype.bind = function (...args) {
   this.view.$controller.addEventListener(...args);
 };
 
@@ -3062,9 +3062,9 @@ FlareTail.widget.ScrollBar.prototype.bind = function (...args) {
  * Window (abstract role) extends RoleType
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Window = function Window () {};
-FlareTail.widget.Window.prototype = Object.create(FlareTail.widget.RoleType.prototype);
-FlareTail.widget.Window.prototype.constructor = FlareTail.widget.Window;
+FlareTail.widgets.Window = function Window () {};
+FlareTail.widgets.Window.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
+FlareTail.widgets.Window.prototype.constructor = FlareTail.widgets.Window;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Dialog extends Window
@@ -3082,7 +3082,7 @@ FlareTail.widget.Window.prototype.constructor = FlareTail.widget.Window;
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Dialog = function Dialog (options) {
+FlareTail.widgets.Dialog = function Dialog (options) {
   this.options = {
     'id': options.id || Date.now(),
     'type': options.type,
@@ -3101,10 +3101,10 @@ FlareTail.widget.Dialog = function Dialog (options) {
   this.activate();
 };
 
-FlareTail.widget.Dialog.prototype = Object.create(FlareTail.widget.Window.prototype);
-FlareTail.widget.Dialog.prototype.constructor = FlareTail.widget.Dialog;
+FlareTail.widgets.Dialog.prototype = Object.create(FlareTail.widgets.Window.prototype);
+FlareTail.widgets.Dialog.prototype.constructor = FlareTail.widgets.Dialog;
 
-FlareTail.widget.Dialog.prototype.build = function () {
+FlareTail.widgets.Dialog.prototype.build = function () {
   let options = this.options,
       $wrapper = this.view.$wrapper = document.createElement('div'),
       $dialog = this.view.$dialog = document.createElement('aside'),
@@ -3145,25 +3145,25 @@ FlareTail.widget.Dialog.prototype.build = function () {
   $button_accept = this.view.$button_accept = $footer.appendChild($button.cloneNode(true)),
   $button_accept.textContent = options.button_accept_label;
   $button_accept.dataset.action = 'accept';
-  (new FlareTail.widget.Button($button_accept)).bind('Pressed', event => this.hide('accept'));
+  (new FlareTail.widgets.Button($button_accept)).bind('Pressed', event => this.hide('accept'));
 
   if (options.type !== 'alert') {
     $button_cancel = this.view.$button_cancel = $footer.appendChild($button.cloneNode(true)),
     $button_cancel.textContent = options.button_cancel_label;
     $button_cancel.dataset.action = 'cancel';
-    (new FlareTail.widget.Button($button_cancel)).bind('Pressed', event => this.hide('cancel'));
+    (new FlareTail.widgets.Button($button_cancel)).bind('Pressed', event => this.hide('cancel'));
   }
 
   $wrapper.className = 'dialog-wrapper';
   $wrapper.appendChild($dialog)
 };
 
-FlareTail.widget.Dialog.prototype.activate = function () {
+FlareTail.widgets.Dialog.prototype.activate = function () {
   // Add event listeners
-  FlareTail.util.event.bind(this, this.view.$dialog, ['keypress']);
+  FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
 };
 
-FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
+FlareTail.widgets.Dialog.prototype.onkeypress = function (event) {
   if (event.key === 'Enter') {
     this.hide('accept');
   }
@@ -3175,7 +3175,7 @@ FlareTail.widget.Dialog.prototype.onkeypress = function (event) {
   event.stopPropagation();
 };
 
-FlareTail.widget.Dialog.prototype.show = function () {
+FlareTail.widgets.Dialog.prototype.show = function () {
   this.focus_map = new Map();
   this.focus_origial = document.activeElement;
 
@@ -3189,7 +3189,7 @@ FlareTail.widget.Dialog.prototype.show = function () {
   this.view.$dialog.focus();
 };
 
-FlareTail.widget.Dialog.prototype.hide = function (action) {
+FlareTail.widgets.Dialog.prototype.hide = function (action) {
   for (let [$element, tabindex] of this.focus_map) {
     tabindex ? $element.tabIndex = tabindex : $element.removeAttribute('tabindex');
   }
@@ -3211,17 +3211,17 @@ FlareTail.widget.Dialog.prototype.hide = function (action) {
  * AlertDialog (abstract role) extends Dialog
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.AlertDialog = function AlertDialog () {};
-FlareTail.widget.AlertDialog.prototype = Object.create(FlareTail.widget.Dialog.prototype);
-FlareTail.widget.AlertDialog.prototype.constructor = FlareTail.widget.AlertDialog;
+FlareTail.widgets.AlertDialog = function AlertDialog () {};
+FlareTail.widgets.AlertDialog.prototype = Object.create(FlareTail.widgets.Dialog.prototype);
+FlareTail.widgets.AlertDialog.prototype.constructor = FlareTail.widgets.AlertDialog;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Separator extends Structure
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Separator = function Separator () {};
-FlareTail.widget.Separator.prototype = Object.create(FlareTail.widget.Structure.prototype);
-FlareTail.widget.Separator.prototype.constructor = FlareTail.widget.Separator;
+FlareTail.widgets.Separator = function Separator () {};
+FlareTail.widgets.Separator.prototype = Object.create(FlareTail.widgets.Structure.prototype);
+FlareTail.widgets.Separator.prototype.constructor = FlareTail.widgets.Separator;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Splitter (custom widget) extends Separator
@@ -3230,14 +3230,14 @@ FlareTail.widget.Separator.prototype.constructor = FlareTail.widget.Separator;
  * @returns object widget
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Splitter = function Splitter ($splitter) {
+FlareTail.widgets.Splitter = function Splitter ($splitter) {
   this.view = {
     $splitter,
     '$outer': $splitter.parentElement,
     'controls': {}
   };
 
-  let style = ($element, prop) => Number.parseInt(FlareTail.util.style.get($element, prop)),
+  let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop)),
       $outer = this.view.$outer,
       orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
       outer_bounds = $outer.getBoundingClientRect(),
@@ -3344,7 +3344,7 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
           }
 
           $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
-          FlareTail.util.event.trigger($splitter, 'Resized', { 'detail': { 'position': value }});
+          FlareTail.helpers.event.trigger($splitter, 'Resized', { 'detail': { 'position': value }});
         }
       }
 
@@ -3355,7 +3355,7 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
   });
 
   // Add event listeners
-  FlareTail.util.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
+  FlareTail.helpers.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
   for (let [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
     let $target = document.getElementById(id),
@@ -3391,10 +3391,10 @@ FlareTail.widget.Splitter = function Splitter ($splitter) {
   };
 };
 
-FlareTail.widget.Splitter.prototype = Object.create(FlareTail.widget.Separator.prototype);
-FlareTail.widget.Splitter.prototype.constructor = FlareTail.widget.Splitter;
+FlareTail.widgets.Splitter.prototype = Object.create(FlareTail.widgets.Separator.prototype);
+FlareTail.widgets.Splitter.prototype.constructor = FlareTail.widgets.Splitter;
 
-FlareTail.widget.Splitter.prototype.onmousedown = function (event) {
+FlareTail.widgets.Splitter.prototype.onmousedown = function (event) {
   if (event.buttons > 1) {
     event.preventDefault();
 
@@ -3407,10 +3407,10 @@ FlareTail.widget.Splitter.prototype.onmousedown = function (event) {
   this.view.$outer.dataset.splitter = this.data.orientation;
 
   // Add event listeners
-  FlareTail.util.event.bind(this, window, ['mousemove', 'mouseup']);
+  FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
 };
 
-FlareTail.widget.Splitter.prototype.onmousemove = function (event) {
+FlareTail.widgets.Splitter.prototype.onmousemove = function (event) {
   if (!this.data.grabbed) {
     return;
   }
@@ -3419,7 +3419,7 @@ FlareTail.widget.Splitter.prototype.onmousemove = function (event) {
                      ? event.clientY - this.data.outer.top : event.clientX - this.data.outer.left;
 };
 
-FlareTail.widget.Splitter.prototype.onmouseup = function (event) {
+FlareTail.widgets.Splitter.prototype.onmouseup = function (event) {
   if (!this.data.grabbed) {
     return;
   }
@@ -3428,12 +3428,12 @@ FlareTail.widget.Splitter.prototype.onmouseup = function (event) {
   this.view.$splitter.setAttribute('aria-grabbed', 'false');
 
   // Cleanup
-  FlareTail.util.event.unbind(this, document.body, ['mousemove', 'mouseup']);
+  FlareTail.helpers.event.unbind(this, document.body, ['mousemove', 'mouseup']);
 
   delete this.view.$outer.dataset.splitter;
 };
 
-FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
+FlareTail.widgets.Splitter.prototype.onkeydown = function (event) {
   let value = null,
       position = this.data.position,
       outer = this.data.outer,
@@ -3487,7 +3487,7 @@ FlareTail.widget.Splitter.prototype.onkeydown = function (event) {
   }
 };
 
-FlareTail.widget.Splitter.prototype.bind = function (...args) {
+FlareTail.widgets.Splitter.prototype.bind = function (...args) {
   this.view.$splitter.addEventListener(...args);
 };
 
@@ -3495,54 +3495,54 @@ FlareTail.widget.Splitter.prototype.bind = function (...args) {
  * Region extends Section
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Region = function Region () {};
-FlareTail.widget.Region.prototype = Object.create(FlareTail.widget.Section.prototype);
-FlareTail.widget.Region.prototype.constructor = FlareTail.widget.Region;
+FlareTail.widgets.Region = function Region () {};
+FlareTail.widgets.Region.prototype = Object.create(FlareTail.widgets.Section.prototype);
+FlareTail.widgets.Region.prototype.constructor = FlareTail.widgets.Region;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Status extends Region
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Status = function Status () {};
-FlareTail.widget.Status.prototype = Object.create(FlareTail.widget.Region.prototype);
-FlareTail.widget.Status.prototype.constructor = FlareTail.widget.Status;
+FlareTail.widgets.Status = function Status () {};
+FlareTail.widgets.Status.prototype = Object.create(FlareTail.widgets.Region.prototype);
+FlareTail.widgets.Status.prototype.constructor = FlareTail.widgets.Status;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Landmark (abstract role) extends Region
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Landmark = function Landmark () {};
-FlareTail.widget.Landmark.prototype = Object.create(FlareTail.widget.Region.prototype);
-FlareTail.widget.Landmark.prototype.constructor = FlareTail.widget.Landmark;
+FlareTail.widgets.Landmark = function Landmark () {};
+FlareTail.widgets.Landmark.prototype = Object.create(FlareTail.widgets.Region.prototype);
+FlareTail.widgets.Landmark.prototype.constructor = FlareTail.widgets.Landmark;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Application extends Landmark
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Application = function Application () {};
-FlareTail.widget.Application.prototype = Object.create(FlareTail.widget.Landmark.prototype);
-FlareTail.widget.Application.prototype.constructor = FlareTail.widget.Application;
+FlareTail.widgets.Application = function Application () {};
+FlareTail.widgets.Application.prototype = Object.create(FlareTail.widgets.Landmark.prototype);
+FlareTail.widgets.Application.prototype.constructor = FlareTail.widgets.Application;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Tooltip extends Section
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Tooltip = function Tooltip () {};
-FlareTail.widget.Tooltip.prototype = Object.create(FlareTail.widget.Section.prototype);
-FlareTail.widget.Tooltip.prototype.constructor = FlareTail.widget.Tooltip;
+FlareTail.widgets.Tooltip = function Tooltip () {};
+FlareTail.widgets.Tooltip.prototype = Object.create(FlareTail.widgets.Section.prototype);
+FlareTail.widgets.Tooltip.prototype.constructor = FlareTail.widgets.Tooltip;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Group extends Section
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.Group = function Group () {};
-FlareTail.widget.Group.prototype = Object.create(FlareTail.widget.Section.prototype);
-FlareTail.widget.Group.prototype.constructor = FlareTail.widget.Group;
+FlareTail.widgets.Group = function Group () {};
+FlareTail.widgets.Group.prototype = Object.create(FlareTail.widgets.Section.prototype);
+FlareTail.widgets.Group.prototype.constructor = FlareTail.widgets.Group;
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Toolbar extends Group
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widget.ToolBar = function ToolBar () {};
-FlareTail.widget.ToolBar.prototype = Object.create(FlareTail.widget.Group.prototype);
-FlareTail.widget.ToolBar.prototype.constructor = FlareTail.widget.ToolBar;
+FlareTail.widgets.ToolBar = function ToolBar () {};
+FlareTail.widgets.ToolBar.prototype = Object.create(FlareTail.widgets.Group.prototype);
+FlareTail.widgets.ToolBar.prototype.constructor = FlareTail.widgets.ToolBar;
