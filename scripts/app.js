@@ -98,6 +98,8 @@ FlareTail.app.Events = function Events () {};
 FlareTail.app.Events.prototype = Object.create(Object.prototype);
 FlareTail.app.Events.prototype.constructor = FlareTail.app.Events;
 
+FlareTail.app.Events.prototype.helpers = FlareTail.util;
+
 /*
  * Publish an event asynchronously on a separate thread.
  *
@@ -120,7 +122,7 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
     console.info('Event triggered:', topic, data);
   }
 
-  FlareTail.util.event.trigger(window, topic, { 'detail': data });
+  this.helpers.event.trigger(window, topic, { 'detail': data });
 };
 
 /*
