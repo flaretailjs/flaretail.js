@@ -430,6 +430,7 @@ FlareTail.app.View.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.View.prototype.constructor = FlareTail.app.View;
 
 FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
+FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
 FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
 FlareTail.app.View.prototype.widgets = FlareTail.widgets;
 
@@ -443,6 +444,7 @@ FlareTail.app.Helper.prototype = Object.create(FlareTail.app.Events.prototype);
 FlareTail.app.Helper.prototype.constructor = FlareTail.app.Helper;
 
 FlareTail.app.Helper.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
+FlareTail.app.Helper.prototype.get_template = FlareTail.helpers.content.get_template;
 FlareTail.app.Helper.prototype.fill = FlareTail.helpers.content.fill;
 FlareTail.app.Helper.prototype.widgets = FlareTail.widgets;
 

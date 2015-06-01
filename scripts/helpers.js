@@ -217,6 +217,10 @@ FlareTail.helpers.content.get_fragment = function (id, prefix = undefined) {
   return $fragment;
 };
 
+FlareTail.helpers.content.get_template = function (...args) {
+  return this.get_fragment(...args).firstElementChild;
+};
+
 /* ------------------------------------------------------------------------------------------------------------------
  * Event
  * ------------------------------------------------------------------------------------------------------------------ */
