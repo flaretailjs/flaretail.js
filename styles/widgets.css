@@ -415,7 +415,7 @@ a[role="menuitem"] {
   position: absolute;
   top: calc(50% - 8rem);
   left: calc(50% - 24rem);
-  box-sizing: padding-box;
+  box-sizing: border-box;
   width: 48rem;
 }
 
