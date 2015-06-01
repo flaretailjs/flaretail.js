@@ -114,15 +114,13 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
     topic = this.constructor.name + topic;
   }
 
-  if (!data.id && this.id) {
-    data.id = this.id;
-  }
+  let id = this.id;
 
   if (FlareTail.debug) {
-    console.info('Event triggered:', topic, data);
+    console.info('Event triggered:', topic, id || '(global)', data);
   }
 
-  this.helpers.event.trigger(window, topic, { detail: data });
+  this.helpers.event.trigger(window, topic, { detail: { id, data }});
 };
 
 /*
@@ -146,7 +144,7 @@ FlareTail.app.Events.prototype.on = function (topic, callback, global = false) {
       return false;
     }
 
-    callback(event.detail);
+    callback(event.detail.data);
 
     return true;
   });
