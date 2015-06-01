@@ -43,7 +43,7 @@ FlareTail.widgets.RoleType.prototype.activate = function (rebuild) {
   }
 
   if (this.update_view) {
-    this.view = new Proxy(this.view, { 'set': this.update_view.bind(this) });
+    this.view = new Proxy(this.view, { set: this.update_view.bind(this) });
   }
 
   // Add event listeners
@@ -135,11 +135,11 @@ FlareTail.widgets.Button = function Button ($button) {
   this.view = { $button };
 
   this.data = new Proxy({
-    'disabled': $button.matches('[aria-disabled="true"]'),
-    'pressed': $button.matches('[aria-pressed="true"]')
+    disabled: $button.matches('[aria-disabled="true"]'),
+    pressed: $button.matches('[aria-pressed="true"]')
   },
   {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (prop === 'disabled' || prop === 'pressed') {
         $button.setAttribute(`aria-${prop}`, value);
       }
@@ -151,7 +151,7 @@ FlareTail.widgets.Button = function Button ($button) {
   });
 
   this.options = {
-    'toggle': $button.hasAttribute('aria-pressed')
+    toggle: $button.hasAttribute('aria-pressed')
   };
 
   FlareTail.helpers.event.bind(this, $button, ['click', 'keydown']);
@@ -177,7 +177,7 @@ FlareTail.widgets.Button.prototype.onclick = function (event) {
     pressed = this.data.pressed = !this.data.pressed;
   }
 
-  FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { 'detail': { pressed }});
+  FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
 };
 
 FlareTail.widgets.Button.prototype.onkeydown = function (event) {
@@ -566,11 +566,11 @@ FlareTail.widgets.Composite.prototype.update_view = function (obj, prop, newval)
       }
     }
 
-    FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { 'detail': {
+    FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { detail: {
       oldval,
-      'items': newval || [],
-      'ids': [for ($item of newval || []) $item.dataset.id || $item.id],
-      'labels': [for ($item of newval || []) $item.textContent]
+      items: newval || [],
+      ids: [for ($item of newval || []) $item.dataset.id || $item.id],
+      labels: [for ($item of newval || []) $item.textContent]
     }});
   }
 
@@ -641,19 +641,19 @@ FlareTail.widgets.Grid = function Grid ($container, data, options) {
   } else {
     this.view.$header = $container.querySelector('.grid-header');
     this.view.$body = $container.querySelector('.grid-body');
-    this.data = { 'columns': [], 'rows': [] };
+    this.data = { columns: [], rows: [] };
     this.options = {
-      'item_roles': [role],
-      'item_selector': `.grid-body [role="${role}"]`,
-      'sortable': dataset.sortable === 'false' ? false : true,
-      'reorderable': dataset.reorderable === 'false' ? false : true
+      item_roles: [role],
+      item_selector: `.grid-body [role="${role}"]`,
+      sortable: dataset.sortable === 'false' ? false : true,
+      reorderable: dataset.reorderable === 'false' ? false : true
     };
     // Retrieve data from the static table
     this.get_data();
   }
 
   this.options = new Proxy(this.options, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (prop === 'adjust_scrollbar') {
         this.view.$$scrollbar.options.adjusted = value;
       }
@@ -676,7 +676,7 @@ FlareTail.widgets.Grid.prototype.constructor = FlareTail.widgets.Grid;
 
 FlareTail.widgets.Grid.prototype.activate_extend = function () {
   this.view = new Proxy(this.view, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       switch (prop) {
         case 'selected': {
           // Validation: this.selectd.value is always Array
@@ -708,7 +708,7 @@ FlareTail.widgets.Grid.prototype.activate_extend = function () {
     }
   });
 
-  this.options.sort_conditions = new Proxy(this.options.sort_conditions, { 'set': this.sort.bind(this) });
+  this.options.sort_conditions = new Proxy(this.options.sort_conditions, { set: this.sort.bind(this) });
 
   this.activate_columns();
   this.activate_rows();
@@ -717,12 +717,12 @@ FlareTail.widgets.Grid.prototype.activate_extend = function () {
 FlareTail.widgets.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
     // Default behavior, or find column by id
-    'get': (obj, prop) => prop in obj ? obj[prop] : [for (col of obj) if (col.id === prop) col][0]
+    get: (obj, prop) => prop in obj ? obj[prop] : [for (col of obj) if (col.id === prop) col][0]
   });
 
   // Handler to show/hide column
   let handler = {
-    'get': (obj, prop) => {
+    get: (obj, prop) => {
       let value;
 
       switch (prop) {
@@ -751,11 +751,11 @@ FlareTail.widgets.Grid.prototype.activate_columns = function () {
 
       return value;
     },
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       switch (prop) {
         case 'hidden': {
           // Fire an event
-          FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { 'detail': { columns }});
+          FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { detail: { columns }});
 
           // Reflect the change of row's visibility to UI
           value === true ? this.hide_column(obj) : this.show_column(obj);
@@ -777,7 +777,7 @@ FlareTail.widgets.Grid.prototype.activate_columns = function () {
 
 FlareTail.widgets.Grid.prototype.activate_rows = function () {
   let handler = {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       // Reflect Data change into View
       let row = [for (row of this.data.rows) if (row.data.id === obj.id) row][0],
           $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
@@ -799,7 +799,7 @@ FlareTail.widgets.Grid.prototype.activate_rows = function () {
 
   // Sort handler
   this.data.rows = new Proxy(rows, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (!Number.isNaN(prop) && value.$element) {
         $tbody.appendChild(value.$element);
       }
@@ -1045,24 +1045,24 @@ FlareTail.widgets.Grid.prototype.get_data = function () {
   // Sort conditions
   if (this.options.sortable && $sorter) {
     this.options.sort_conditions = {
-      'key': $sorter.dataset.id || null,
-      'order': $sorter.getAttribute('aria-sort') || 'none'
+      key: $sorter.dataset.id || null,
+      order: $sorter.getAttribute('aria-sort') || 'none'
     };
   }
 
   // Fill the column database
   this.data.columns = [...$header.querySelector('[role="row"]').cells].map($cell => ({
-    'id': $cell.dataset.id,
-    'type': $cell.dataset.type || 'string',
-    'label': $cell.textContent,
-    'hidden': false,
-    'key': $cell.dataset.key ? true : false,
-    '$element': $cell
+    id: $cell.dataset.id,
+    type: $cell.dataset.type || 'string',
+    label: $cell.textContent,
+    hidden: false,
+    key: $cell.dataset.key ? true : false,
+    $element: $cell
   }));
 
   // Fill the row database
   this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].map($row => {
-    let row = { 'id': $row.id, '$element': $row, 'data': {} };
+    let row = { id: $row.id, $element: $row, data: {} };
 
     for (let [index, $cell] of [...$row.cells].entries()) {
       let column = this.data.columns[index],
@@ -1132,8 +1132,8 @@ FlareTail.widgets.Grid.prototype.sort = function (cond, prop, value, receiver, d
   this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
   // Fire an event
-  FlareTail.helpers.event.trigger($grid, 'Sorted', { 'detail': {
-    'conditions': FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
+  FlareTail.helpers.event.trigger($grid, 'Sorted', { detail: {
+    conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
   }});
 
   let selected = this.view.selected;
@@ -1162,12 +1162,12 @@ FlareTail.widgets.Grid.prototype.init_columnpicker = function () {
 
 FlareTail.widgets.Grid.prototype.build_columnpicker = function () {
   this.data.$$columnpicker.build(this.data.columns.map(col => ({
-    'id': `${this.view.$container.id}-columnpicker-${col.id}`,
-    'label': col.label,
-    'type': 'menuitemcheckbox',
-    'disabled': col.key === true,
-    'checked': !col.hidden,
-    'data': { 'id': col.id }
+    id: `${this.view.$container.id}-columnpicker-${col.id}`,
+    label: col.label,
+    type: 'menuitemcheckbox',
+    disabled: col.key === true,
+    checked: !col.hidden,
+    data: { id: col.id }
   })));
 };
 
@@ -1221,11 +1221,11 @@ FlareTail.widgets.Grid.prototype.ensure_row_visibility = function ($row) {
       roh = $row.offsetHeight;
 
   if (ost > rot) {
-    $row.scrollIntoView({ 'block': 'start', 'behavior': 'smooth' });
+    $row.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   if (ost + ooh < rot + roh) {
-    $row.scrollIntoView({ 'block': 'end', 'behavior': 'smooth' });
+    $row.scrollIntoView({ block: 'end', behavior: 'smooth' });
   }
 };
 
@@ -1264,18 +1264,18 @@ FlareTail.widgets.Grid.prototype.start_column_reordering = function (event) {
       $image.className = 'follower';
       this.data.drag = {
         $container,
-        '$header': $chead,
+        $header: $chead,
         $follower,
-        'start_index': index,
-        'current_index': index,
-        'start_left': event.clientX - left,
-        'row_width': width,
-        'grid_width': $grid.offsetWidth,
+        start_index: index,
+        current_index: index,
+        start_left: event.clientX - left,
+        row_width: width,
+        grid_width: $grid.offsetWidth,
       };
     }
 
     headers.push(new Proxy({ index, left, width }, {
-      'set': (obj, prop, value) => {
+      set: (obj, prop, value) => {
         if (prop === 'left') {
           let $image = document.querySelector(`#column-drag-image-${obj.index}`);
 
@@ -1359,7 +1359,7 @@ FlareTail.widgets.Grid.prototype.stop_column_reordering = function (event) {
   }
 
   // Fire an event
-  FlareTail.helpers.event.trigger($grid, 'ColumnModified', { 'detail': { columns }});
+  FlareTail.helpers.event.trigger($grid, 'ColumnModified', { detail: { columns }});
 
   // Cleanup
   drag.$header.removeAttribute('data-grabbed');
@@ -1462,7 +1462,7 @@ FlareTail.widgets.ComboBox = function ComboBox ($container) {
   this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
   this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
   this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
-  this.$$listbox = new FlareTail.widgets.ListBox(this.$listbox, undefined, { 'search_enabled': false });
+  this.$$listbox = new FlareTail.widgets.ListBox(this.$listbox, undefined, { search_enabled: false });
 
   let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
 
@@ -1471,18 +1471,18 @@ FlareTail.widgets.ComboBox = function ComboBox ($container) {
   }
 
   Object.defineProperties(this, {
-    'options': {
-      'enumerable': true,
-      'get': () => [...this.$listbox.querySelectorAll('[role="option"]')],
+    options: {
+      enumerable: true,
+      get: () => [...this.$listbox.querySelectorAll('[role="option"]')],
     },
-    'selected': {
-      'enumerable': true,
-      'get': () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
+    selected: {
+      enumerable: true,
+      get: () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
     },
-    'selectedIndex': {
-      'enumerable': true,
-      'get': () => this.$$listbox.view.members.indexOf(this.$$listbox.view.selected[0]),
-      'set': index => {
+    selectedIndex: {
+      enumerable: true,
+      get: () => this.$$listbox.view.members.indexOf(this.$$listbox.view.selected[0]),
+      set: index => {
         let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[index];
 
         this.$$input.value = $selected.dataset.value || $selected.textContent;
@@ -1597,7 +1597,7 @@ FlareTail.widgets.ComboBox.prototype.input_onkeydown = function (event) {
 
         if (this.autocomplete === 'list') {
           this.$$input.value = value;
-          FlareTail.helpers.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
+          FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
         }
 
         this.$input.focus(); // Keep focus on <input>
@@ -1623,7 +1623,7 @@ FlareTail.widgets.ComboBox.prototype.input_oninput = function (event) {
     return;
   }
 
-  FlareTail.helpers.event.trigger(this.$container, 'Input', { 'detail': { value, '$target': this.$input }});
+  FlareTail.helpers.event.trigger(this.$container, 'Input', { detail: { value, $target: this.$input }});
 
   event.stopPropagation();
 };
@@ -1655,7 +1655,7 @@ FlareTail.widgets.ComboBox.prototype.listbox_onmousedown = function (event) {
   this.$$input.value = value;
   this.$input.focus();
 
-  FlareTail.helpers.event.trigger(this.$container, 'Change', { 'detail': { $target, value }});
+  FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
   FlareTail.helpers.event.ignore(event);
 };
 
@@ -1677,20 +1677,20 @@ FlareTail.widgets.ListBox = function ListBox ($container, data = undefined, opti
   this.view = { $container };
 
   this.options = {
-    'item_roles': ['option'],
-    'item_selector': '[role="option"]',
-    'search_enabled': options.search_enabled !== undefined ? options.search_enabled : true
+    item_roles: ['option'],
+    item_selector: '[role="option"]',
+    search_enabled: options.search_enabled !== undefined ? options.search_enabled : true
   };
 
   this.handler = {
-    'get': (obj, prop) => {
+    get: (obj, prop) => {
       if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
         return obj.$element.getAttribute(`aria-${prop}`) === 'true';
       }
 
       return obj[prop];
     },
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
         obj.$element.setAttribute(`aria-${prop}`, value);
       }
@@ -1751,7 +1751,7 @@ FlareTail.widgets.ListBox.prototype.get_data = function () {
   let map = this.data.map = new Map();
 
   this.data.structure = this.view.members.map($item => {
-    let item = { '$element': $item, 'id': $item.id, 'label': $item.textContent };
+    let item = { $element: $item, id: $item.id, label: $item.textContent };
 
     if (Object.keys($item.dataset).length) {
       item.data = {};
@@ -1798,9 +1798,9 @@ FlareTail.widgets.Menu = function Menu ($container, data = []) {
   this.view = { $container };
 
   this.options = {
-    'item_roles': ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
-    'item_selector': '[role^="menuitem"]',
-    'focus_cycling': true
+    item_roles: ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
+    item_selector: '[role^="menuitem"]',
+    focus_cycling: true
   };
 
   this.data = {};
@@ -1822,10 +1822,10 @@ FlareTail.widgets.Menu = function Menu ($container, data = []) {
   }
 
   Object.defineProperties(this, {
-    'closed': {
-      'enumerable': true,
-      'get': () => $container.getAttribute('aria-expanded') === 'false',
-      'set': value => value ? this.open() : this.close()
+    closed: {
+      enumerable: true,
+      get: () => $container.getAttribute('aria-expanded') === 'false',
+      set: value => value ? this.open() : this.close()
     }
   });
 
@@ -1835,10 +1835,10 @@ FlareTail.widgets.Menu = function Menu ($container, data = []) {
       this.update_members();
     }
   })).observe($container, {
-    'subtree': true,
-    'childList': true,
-    'attributes': true,
-    'attributeFilter': ['aria-disabled', 'aria-hidden']
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['aria-disabled', 'aria-hidden']
   });
 };
 
@@ -1867,7 +1867,7 @@ FlareTail.widgets.Menu.prototype.activate_extend = function (rebuild = false) {
   }
 
   this.view = new Proxy(this.view, {
-    'set': (obj, prop, newval) => {
+    set: (obj, prop, newval) => {
       let oldval = obj[prop];
 
       if (prop === '$focused') {
@@ -2133,11 +2133,11 @@ FlareTail.widgets.Menu.prototype.open = function () {
 
 FlareTail.widgets.Menu.prototype.select = function (event) {
   FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
-    'bubbles': true,
-    'cancelable': false,
-    'detail': {
-      'target': event.target,
-      'command': event.target.dataset.command || event.target.id
+    bubbles: true,
+    cancelable: false,
+    detail: {
+      target: event.target,
+      command: event.target.dataset.command || event.target.id
     }
   });
 }
@@ -2179,9 +2179,9 @@ FlareTail.widgets.MenuBar = function MenuBar ($container, data) {
   this.view = { $container };
 
   this.options = {
-    'item_roles': ['menuitem'],
-    'item_selector': '[role="menuitem"]',
-    'focus_cycling': true
+    item_roles: ['menuitem'],
+    item_selector: '[role="menuitem"]',
+    focus_cycling: true
   };
 
   this.activate();
@@ -2286,10 +2286,10 @@ FlareTail.widgets.RadioGroup = function RadioGroup ($container, data) {
   this.view = { $container };
 
   this.options = {
-    'item_roles': ['radio'],
-    'item_selector': '[role="radio"]',
-    'selected_attr': 'aria-checked',
-    'focus_cycling': true
+    item_roles: ['radio'],
+    item_selector: '[role="radio"]',
+    selected_attr: 'aria-checked',
+    focus_cycling: true
   };
 
   this.activate();
@@ -2310,9 +2310,9 @@ FlareTail.widgets.Tree = function Tree ($container, data) {
   this.view = { $container };
 
   this.options = {
-    'search_enabled': true,
-    'item_roles': ['treeitem'],
-    'item_selector': '[role="treeitem"]',
+    search_enabled: true,
+    item_roles: ['treeitem'],
+    item_selector: '[role="treeitem"]',
   };
 
   this.data = {};
@@ -2471,11 +2471,11 @@ FlareTail.widgets.Tree.prototype.get_data = function () {
   for (let $item of this.view.members) {
     let level = Number($item.getAttribute('aria-level')),
         item = {
-          '$element': $item,
-          'id': $item.id,
-          'label': $item.textContent,
+          $element: $item,
+          id: $item.id,
+          label: $item.textContent,
           level,
-          'sub': []
+          sub: []
         };
 
     if (Object.keys($item.dataset).length) {
@@ -2555,17 +2555,17 @@ FlareTail.widgets.TabList = function TabList ($container) {
   this.view = { $container };
 
   this.options = {
-    'item_roles': ['tab'],
-    'item_selector': '[role="tab"]',
-    'focus_cycling': true,
-    'removable': $container.dataset.removable === 'true',
-    'reorderable': $container.dataset.reorderable === 'true'
+    item_roles: ['tab'],
+    item_selector: '[role="tab"]',
+    focus_cycling: true,
+    removable: $container.dataset.removable === 'true',
+    reorderable: $container.dataset.reorderable === 'true'
   };
 
   this.activate();
 
   this.view = new Proxy(this.view, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (prop === 'selected') {
         value = Array.isArray(value) ? value : [value];
         this.switch_tabpanel(obj[prop][0], value[0]);
@@ -2589,10 +2589,10 @@ FlareTail.widgets.TabList = function TabList ($container) {
       this.update_members();
     }
   })).observe($container, {
-    'subtree': true,
-    'childList': true,
-    'attributes': true,
-    'attributeFilter': ['aria-disabled', 'aria-hidden']
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['aria-disabled', 'aria-hidden']
   });
 };
 
@@ -2708,10 +2708,10 @@ FlareTail.widgets.TextBox = function TextBox ($textbox, richtext = false) {
   this.richtext = richtext;
 
   Object.defineProperties(this, {
-    'value': {
-      'enumerable': true,
-      'get': () => this.$textbox.textContent,
-      'set': str => this.$textbox.textContent = str
+    value: {
+      enumerable: true,
+      get: () => this.$textbox.textContent,
+      set: str => this.$textbox.textContent = str
     },
   });
 
@@ -2749,12 +2749,12 @@ FlareTail.widgets.Checkbox = function Checkbox ($checkbox) {
   $checkbox.tabIndex = 0;
 
   Object.defineProperties(this, {
-    'checked': {
-      'enumerable': true,
-      'get': () => $checkbox.getAttribute('aria-checked') === 'true',
-      'set': checked => {
+    checked: {
+      enumerable: true,
+      get: () => $checkbox.getAttribute('aria-checked') === 'true',
+      set: checked => {
         $checkbox.setAttribute('aria-checked', checked);
-        FlareTail.helpers.event.trigger($checkbox, 'Toggled', { 'detail': { checked }});
+        FlareTail.helpers.event.trigger($checkbox, 'Toggled', { detail: { checked }});
       }
     }
   });
@@ -2936,10 +2936,10 @@ FlareTail.widgets.ScrollBar.prototype.scroll_with_mouse = function (event) {
 
   if (event.type === 'mousedown') {
     this.data.rect = {
-      'st': $owner.scrollTop,
-      'sh': $owner.scrollHeight,
-      'ch': $owner.clientHeight,
-      'cy': event.clientY
+      st: $owner.scrollTop,
+      sh: $owner.scrollHeight,
+      ch: $owner.clientHeight,
+      cy: event.clientY
     };
 
     FTue.bind(this, window, ['mousemove', 'mouseup']);
@@ -3084,15 +3084,15 @@ FlareTail.widgets.Window.prototype.constructor = FlareTail.widgets.Window;
 
 FlareTail.widgets.Dialog = function Dialog (options) {
   this.options = {
-    'id': options.id || Date.now(),
-    'type': options.type,
-    'title': options.title,
-    'message': options.message,
-    'button_accept_label': options.button_accept_label || 'OK',
-    'button_cancel_label': options.button_cancel_label || 'Cancel',
-    'onaccept': options.onaccept,
-    'oncancel': options.oncancel,
-    'value': options.value || ''
+    id: options.id || Date.now(),
+    type: options.type,
+    title: options.title,
+    message: options.message,
+    button_accept_label: options.button_accept_label || 'OK',
+    button_cancel_label: options.button_cancel_label || 'Cancel',
+    onaccept: options.onaccept,
+    oncancel: options.oncancel,
+    value: options.value || ''
   };
 
   this.view = {};
@@ -3233,8 +3233,8 @@ FlareTail.widgets.Separator.prototype.constructor = FlareTail.widgets.Separator;
 FlareTail.widgets.Splitter = function Splitter ($splitter) {
   this.view = {
     $splitter,
-    '$outer': $splitter.parentElement,
-    'controls': {}
+    $outer: $splitter.parentElement,
+    controls: {}
   };
 
   let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop)),
@@ -3246,12 +3246,12 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
       position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
 
   this.data = new Proxy({
-    'outer': new Proxy({
-      'id': $outer.id,
-      'top': outer_bounds.top,
-      'left': outer_bounds.left,
+    outer: new Proxy({
+      id: $outer.id,
+      top: outer_bounds.top,
+      left: outer_bounds.left,
     }, {
-      'get': (obj, prop) => {
+      get: (obj, prop) => {
         if (prop === 'size') {
           // The dimension of the element can be changed when the window is resized.
           // Return the current width or height
@@ -3265,11 +3265,11 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
     }),
     orientation,
     flex,
-    'position': flex ? `${(position / outer_size * 100).toFixed(2)}%` : `${position}px`,
-    'controls': {},
-    'grabbed': false
+    position: flex ? `${(position / outer_size * 100).toFixed(2)}%` : `${position}px`,
+    controls: {},
+    grabbed: false
   }, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       if (prop === 'orientation') {
         this.data.position = 'default';
         $splitter.setAttribute('aria-orientation', value);
@@ -3344,7 +3344,7 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
           }
 
           $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
-          FlareTail.helpers.event.trigger($splitter, 'Resized', { 'detail': { 'position': value }});
+          FlareTail.helpers.event.trigger($splitter, 'Resized', { detail: { position: value }});
         }
       }
 
@@ -3363,11 +3363,11 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
 
     this.data.controls[position] = new Proxy({
       id,
-      'collapsible': $target.hasAttribute('aria-expanded'),
-      'expanded': $target.getAttribute('aria-expanded') !== 'false'
+      collapsible: $target.hasAttribute('aria-expanded'),
+      expanded: $target.getAttribute('aria-expanded') !== 'false'
     },
     {
-      'get': (obj, prop) => {
+      get: (obj, prop) => {
         if (prop === 'min' || prop === 'max') {
           let horizontal = this.data.orientation === 'horizontal';
 
@@ -3376,7 +3376,7 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
 
         return obj[prop];
       },
-      'set': (obj, prop, value) => {
+      set: (obj, prop, value) => {
         if (prop === 'expanded') {
           document.getElementById(obj.id).setAttribute('aria-expanded', value);
         }

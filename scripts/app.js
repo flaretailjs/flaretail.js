@@ -122,7 +122,7 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
     console.info('Event triggered:', topic, data);
   }
 
-  this.helpers.event.trigger(window, topic, { 'detail': data });
+  this.helpers.event.trigger(window, topic, { detail: data });
 };
 
 /*
@@ -138,7 +138,7 @@ FlareTail.app.Events.prototype.trigger = function (topic, data = {}) {
 FlareTail.app.Events.prototype.on = function (topic, callback, global = false) {
   topic = topic.replace(/^([MVC]):/, (match, prefix) => {
     return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-            + { 'M': 'Model', 'V': 'View', 'C': 'Controller' }[prefix] + ':';
+            + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
   });
 
   window.addEventListener(topic, event => {
@@ -215,12 +215,12 @@ FlareTail.app.DataSource.IndexedDB.prototype.get_store = function (name, return_
   });
 
   return {
-    'obj': store, // IDBObjectStore
-    'save': obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
-    'get': key => send(store.get(key)),
-    'get_all': () => send(store.mozGetAll()),
-    'delete': key => send(store.delete(key)),
-    'clear': () => send(store.clear()),
+    obj: store, // IDBObjectStore
+    save: obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
+    get: key => send(store.get(key)),
+    get_all: () => send(store.mozGetAll()),
+    delete: key => send(store.delete(key)),
+    clear: () => send(store.clear()),
   };
 };
 
@@ -241,8 +241,8 @@ FlareTail.app.Model.prototype.constructor = FlareTail.app.Model;
  */
 FlareTail.app.Model.prototype.proxy = function (data) {
   return new Proxy(this, {
-    'get': (obj, prop) => prop in this ? this[prop] : this.data[prop],
-    'set': (obj, prop, value) => {
+    get: (obj, prop) => prop in this ? this[prop] : this.data[prop],
+    set: (obj, prop, value) => {
       prop in this ? this[prop] = value : this.data[prop] = value;
 
       return true; // The set trap must return true (Bug 1132522)
@@ -261,7 +261,7 @@ FlareTail.app.Model.prototype.cache = function (data) {
   data = Object.assign({}, data);
 
   return this.data = new Proxy(data, {
-    'set': (obj, prop, value) => {
+    set: (obj, prop, value) => {
       obj[prop] = value;
       this.datasource.get_store(this.store_name).save(obj);
 

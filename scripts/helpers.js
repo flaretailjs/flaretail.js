@@ -86,8 +86,8 @@ FlareTail.helpers = {};
   }
 
   Object.defineProperty(FlareTail, 'compatible', {
-    'enumerable': true,
-    'value': compatible
+    enumerable: true,
+    value: compatible
   });
 }
 
@@ -132,10 +132,10 @@ FlareTail.helpers.content = {};
  * JavaScript example:
  *  FlareTail.helpers.content.fill($bug.querySelector('[itemprop="creator"]'), {
  *    // Schema.org data
- *    'name': 'Kohei Yoshino', 'email': 'kohei.yoshino@gmail.com', 'image': 'kohei.png'
+ *    name: 'Kohei Yoshino', email: 'kohei.yoshino@gmail.com', image: 'kohei.png'
  *  }, {
  *    // Attributes
- *    'title': 'Kohei Yoshino\nkohei.yoshino@gmail.com', 'data-id': 232883
+ *    title: 'Kohei Yoshino\nkohei.yoshino@gmail.com', 'data-id': 232883
  *  });
  *
  * [argument] $scope (Element) an DOM element with the itemscope attribute
@@ -367,24 +367,24 @@ FlareTail.helpers.Storage = function () {
  * ------------------------------------------------------------------------------------------------------------------ */
 
 FlareTail.helpers.env = {
-  'device': {
-    'type': 'unknown',
-    'tv': false,
-    'desktop': false,
-    'mobile': false,
-    'tablet': false,
-    'phone': false,
+  device: {
+    type: 'unknown',
+    tv: false,
+    desktop: false,
+    mobile: false,
+    tablet: false,
+    phone: false,
   },
-  'platform': {
-    'name': 'unknown',
-    'windows': false,
-    'macintosh': false,
-    'linux': false,
-    'android': false,
-    'firefox': false,
+  platform: {
+    name: 'unknown',
+    windows: false,
+    macintosh: false,
+    linux: false,
+    android: false,
+    firefox: false,
   },
-  'touch': {
-    'enabled': window.matchMedia('(-moz-touch-enabled: 1)').matches
+  touch: {
+    enabled: window.matchMedia('(-moz-touch-enabled: 1)').matches
   }
 };
 
@@ -484,18 +484,18 @@ FlareTail.helpers.app.show_notification = function (title, options) {
 FlareTail.helpers.theme = {};
 
 Object.defineProperties(FlareTail.helpers.theme, {
-  'list': {
-    'enumerable': true,
-    'get': () => document.styleSheetSets
+  list: {
+    enumerable: true,
+    get: () => document.styleSheetSets
   },
-  'default': {
-    'enumerable': true,
-    'get': () => document.preferredStyleSheetSet
+  default: {
+    enumerable: true,
+    get: () => document.preferredStyleSheetSet
   },
-  'selected': {
-    'enumerable': true,
-    'get': () => document.selectedStyleSheetSet,
-    'set': name => document.selectedStyleSheetSet = name
+  selected: {
+    enumerable: true,
+    get: () => document.selectedStyleSheetSet,
+    set: name => document.selectedStyleSheetSet = name
   }
 });
 
@@ -539,12 +539,12 @@ FlareTail.helpers.theme.preload_images = function () {
 FlareTail.helpers.datetime = {};
 
 FlareTail.helpers.datetime.options = new Proxy({
-  'relative': false,
-  'timezone': 'local',
-  'updater_enabled': false,
-  'updater_interval': 60 // seconds
+  relative: false,
+  timezone: 'local',
+  updater_enabled: false,
+  updater_interval: 60 // seconds
 }, {
-  'set': (obj, prop, value) => {
+  set: (obj, prop, value) => {
     let dt = FlareTail.helpers.datetime;
 
     obj[prop] = value;
@@ -631,8 +631,8 @@ FlareTail.helpers.datetime.get_shifted_date = function (date, offset) {
 FlareTail.helpers.datetime.fill_element = function ($time, value, options = null) {
   if (!options) {
     options = {
-      'relative': $time.dataset.relative ? JSON.parse($time.dataset.relative) : undefined,
-      'simple': $time.dataset.simple ? JSON.parse($time.dataset.simple) : undefined
+      relative: $time.dataset.relative ? JSON.parse($time.dataset.relative) : undefined,
+      simple: $time.dataset.simple ? JSON.parse($time.dataset.simple) : undefined
     };
   }
 
@@ -655,8 +655,8 @@ FlareTail.helpers.datetime.update_elements = function () {
   for (let $time of document.querySelectorAll('time')) {
     let data = $time.dataset,
         time = this.format($time.dateTime, {
-          'relative': data.relative !== undefined ? data.relative === 'true' : this.options.relative,
-          'simple': data.simple !== undefined ? data.simple === 'true' : this.options.simple
+          relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
+          simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
         });
 
     if ($time.textContent !== time) {
@@ -694,8 +694,8 @@ FlareTail.helpers.network = {};
 
 FlareTail.helpers.network.json = (url, body = undefined) => {
   return window.fetch(new Request(url, {
-    'method': body ? 'POST' : 'GET',
-    'headers': new Headers({ 'Accept': 'application/json' }),
+    method: body ? 'POST' : 'GET',
+    headers: new Headers({ Accept: 'application/json' }),
     body,
   })).then(response => response.json());
 };
