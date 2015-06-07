@@ -166,8 +166,18 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
     }
   };
 
-  let fill = ($item, value) => $item.dateTime !== undefined ? FlareTail.helpers.datetime.fill_element($item, value)
-                                                            : $item.itemValue = value;
+  let fill = ($item, value) => {
+    if ($item.dateTime !== undefined) {
+      FlareTail.helpers.datetime.fill_element($item, value);
+    } else {
+      $item.itemValue = value;
+
+      // Set the URL as the link label if empty
+      if ($item.href === value && !$item.text) {
+        $item.text = value;
+      }
+    }
+  };
 
   $scope.setAttribute('aria-busy', 'true');
 
