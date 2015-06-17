@@ -37,6 +37,7 @@ FlareTail.helpers = {};
     'origin' in location, // Firefox 21
     'HTMLTemplateElement' in window, // Firefox 22
     'Notification' in window, // Firefox 22
+    'CSS' in window && 'supports' in CSS, // Firefox 23
     'remove' in Element.prototype, // Firefox 23
     'parseInt' in Number, // Firefox 25
     'createTBody' in HTMLTableElement.prototype, // Firefox 25
@@ -44,12 +45,14 @@ FlareTail.helpers = {};
     'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
     'URLSearchParams' in window, // Firefox 29
-    'escape' in CSS, // Firefox 31
+    'CSS' in window && 'escape' in CSS, // Firefox 31
     'getBoxQuads' in Element.prototype, // Firefox 31
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in StyleSheetList.prototype, // Firefox 31, 36
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in CSSRuleList.prototype, // Firefox 32, 36
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
+    'mediaDevices' in navigator, // Firefox 36
+    'BroadcastChannel' in window, // Firefox 38
   ];
 
   let compatible = true;
