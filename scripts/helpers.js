@@ -170,6 +170,10 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   };
 
   let fill = ($item, value) => {
+    if (value === undefined) {
+      return;
+    }
+
     if ($item.dateTime !== undefined) {
       FlareTail.helpers.datetime.fill_element($item, value);
     } else {
@@ -195,7 +199,7 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
       $items.push($scope);
     }
 
-    for (let $item of $items) {
+    for (let $item of $items) if (value !== undefined) {
       $item.setAttribute(attr, value);
     }
   }
