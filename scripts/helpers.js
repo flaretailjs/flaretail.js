@@ -604,7 +604,7 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
       [1000 * 60 * 60, '%dh', '1 hour ago', '%d hours ago'],
       [1000 * 60, '%dm', '1 minute ago', '%d minutes ago'],
       [1000, '%ds', 'Just now', '%d seconds ago'],
-      [0, '%ds', 'Just now', 'Just now'] // Less than 1 second
+      [0, 'Now', 'Just now', 'Just now'] // Less than 1 second
     ];
 
     let format = (ms, simple, singular, plural) => {
