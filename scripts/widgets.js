@@ -2838,10 +2838,10 @@ FlareTail.widgets.TextBox.prototype.bind = function (...args) {
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Checkbox extends Input
+ * CheckBox extends Input
  * ------------------------------------------------------------------------------------------------------------------ */
 
-FlareTail.widgets.Checkbox = function Checkbox ($checkbox) {
+FlareTail.widgets.CheckBox = function CheckBox ($checkbox) {
   this.view = { $checkbox };
 
   $checkbox.tabIndex = 0;
@@ -2860,23 +2860,23 @@ FlareTail.widgets.Checkbox = function Checkbox ($checkbox) {
   FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
 };
 
-FlareTail.widgets.Checkbox.prototype = Object.create(FlareTail.widgets.Input.prototype);
-FlareTail.widgets.Checkbox.prototype.constructor = FlareTail.widgets.Checkbox;
+FlareTail.widgets.CheckBox.prototype = Object.create(FlareTail.widgets.Input.prototype);
+FlareTail.widgets.CheckBox.prototype.constructor = FlareTail.widgets.CheckBox;
 
-FlareTail.widgets.Checkbox.prototype.onkeydown = function (event) {
+FlareTail.widgets.CheckBox.prototype.onkeydown = function (event) {
   if (event.key === ' ') { // Space
     this.view.$checkbox.click();
   }
 }
 
-FlareTail.widgets.Checkbox.prototype.onclick = function (event) {
+FlareTail.widgets.CheckBox.prototype.onclick = function (event) {
   this.checked = !this.checked;
   this.view.$checkbox.focus();
 
   return false;
 };
 
-FlareTail.widgets.Checkbox.prototype.bind = function (...args) {
+FlareTail.widgets.CheckBox.prototype.bind = function (...args) {
   this.view.$checkbox.addEventListener(...args);
 };
 
