@@ -2853,6 +2853,11 @@ FlareTail.widgets.CheckBox = function CheckBox ($checkbox) {
       set: checked => {
         $checkbox.setAttribute('aria-checked', checked);
         FlareTail.helpers.event.trigger($checkbox, 'Toggled', { detail: { checked }});
+
+        // Set Microdata when necessary
+        if ($checkbox.matches('meta[content]')) {
+          $checkbox.setAttribute('content', checked);
+        }
       }
     }
   });

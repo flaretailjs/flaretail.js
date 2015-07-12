@@ -183,6 +183,11 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
       if ($item.href === value && !$item.text) {
         $item.text = value;
       }
+
+      // Set WAI-ARIA attribute when necessary
+      if ($item.matches('meta[role="checkbox"]')) {
+        $item.setAttribute('aria-checked', value);
+      }
     }
   };
 
