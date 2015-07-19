@@ -2773,7 +2773,7 @@ FlareTail.widgets.TextBox = function TextBox ($textbox, richtext = false) {
     },
   });
 
-  FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown']);
+  FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
 };
 
 FlareTail.widgets.TextBox.prototype = Object.create(FlareTail.widgets.Input.prototype);
@@ -2788,6 +2788,8 @@ FlareTail.widgets.TextBox.prototype.oncut = function (event) {
     event.preventDefault();
     selection.deleteFromDocument();
   }
+
+  this.onedit();
 };
 
 FlareTail.widgets.TextBox.prototype.oncopy = function (event) {
@@ -2811,6 +2813,8 @@ FlareTail.widgets.TextBox.prototype.onpaste = function (event) {
     range.insertNode(document.createTextNode(event.clipboardData.getData('text/plain')));
     range.collapse(false);
   }
+
+  this.onedit();
 };
 
 FlareTail.widgets.TextBox.prototype.onkeydown = function (event) {
@@ -2829,8 +2833,18 @@ FlareTail.widgets.TextBox.prototype.onkeydown = function (event) {
   return true;
 };
 
+
+FlareTail.widgets.TextBox.prototype.oninput = function (event) {
+  this.onedit();
+};
+
+FlareTail.widgets.TextBox.prototype.onedit = function () {
+  FlareTail.helpers.event.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
+};
+
 FlareTail.widgets.TextBox.prototype.clear = function () {
   this.$textbox.textContent = '';
+  this.onedit();
 };
 
 FlareTail.widgets.TextBox.prototype.bind = function (...args) {
