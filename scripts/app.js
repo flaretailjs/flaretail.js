@@ -172,10 +172,11 @@ FlareTail.app.DataSource.IndexedDB.prototype.constructor = FlareTail.app.DataSou
  * Open a local IndexedDB database by name, and return it.
  *
  * [argument] name (String) name of the database
+ * [argument] version (Integer) database version
  * [return] database (Promise -> IDBDatabase or Error) the target database
  */
-FlareTail.app.DataSource.IndexedDB.prototype.open_database = function (name) {
-  let request = indexedDB.open(name);
+FlareTail.app.DataSource.IndexedDB.prototype.open_database = function (name, version = 1) {
+  let request = indexedDB.open(name, version);
 
   return new Promise((resolve, reject) => {
     // Create object stores when the database is created or upgraded
