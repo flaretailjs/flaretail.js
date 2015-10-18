@@ -22,9 +22,17 @@ FlareTail.app.Router = function Router (app) {
   this.root = app.config.app.root.match(/(.*)\/$/)[1] || '';
   // Specify the launch path
   this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
-  // Retrieve routes from app controllers
-  this.routes = new Map([for (component of Iterator(app.controllers)) if ('route' in component[1])
-                          [new RegExp('^' + this.root + component[1].route + '$'), component[1]]]);
+  // Specify the routes
+  this.routes = new Map();
+
+  // Retrieve the routes from app controllers
+  for (let prop in app.controllers) {
+    let controller = app.controllers[prop];
+
+    if ('route' in controller) {
+      this.routes.set(new RegExp(`^${this.root}${controller.route}$`), controller);
+    }
+  }
 
   window.addEventListener('popstate', event => this.locate());
 };

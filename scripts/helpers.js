@@ -63,9 +63,9 @@ FlareTail.helpers = {};
       throw new Error;
     }
 
-    // Iterator and destructuring assignment (Firefox 2)
+    // Destructuring assignment (Firefox 2)
     // for...of loop (Firefox 13)
-    for (let [key, value] of Iterator(['a', 'b', 'c'])) if (key === 1) {}
+    for (let [key, value] of new Map([[1, 'a'], [2, 'b'], [3, 'c']])) if (key === 1) {}
 
     // Direct Proxy (Firefox 18; constructor)
     new Proxy({}, {});
@@ -74,7 +74,7 @@ FlareTail.helpers = {};
     [0, 1, 2].push(...[3, 4, 5]);
 
     // ES6 Array comprehensions (Firefox 30)
-    [for (item of Iterator(['a', 'b', 'c'])) if (item[0] === 1) item[1]];
+    [for (item of new Map([[1, 'a'], [2, 'b'], [3, 'c']])) if (item[0] === 1) item[1]];
 
     // ES6 shorthand properties in object literals (Firefox 33)
     let a = 1, b = 2, c = { a, b };
@@ -148,7 +148,9 @@ FlareTail.helpers.content = {};
  */
 FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
-    for (let [prop, value] of Iterator(data)) {
+    for (let prop in data) {
+      let value = data[prop];
+
       for (let $item of $scope.properties[prop] || []) {
         // Multiple items
         if (Array.isArray(value)) {
@@ -197,8 +199,9 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   iterate($scope, data);
 
   // Attributes
-  for (let [attr, value] of Iterator(attrs)) {
-    let $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
+  for (let attr in attrs) {
+    let value = attrs[attr],
+        $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
 
     if ($scope.matches(`[data-attrs~="${CSS.escape(attr)}"]`)) {
       $items.push($scope);
@@ -320,10 +323,11 @@ FlareTail.helpers.kbd = {};
 FlareTail.helpers.kbd.assign = function ($target, map) {
   let bindings = new Set();
 
-  for (let [_combos, command] of Iterator(map)) for (let _combo of _combos.split('|')) {
+  for (let _combos in map) for (let _combo of _combos.split('|')) {
     let combo = _combo.split('+'),
         key = combo.pop().toLowerCase().replace('Space', ' '), // Space is an exception
-        modifiers = new Set(combo);
+        modifiers = new Set(combo),
+        command = map[_combos];
 
     bindings.add([key, modifiers, command]);
   }
