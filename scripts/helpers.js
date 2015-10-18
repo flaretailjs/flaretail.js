@@ -4,7 +4,7 @@
 
 'use strict';
 
-let FlareTail = FlareTail || {};
+let FlareTail = {};
 
 FlareTail.debug = 'URLSearchParams' in window &&
                     (new URLSearchParams(location.search.substr(1))).get('debug') === 'true';

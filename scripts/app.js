@@ -4,8 +4,6 @@
 
 'use strict';
 
-let FlareTail = FlareTail || {};
-
 FlareTail.app = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -77,17 +75,6 @@ FlareTail.app.Router.prototype.navigate = function (path, state = {}, replace = 
     console.info(replace ? 'History replaced:' : 'History added:', path, state);
   }
 };
-
-/*
- * Automatically activate the app's Router when the page is loaded. The app namespace should be specified with the meta
- * element, e.g. <meta name="application-name" content="BzDeck">
- */
-window.addEventListener('DOMContentLoaded', event => {
-  let app = window[document.querySelector('meta[name="application-name"]').content];
-
-  // Activate router
-  app.router = new FlareTail.app.Router(app);
-});
 
 /* ------------------------------------------------------------------------------------------------------------------
  * Events
