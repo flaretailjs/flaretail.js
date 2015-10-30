@@ -22,7 +22,6 @@ FlareTail.helpers = {};
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
     'createObjectURL' in URL, // Firefox 4
-    'mozGetAll' in IDBObjectStore.prototype, // Firefox 4, still prefixed
     'matchMedia' in window, // Firefox 6
     'WeakMap' in window, // Firefox 6
     'Blob' in window, // Firefox 13
@@ -32,7 +31,7 @@ FlareTail.helpers = {};
     'isNaN' in Number, // Firefox 15
     'scrollTopMax' in Element.prototype, // Firefox 16
     'isInteger' in Number, // Firefox 16
-    'indexedDB' in window, // unprefixed in Firefox 16
+    'indexedDB' in window, // unprefixed with Firefox 16
     'onwheel' in window, // Firefox 17
     'origin' in location, // Firefox 21
     'HTMLTemplateElement' in window, // Firefox 22
@@ -53,6 +52,7 @@ FlareTail.helpers = {};
     'matches' in Element.prototype, // Firefox 34
     'mediaDevices' in navigator, // Firefox 36
     'BroadcastChannel' in window, // Firefox 38
+    'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
   ];
 
   let compatible = true;

@@ -212,7 +212,7 @@ FlareTail.app.DataSource.IndexedDB.prototype.get_store = function (name, return_
     obj: store, // IDBObjectStore
     save: obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
     get: key => send(store.get(key)),
-    get_all: () => send(store.mozGetAll()),
+    get_all: () => send(store.getAll()),
     delete: key => send(store.delete(key)),
     clear: () => send(store.clear()),
   };
