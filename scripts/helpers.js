@@ -52,6 +52,8 @@ FlareTail.helpers = {};
     'matches' in Element.prototype, // Firefox 34
     'mediaDevices' in navigator, // Firefox 36
     'BroadcastChannel' in window, // Firefox 38
+    'includes' in String.prototype, // Firefox 40
+    'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
   ];
 
@@ -92,22 +94,6 @@ FlareTail.helpers = {};
     enumerable: true,
     value: compatible
   });
-}
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Polyfills
- * ------------------------------------------------------------------------------------------------------------------ */
-
-if (typeof Array.prototype.includes !== 'function') {
-  Array.prototype.includes = function (item) {
-    return Array.prototype.indexOf.call(this, item) > -1;
-  }
-}
-
-if (typeof String.prototype.includes !== 'function') {
-  String.prototype.includes = function (item) {
-    return String.prototype.search.call(this, new RegExp(item)) > -1;
-  }
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
