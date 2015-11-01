@@ -117,8 +117,8 @@ if (typeof String.prototype.includes !== 'function') {
 FlareTail.helpers.content = {};
 
 /*
- * Fill DOM nodes with data using the Microdata API, and optionally set arbitrary attributes. This method also supports
- * simple if-else switches in the markup; use the data-if and data-else attributes.
+ * Fill DOM nodes with data using Microdata, and optionally set arbitrary attributes. This method also supports simple
+ * if-else switches in the markup; use the data-if and data-else attributes.
  *
  * Markup example:
  *  <span itemprop="creator" itemscope itemtype="http://schema.org/Person" data-attrs="title data-id">
@@ -151,11 +151,17 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
     for (let prop in data) {
       let value = data[prop];
 
-      for (let $item of $scope.properties[prop] || []) {
+      for (let $prop of $scope.querySelectorAll(`[itemprop=${prop}]`)) {
+        // Unlike Microdata API's Element.properties, Element.querySelectorAll doesn't consider itemscopes.
+        // Check if the node is in the same itemscope
+        if ($prop.parentElement.closest('[itemscope]') !== $scope) {
+          continue;
+        }
+
         // Multiple items
         if (Array.isArray(value)) {
-          let $parent = $item.parentElement,
-              $_item = $parent.removeChild($item);
+          let $parent = $prop.parentElement,
+              $_item = $parent.removeChild($prop);
 
           $parent.innerHTML = ''; // Empty the loop before adding items
 
@@ -165,7 +171,7 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
             typeof _value === 'object' ? iterate($item, _value) : fill($item, _value);
           }
         } else {
-          typeof value === 'object' ? iterate($item, value) : fill($item, value);
+          typeof value === 'object' ? iterate($prop, value) : fill($prop, value);
         }
       }
     }
@@ -176,20 +182,34 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
       return;
     }
 
-    if ($item.dateTime !== undefined) {
+    let tag = $item.tagName.toLowerCase();
+
+    // Mimic Microdata API's Element.itemValue
+    // http://www.w3.org/TR/microdata/#dom-itemvalue
+    if (tag === 'meta') {
+      $item.content = value;
+    } else if (['audio', 'embed', 'iframe', 'img', 'source', 'track', 'video'].includes(tag)) {
+      $item.src = value;
+    } else if (['a', 'area', 'link'].includes(tag)) {
+      $item.href = value;
+    } else if (tag === 'object') {
+      $item.data = value;
+    } else if (['data', 'meter'].includes(tag)) {
+      $item.value = value;
+    } else if (tag === 'time') {
       FlareTail.helpers.datetime.fill_element($item, value);
     } else {
-      $item.itemValue = value;
+      $item.textContent = value;
+    }
 
-      // Set the URL as the link label if empty
-      if ($item.href === value && !$item.text) {
-        $item.text = value;
-      }
+    // Set the URL as the link label if empty
+    if (tag === 'a' && $item.href === value && !$item.text) {
+      $item.text = value;
+    }
 
-      // Set WAI-ARIA attribute when necessary
-      if ($item.matches('meta[role="checkbox"]')) {
-        $item.setAttribute('aria-checked', value);
-      }
+    // Set WAI-ARIA attribute when necessary
+    if ($item.matches('meta[role="checkbox"]')) {
+      $item.setAttribute('aria-checked', value);
     }
   };
 
