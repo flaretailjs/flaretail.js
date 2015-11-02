@@ -18,6 +18,7 @@ FlareTail.helpers = {};
 {
   let features = [
     'toLocaleFormat' in Date.prototype, // Gecko specific
+    'Worker' in window, // Firefox 3.5
     'FileReader' in window, // Firefox 3.6
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
@@ -48,11 +49,15 @@ FlareTail.helpers = {};
     'getBoxQuads' in Element.prototype, // Firefox 31
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in StyleSheetList.prototype, // Firefox 31, 36
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in CSSRuleList.prototype, // Firefox 32, 36
+    'ServiceWorker' in window, // Firefox 33
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
     'mediaDevices' in navigator, // Firefox 36
     'BroadcastChannel' in window, // Firefox 38
+    'fetch' in window, // Firefox 39
     'includes' in String.prototype, // Firefox 40
+    'CacheStorage' in window, // Firefox 41
+    'Permissions' in window, // Firefox 43
     'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
   ];
