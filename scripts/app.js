@@ -51,7 +51,7 @@ FlareTail.app.Router.prototype.locate = function (path = location.pathname) {
     if (match) {
       // Call the constructor when a route is found
       // Pass arguments based on the RegExp pattern, taking numeric arguments into account
-      new constructor(...[for (arg of match.slice(1)) isNaN(arg) ? arg : Number(arg)]);
+      new constructor(...match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg)));
 
       return true;
     }
@@ -379,7 +379,7 @@ FlareTail.app.Collection.prototype.get = function (key, fallback_data = undefine
  * [return] items (Map(String or Number, Proxy)) new instances of the model object
  */
 FlareTail.app.Collection.prototype.get_some = function (keys) {
-  return new Map([for (key of keys) [key, this.get(key)]]);
+  return new Map(keys.map(key => [key, this.get(key)]));
 };
 
 /*

@@ -567,8 +567,8 @@ FlareTail.widgets.Composite.prototype.update_view = function (obj, prop, newval)
     FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { detail: {
       oldval,
       items: newval || [],
-      ids: [for ($item of newval || []) $item.dataset.id || $item.id],
-      labels: [for ($item of newval || []) $item.textContent]
+      ids: newval ? newval.map($item => $item.dataset.id || $item.id) : [],
+      labels: newval ? newval.map($item => $item.textContent) : [],
     }});
   }
 
@@ -715,7 +715,7 @@ FlareTail.widgets.Grid.prototype.activate_extend = function () {
 FlareTail.widgets.Grid.prototype.activate_columns = function () {
   let columns = this.data.columns = new Proxy(this.data.columns, {
     // Default behavior, or find column by id
-    get: (obj, prop) => prop in obj ? obj[prop] : [for (col of obj) if (col.id === prop) col][0]
+    get: (obj, prop) => prop in obj ? obj[prop] : obj.find(col => col.id === prop),
   });
 
   // Handler to show/hide column
@@ -777,7 +777,7 @@ FlareTail.widgets.Grid.prototype.activate_rows = function () {
   let handler = {
     set: (obj, prop, value) => {
       // Reflect Data change into View
-      let row = [for (row of this.data.rows) if (row.data.id === obj.id) row][0],
+      let row = this.data.rows.find(row => row.data.id === obj.id),
           $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
 
       this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value) : $elm.textContent = value;
@@ -2551,7 +2551,7 @@ FlareTail.widgets.Tree.prototype.expand = function ($item) {
   $item.setAttribute('aria-expanded', !expanded);
 
   // Update data with visible items
-  this.view.members = [for ($item of items) if ($item.offsetParent !== null) $item];
+  this.view.members = items.filter($item => $item.offsetParent !== null);
 
   if (!children.length) {
     return;
@@ -2566,7 +2566,7 @@ FlareTail.widgets.Tree.prototype.expand = function ($item) {
   }
 
   // Remove the item's children from selection
-  let selected = [for ($item of this.view.selected) if (!children.includes($item)) $item];
+  let selected = this.view.selected.filter($item => !children.includes($item));
 
   // Add the item to selection
   selected.push($item);
@@ -2917,7 +2917,10 @@ FlareTail.widgets.ScrollBar = function ScrollBar ($owner, adjusted = false, arro
 
   $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
 
-  [for ($child of [...$owner.children]) $content.appendChild($child)];
+  for (let $child of $owner.children) {
+    $content.appendChild($child);
+  }
+
   $content.className = 'scrollable-area-content';
 
   // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers

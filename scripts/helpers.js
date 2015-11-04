@@ -80,9 +80,6 @@ FlareTail.helpers = {};
     // Spread operation in function calls (Firefox 27)
     [0, 1, 2].push(...[3, 4, 5]);
 
-    // ES6 Array comprehensions (Firefox 30)
-    [for (item of new Map([[1, 'a'], [2, 'b'], [3, 'c']])) if (item[0] === 1) item[1]];
-
     // ES6 shorthand properties in object literals (Firefox 33)
     let a = 1, b = 2, c = { a, b };
 
@@ -542,7 +539,7 @@ Object.defineProperties(FlareTail.helpers.theme, {
 
 FlareTail.helpers.theme.preload_images = function () {
   let pattern = 'url\\("(.+?)"\\)',
-      images = new Set();
+      images = new Set(); // Use a Set to avoid duplicates
 
   for (let sheet of document.styleSheets) {
     for (let rule of sheet.cssRules) {
@@ -554,11 +551,7 @@ FlareTail.helpers.theme.preload_images = function () {
 
       // Support for multiple background
       for (let m of match) {
-        let src = m.match(RegExp(pattern))[1];
-
-        if (!images.has(src)) {
-          images.add(src);
-        }
+        images.add(m.match(RegExp(pattern))[1]);
       }
     }
   }
@@ -570,7 +563,7 @@ FlareTail.helpers.theme.preload_images = function () {
     image.src = src;
   });
 
-  return Promise.all([for (src of images) _load(src)]);
+  return Promise.all([...images].map(src => _load(src)));
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -799,7 +792,7 @@ FlareTail.helpers.array.clone = array => [...array];
 FlareTail.helpers.array.join = (set, tag = undefined) => {
   let open_tag = tag ? `<${tag}>` : '',
       close_tag = tag ? `</${tag}>` : '',
-      array = [for (item of set) open_tag + FlareTail.helpers.string.sanitize(item) + close_tag],
+      array = set.map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag),
       last = array.pop();
 
   return array.length ? array.join(', ') + ' and ' + last : last; // l10n
