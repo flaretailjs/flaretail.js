@@ -792,7 +792,7 @@ FlareTail.helpers.array.clone = array => [...array];
 FlareTail.helpers.array.join = (set, tag = undefined) => {
   let open_tag = tag ? `<${tag}>` : '',
       close_tag = tag ? `</${tag}>` : '',
-      array = set.map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag),
+      array = [...set].map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag),
       last = array.pop();
 
   return array.length ? array.join(', ') + ' and ' + last : last; // l10n

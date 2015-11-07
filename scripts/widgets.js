@@ -2917,7 +2917,7 @@ FlareTail.widgets.ScrollBar = function ScrollBar ($owner, adjusted = false, arro
 
   $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
 
-  for (let $child of $owner.children) {
+  for (let $child of [...$owner.children]) {
     $content.appendChild($child);
   }
 

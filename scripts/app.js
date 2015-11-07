@@ -379,7 +379,7 @@ FlareTail.app.Collection.prototype.get = function (key, fallback_data = undefine
  * [return] items (Map(String or Number, Proxy)) new instances of the model object
  */
 FlareTail.app.Collection.prototype.get_some = function (keys) {
-  return new Map(keys.map(key => [key, this.get(key)]));
+  return new Map([...keys].map(key => [key, this.get(key)]));
 };
 
 /*
