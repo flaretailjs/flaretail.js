@@ -104,11 +104,11 @@ FlareTail.helpers = {};
 
 FlareTail.helpers.content = {};
 
-/*
+/**
  * Fill DOM nodes with data using Microdata, and optionally set arbitrary attributes. This method also supports simple
  * if-else switches in the markup; use the data-if and data-else attributes.
  *
- * Markup example:
+ * @example Markup:
  *  <span itemprop="creator" itemscope itemtype="http://schema.org/Person" data-attrs="title data-id">
  *    <meta itemprop="email">
  *    <span itemprop="name"></span>
@@ -119,8 +119,7 @@ FlareTail.helpers.content = {};
  *      No image provided.
  *    </span>
  *  </span>
- *
- * JavaScript example:
+ * @example JavaScript:
  *  FlareTail.helpers.content.fill($bug.querySelector('[itemprop="creator"]'), {
  *    // Schema.org data
  *    name: 'Kohei Yoshino', email: 'kohei.yoshino@gmail.com', image: 'kohei.png'
@@ -128,11 +127,10 @@ FlareTail.helpers.content = {};
  *    // Attributes
  *    title: 'Kohei Yoshino\nkohei.yoshino@gmail.com', 'data-id': 232883
  *  });
- *
- * [argument] $scope (Element) an DOM element with the itemscope attribute
- * [argument] data (Object) keys are the itemprop attribute
- * [argument] attrs (Object) attributes to be set according to the data-attrs attribute
- * [return] $scope (Element)
+ * @argument {Element} $scope - DOM element with the itemscope attribute.
+ * @argument {Object} data - Keys are the itemprop attribute.
+ * @argument {Object} [attrs={}] - Attributes to be set according to the data-attrs attribute.
+ * @return {Element} $scope
  */
 FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
@@ -318,16 +316,15 @@ FlareTail.helpers.event.trigger = function ($target, type, options = {}, async =
 
 FlareTail.helpers.kbd = {};
 
-/* ------------------------------------------------------------------------------------------------------------------
+/**
  * Assign keyboard shortcuts on a specific element
  *
- * @param   {Element} $target
- * @param   {Object} A map of keybind patterns ('S', 'Accel+Shift+R', 'Control+O', etc.
-                     Multiple pattern should be separated with '|') and function.
-                     Possible key values can be found at MDN:
-                     https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key
-                     https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState
- * ------------------------------------------------------------------------------------------------------------------ */
+ * @argument {Element} $target
+ * @argument {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Control+O, etc. Multiple pattern
+ *  should be separated with `|`) and function. Possible key values can be found at MDN.
+ * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key}
+ * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState}
+ */
 FlareTail.helpers.kbd.assign = function ($target, map) {
   let bindings = new Set();
 
@@ -368,12 +365,12 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
   });
 };
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Fire a keydown event on a specific element
+/**
+ * Fire a keydown event on a specific element.
  *
- * @param   {Element} $target
- * @param   {Integer} key
- * ------------------------------------------------------------------------------------------------------------------ */
+ * @argument {Element} $target
+ * @argument {Integer} key
+ */
 FlareTail.helpers.kbd.dispatch = function ($target, key) {
   $target.dispatchEvent(new KeyboardEvent('keydown', { key }));
 };

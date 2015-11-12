@@ -592,27 +592,26 @@ FlareTail.widgets.Composite.prototype.update_view = function (obj, prop, newval)
   return true;
 };
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Grid extends Composite
+/**
+ * Grid
  *
- * @param   {Element} $container <table role="grid">
- * @param   {Object} optional data including columns, rows and order
- * @options attributes on the grid element:
- *           * aria-multiselectable: the default is true
- *           * aria-readonly: the default is false
- *          attributes on the columnheader elements:
- *           * draggable: if false, the row cannot be reordered
- *           * data-key: true/false, whether the key column or not
- *           * data-type: string (default), integer or boolean
- *          an attribute on the row elements:
- *           * aria-selected: if the attribute is set on the rows, the grid
- *                            will be like a thread pane in an email client
- *          an attribute on the gridcell elements:
- *           * aria-selected: if the attribute is set on the cells, the grid
- *                            will be like a spreadsheet application
- * @returns {Object} the widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Composite
+ * @argument {Element} $container - <table role="grid">
+ * @argument {Object} [data] - Optional data including columns, rows and order.
+ * @argument {Object} [options] - These attributes on the grid element are also supported:
+ *  - aria-multiselectable: The default is true.
+ *  - aria-readonly: The default is false.
+ *  Attributes on the columnheader elements:
+ *  - draggable: If false, the row cannot be reordered.
+ *  - data-key: True/false, whether the key column or not.
+ *  - data-type: String (default), Integer or Boolean.
+ *  Attribute on the row elements:
+ *  - aria-selected: If the attribute is set on the rows, the grid will be like a thread pane in a mail app.
+ *  Attribute on the gridcell elements:
+ *  - aria-selected: If the attribute is set on the cells, the grid will be like a spreadsheet app.
+ * @return {Object} widget
+ */
 FlareTail.widgets.Grid = function Grid ($container, data, options) {
   // What can be selected on the grid
   let dataset = $container.dataset,
@@ -1714,16 +1713,17 @@ FlareTail.widgets.ComboBox.prototype.bind = function (...args) {
   this.$container.addEventListener(...args);
 };
 
-/* ------------------------------------------------------------------------------------------------------------------
- * ListBox extends Select
+/**
+ * ListBox
  *
- * @param   element <menu role="listbox">
- * @param   optional array data
- * @options attributes on the listbox element:
- *           * aria-multiselectable
- * @returns object widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Select
+ * @argument {Element} $container - <menu role="listbox">
+ * @argument {Array} [data]
+ * @argument {Object} [options] - This attribute on the listbox element is also supported:
+ *  - aria-multiselectable
+ * @return {Object} widget
+ */
 FlareTail.widgets.ListBox = function ListBox ($container, data = undefined, options = {}) {
   this.view = { $container };
 
@@ -2349,14 +2349,15 @@ FlareTail.widgets.RadioGroup = function RadioGroup ($container, data) {
 FlareTail.widgets.RadioGroup.prototype = Object.create(FlareTail.widgets.Select.prototype);
 FlareTail.widgets.RadioGroup.prototype.constructor = FlareTail.widgets.RadioGroup;
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Tree extends Select
+/**
+ * Tree
  *
- * @param   $container <menu role="tree">
- * @param   optional array data
- * @returns object widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Select
+ * @argument {Element} $container - <menu role="tree">
+ * @argument {Array} data - Optional data
+ * @return {Object} widget
+ */
 FlareTail.widgets.Tree = function Tree ($container, data) {
   this.view = { $container };
 
@@ -2581,21 +2582,19 @@ FlareTail.widgets.TreeGrid = function TreeGrid () {};
 FlareTail.widgets.TreeGrid.prototype = Object.create(FlareTail.widgets.Grid.prototype);
 FlareTail.widgets.TreeGrid.prototype.constructor = FlareTail.widgets.TreeGrid;
 
-/* ------------------------------------------------------------------------------------------------------------------
- * TabList extends Composite
+/**
+ * TabList
  *
- * @param   $container <ul role="tablist">
- * @options attributes on the tablist element:
- *           * data-removable: if true, tabs can be opened and/or closed
- *                             (default: false)
- *           * data-reorderable: if true, tabs can be reordered by drag
- *                               (default: false)
- *          attributes on the tab elements:
- *           * aria-selected: if true, the tab will be selected first
- *           * draggable and aria-grabbed: tabs can be dragged (to reorder)
- * @returns object widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Composite
+ * @argument {Element} $container - <ul role="tablist">. Those attributes are supported as options:
+ *  - data-removable: If true, tabs can be opened and/or closed (default: false)
+ *  - data-reorderable: If true, tabs can be reordered by drag (default: false)
+ *  Those attributes on the tab elements are also supported:
+ *  - aria-selected: If true, the tab will be selected first
+ *  - draggable and aria-grabbed: Tabs can be dragged (to reorder)
+ * @return {Object} widget
+ */
 FlareTail.widgets.TabList = function TabList ($container) {
   // TODO: aria-multiselectable support for accordion UI
   // http://www.w3.org/WAI/PF/aria-practices/#accordion
@@ -2897,15 +2896,17 @@ FlareTail.widgets.CheckBox.prototype.bind = function (...args) {
   this.view.$checkbox.addEventListener(...args);
 };
 
-/* ------------------------------------------------------------------------------------------------------------------
- * ScrollBar extends Input
+/**
+ * ScrollBar
  *
- * @param   $owner    An element to be scrolled
- * @param   adjusted  Adjust the scrolling increment for Grid, Tree, ListBox
- * @param   arrow_keys_enabled
- *                    Scroll with up/down arrow keys. Should be false on Grid, Tree, ListBox
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Input
+ * @argument {Element} $owner - Element to be scrolled.
+ * @argument {Boolean} [adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
+ * @argument {Boolean} [arrow_keys_enabled=false] - Enable scrolling with the up/down arrow keys. Should be false on
+ *  Grid, Tree and ListBox.
+ * @return {Object} widget
+ */
 FlareTail.widgets.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
   let $controller = document.createElement('div'),
       $content = document.createElement('div'),
@@ -3184,22 +3185,23 @@ FlareTail.widgets.Window = function Window () {};
 FlareTail.widgets.Window.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
 FlareTail.widgets.Window.prototype.constructor = FlareTail.widgets.Window;
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Dialog extends Window
+/**
+ * Dialog
  *
- * @param   object options
- *            id (optional)
- *            type: alert, confirm or prompt
- *            title
- *            message
- *            button_accept_label (optional)
- *            button_cancel_label (optional)
- *            onaccept (callback function, optional)
- *            oncancel (callback function, optional)
- *            value (for prompt, optional)
- * @returns object widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Window
+ * @argument {Object} options
+ *  - id (optional)
+ *  - type: alert, confirm or prompt
+ *  - title
+ *  - message
+ *  - button_accept_label (optional)
+ *  - button_cancel_label (optional)
+ *  - onaccept (callback function, optional)
+ *  - oncancel (callback function, optional)
+ *  - value (for prompt, optional)
+ * @return {Object} widget
+ */
 FlareTail.widgets.Dialog = function Dialog (options) {
   this.options = {
     id: options.id || Date.now(),
@@ -3341,13 +3343,14 @@ FlareTail.widgets.Separator = function Separator () {};
 FlareTail.widgets.Separator.prototype = Object.create(FlareTail.widgets.Structure.prototype);
 FlareTail.widgets.Separator.prototype.constructor = FlareTail.widgets.Separator;
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Splitter (custom widget) extends Separator
+/**
+ * Splitter (custom widget)
  *
- * @param   element <div class="splitter" role="separator">
- * @returns object widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
+ * @constructor
+ * @extends Separator
+ * @argument {Element} $splitter - <div class="splitter" role="separator">
+ * @return {Object} widget
+ */
 FlareTail.widgets.Splitter = function Splitter ($splitter) {
   this.view = {
     $splitter,
