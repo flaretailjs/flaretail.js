@@ -153,6 +153,18 @@ FlareTail.app.Events.prototype.on = function (topic, callback, global = false) {
   });
 };
 
+/**
+ * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For example,
+ * if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
+ *
+ * @argument {String} topic - See the 'on' function above for details.
+ * @argument {Boolean} [global=false] - See the 'on' function above for details.
+ * @return {undefined}
+ */
+FlareTail.app.Events.prototype.subscribe = function(topic, global = false) {
+  this.on(topic, data => this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
+};
+
 /* ------------------------------------------------------------------------------------------------------------------
  * DataSource
  * ------------------------------------------------------------------------------------------------------------------ */
