@@ -57,7 +57,6 @@ FlareTail.helpers = {};
     'fetch' in window, // Firefox 39
     'includes' in String.prototype, // Firefox 40
     'CacheStorage' in window, // Firefox 41
-    'Permissions' in window, // Firefox 43
     'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
   ];
@@ -90,6 +89,7 @@ FlareTail.helpers = {};
     let e = `a: ${a}, b: ${b}`;
   } catch (ex) {
     compatible = false;
+    console.log(ex, features);
   }
 
   Object.defineProperty(FlareTail, 'compatible', {
