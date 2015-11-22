@@ -44,6 +44,7 @@ FlareTail.helpers = {};
     'find' in Array.prototype, // Firefox 25
     'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
+    'SharedWorker' in window, // Firefox 29
     'URLSearchParams' in window, // Firefox 29
     'CSS' in window && 'escape' in CSS, // Firefox 31
     'getBoxQuads' in Element.prototype, // Firefox 31
