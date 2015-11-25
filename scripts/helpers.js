@@ -874,3 +874,17 @@ FlareTail.helpers.regexp = {};
 
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Regular_Expressions
 FlareTail.helpers.regexp.escape = str => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/* ------------------------------------------------------------------------------------------------------------------
+ * Misc.
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.helpers.misc = {};
+
+/**
+ * Create a GUID.
+ *
+ * @argument {undefined}
+ * @argument {String} guid - Such as 80B2A9ED-9103-4847-B69B-0BC37F7F7CF6
+ */
+FlareTail.helpers.misc.uuidgen = () => URL.createObjectURL(new Blob()).split('/')[1].toUpperCase();
