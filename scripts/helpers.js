@@ -60,6 +60,7 @@ FlareTail.helpers = {};
     'CacheStorage' in window, // Firefox 41
     'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
+    'entries' in Object || 'Iterator' in window, // Firefox 45; use the Iterator polyfill below for older versions
   ];
 
   let compatible = true;
@@ -100,6 +101,14 @@ FlareTail.helpers = {};
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
+ * Polyfills
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+if (!('entries' in Object)) {
+  Object.entries = obj => Iterator(obj);
+}
+
+/* ------------------------------------------------------------------------------------------------------------------
  * Content
  * ------------------------------------------------------------------------------------------------------------------ */
 
@@ -135,9 +144,7 @@ FlareTail.helpers.content = {};
  */
 FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
-    for (let prop in data) {
-      let value = data[prop];
-
+    for (let [prop, value] of Object.entries(data)) {
       for (let $prop of $scope.querySelectorAll(`[itemprop=${prop}]`)) {
         // Unlike Microdata API's Element.properties, Element.querySelectorAll doesn't consider itemscopes.
         // Check if the node is in the same itemscope
@@ -206,9 +213,8 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   iterate($scope, data);
 
   // Attributes
-  for (let attr in attrs) {
-    let value = attrs[attr],
-        $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
+  for (let [attr, value] of Object.entries(attrs)) {
+    let $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
 
     if ($scope.matches(`[data-attrs~="${CSS.escape(attr)}"]`)) {
       $items.push($scope);
@@ -329,11 +335,10 @@ FlareTail.helpers.kbd = {};
 FlareTail.helpers.kbd.assign = function ($target, map) {
   let bindings = new Set();
 
-  for (let _combos in map) for (let _combo of _combos.split('|')) {
+  for (let [_combos, command] of Object.entries(map)) for (let _combo of _combos.split('|')) {
     let combo = _combo.split('+'),
         key = combo.pop().toLowerCase().replace('Space', ' '), // Space is an exception
-        modifiers = new Set(combo),
-        command = map[_combos];
+        modifiers = new Set(combo);
 
     bindings.add([key, modifiers, command]);
   }

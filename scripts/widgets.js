@@ -1004,8 +1004,8 @@ FlareTail.widgets.Grid.prototype.build_body = function (row_data) {
 
     // Custom data
     if (row.dataset && Object.keys(row.dataset).length) {
-      for (let prop in row.dataset) {
-        $row.dataset[prop] = row.dataset[prop];
+      for (let [prop, value] of Object.entries(row.dataset)) {
+        $row.dataset[prop] = value;
       }
     }
 
@@ -1786,8 +1786,8 @@ FlareTail.widgets.ListBox.prototype.build = function () {
     $item.firstElementChild.textContent = item.label;
 
     if (item.data) {
-      for (let prop in item.data) {
-        $item.dataset[prop] = item.data[prop];
+      for (let [prop, value] of Object.entries(item.data)) {
+        $item.dataset[prop] = value;
       }
     }
 
@@ -1807,8 +1807,8 @@ FlareTail.widgets.ListBox.prototype.get_data = function () {
     if (Object.keys($item.dataset).length) {
       item.data = {};
 
-      for (let prop in $item.dataset) {
-        item.data[prop] = $item.dataset[prop];
+      for (let [prop, value] of Object.entries($item.dataset)) {
+        item.data[prop] = value;
       }
     }
 
@@ -2148,8 +2148,8 @@ FlareTail.widgets.Menu.prototype.build = function (data) {
     $item.firstElementChild.textContent = item.label;
 
     if (item.data) {
-      for (let prop in item.data) {
-        $item.dataset[prop] = item.data[prop];
+      for (let [prop, value] of Object.entries(item.data)) {
+        $item.dataset[prop] = value;
       }
     }
 
@@ -2481,8 +2481,8 @@ FlareTail.widgets.Tree.prototype.build = function () {
     $_outer.appendChild($item);
 
     if (obj.data) {
-      for (let prop in obj.data) {
-        $item.dataset[prop] = obj.data[prop];
+      for (let [prop, value] of Object.entries(obj.data)) {
+        $item.dataset[prop] = value;
       }
     }
 
@@ -2533,8 +2533,8 @@ FlareTail.widgets.Tree.prototype.get_data = function () {
     if (Object.keys($item.dataset).length) {
       item.data = {};
 
-      for (let prop in $item.dataset) {
-        item.data[prop] = $item.dataset[prop];
+      for (let [prop, value] of Object.entries($item.dataset)) {
+        item.data[prop] = value;
       }
     }
 
@@ -2695,8 +2695,8 @@ FlareTail.widgets.TabList.prototype.add_tab = function (name, title, label, $pan
   $tab.querySelector('[role="button"]').setAttribute('aria-controls', $tab.id);
 
   if (dataset) {
-    for (let prop in dataset) {
-      $tab.dataset[prop] = dataset[prop];
+    for (let [prop, value] of Object.entries(dataset)) {
+      $tab.dataset[prop] = value;
     }
   }
 
