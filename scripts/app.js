@@ -348,7 +348,7 @@ FlareTail.app.Collection.prototype.constructor = FlareTail.app.Collection;
  * faster access.
  *
  * @argument {undefined}
- * @return {Promise.<Map.<(String|Number), Proxy>>} items - New instances of the model object.
+ * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
  */
 FlareTail.app.Collection.prototype.load = function () {
   let store = this.datasource.get_store(this.store_name);
@@ -381,7 +381,7 @@ FlareTail.app.Collection.prototype.load = function () {
  *
  * @argument {(Number|String)} key - Key of the item.
  * @argument {*} value - Raw data object or any value.
- * @return {Proxy} item - New instance of the model object.
+ * @return {Promise.<Proxy>} item - Promise to be resolved in a model instance.
  */
 FlareTail.app.Collection.prototype.set = function (key, value) {
   if (this.model) {
@@ -400,7 +400,7 @@ FlareTail.app.Collection.prototype.set = function (key, value) {
 
   this.map.set(key, value);
 
-  return value;
+  return Promise.resolve(value);
 };
 
 /**
@@ -408,48 +408,50 @@ FlareTail.app.Collection.prototype.set = function (key, value) {
  *
  * @argument {(Number|String)} key - Key of the item.
  * @argument {Object} [fallback_data] - If an item is not found, create a new model object with this data.
- * @return {(Proxy|undefined)} item - New instance of the model object.
+ * @return {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
  */
 FlareTail.app.Collection.prototype.get = function (key, fallback_data = undefined) {
-  if (this.has(key)) {
-    return this.map.get(key);
-  }
+  return this.has(key).then(has => {
+    if (has) {
+      return this.map.get(key);
+    }
 
-  if (fallback_data) {
-    return this.set(key, fallback_data);
-  }
+    if (fallback_data) {
+      return this.set(key, fallback_data);
+    }
 
-  return undefined;
+    return undefined;
+  });
 };
 
 /**
  * Get items by specific keys.
  *
  * @argument {(Array|Set).<(String|Number)>} keys - Key list.
- * @return {Map.<(String|Number), Proxy>} items - New instances of the model object.
+ * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
  */
 FlareTail.app.Collection.prototype.get_some = function (keys) {
-  return new Map([...keys].map(key => [key, this.get(key)]));
+  return Promise.resolve(new Map([...keys].map(key => [key, this.get(key)])));
 };
 
 /**
  * Get all items locally-stored in IndexedDB.
  *
  * @argument {undefined}
- * @return {Map.<(String|Number), Proxy>} items - New instances of the model object.
+ * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
  */
 FlareTail.app.Collection.prototype.get_all = function () {
-  return this.map;
+  return Promise.resolve(this.map);
 };
 
 /**
  * Check if an item with a specific key is in the database.
  *
  * @argument {(Number|String)} key - Key of the item.
- * @return {Boolean} result - Whether the item exists.
+ * @return {Promise.<Boolean>} result - Promise to be resolved in whether the item exists.
  */
 FlareTail.app.Collection.prototype.has = function (key) {
-  return this.map.has(key);
+  return Promise.resolve(this.map.has(key));
 };
 
 /**
