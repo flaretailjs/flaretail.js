@@ -2,1282 +2,693 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
-
+/**
+ * Provide application widgets based on the WAI-ARIA roles.
+ */
 FlareTail.widgets = {};
 
-/* ------------------------------------------------------------------------------------------------------------------
- * RoleType (top level abstract role)
- * ------------------------------------------------------------------------------------------------------------------ */
+/**
+ * Define the top level abstract role.
+ */
+FlareTail.widgets.RoleType = class RoleType {
+  activate (rebuild) {
+    let FTue = FlareTail.helpers.event,
+        $container = this.view.$container;
 
-FlareTail.widgets.RoleType = function RoleType () {};
+    if (!$container) {
+      throw new Error('The container element is not defined');
+    }
 
-FlareTail.widgets.RoleType.prototype.activate = function (rebuild) {
-  let FTue = FlareTail.helpers.event,
-      $container = this.view.$container;
+    this.options = this.options || {};
+    this.options.item_roles = this.options.item_roles || [];
+    this.options.selected_attr = this.options.selected_attr || 'aria-selected';
+    this.options.multiselectable = $container.matches('[aria-multiselectable="true"]');
 
-  if (!$container) {
-    throw new Error('The container element is not defined');
-  }
+    this.update_members();
 
-  this.options = this.options || {};
-  this.options.item_roles = this.options.item_roles || [];
-  this.options.selected_attr = this.options.selected_attr || 'aria-selected';
-  this.options.multiselectable = $container.matches('[aria-multiselectable="true"]');
+    // Focus Management
+    for (let [i, $item] of this.view.members.entries()) {
+      $item.tabIndex = i === 0 ? 0 : -1;
+    }
 
-  this.update_members();
+    $container.removeAttribute('tabindex');
 
-  // Focus Management
-  for (let [i, $item] of this.view.members.entries()) {
-    $item.tabIndex = i === 0 ? 0 : -1;
-  }
+    this.data = this.data || {};
 
-  $container.removeAttribute('tabindex');
+    if (rebuild) {
+      return;
+    }
 
-  this.data = this.data || {};
+    if (this.update_view) {
+      this.view = new Proxy(this.view, { set: this.update_view.bind(this) });
+    }
 
-  if (rebuild) {
+    // Add event listeners
+    FTue.bind(this, $container, [
+      // MouseEvent
+      'mousedown', 'contextmenu', 'mouseup', 'click', 'dblclick',
+      'mouseover',
+      // WheelEvent
+      'wheel',
+      // KeyboardEvent
+      'keydown', 'keypress', 'keyup',
+      // DragEvent
+      'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend'
+    ], false);
+
+    FTue.bind(this, $container, [
+      // FocusEvent
+      'focus', 'blur',
+    ], true); // Set use_capture true to catch events on descendants
+
     return;
   }
 
-  if (this.update_view) {
-    this.view = new Proxy(this.view, { set: this.update_view.bind(this) });
+  update_members () {
+    let selector = this.options.item_selector,
+        not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
+        get_items = selector => [...this.view.$container.querySelectorAll(selector)];
+
+    this.view.members = get_items(`${selector}${not_selector}`),
+    this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
+    this.view.$focused = null;
   }
 
-  // Add event listeners
-  FTue.bind(this, $container, [
-    // MouseEvent
-    'mousedown', 'contextmenu', 'mouseup', 'click', 'dblclick',
-    'mouseover',
-    // WheelEvent
-    'wheel',
-    // KeyboardEvent
-    'keydown', 'keypress', 'keyup',
-    // DragEvent
-    'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend'
-  ], false);
-
-  FTue.bind(this, $container, [
-    // FocusEvent
-    'focus', 'blur',
-  ], true); // Set use_capture true to catch events on descendants
-
-  return;
-};
-
-FlareTail.widgets.RoleType.prototype.update_members = function () {
-  let selector = this.options.item_selector,
-      not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
-      get_items = selector => [...this.view.$container.querySelectorAll(selector)];
-
-  this.view.members = get_items(`${selector}${not_selector}`),
-  this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
-  this.view.$focused = null;
-};
-
-FlareTail.widgets.RoleType.prototype.assign_key_bindings = function (map) {
-  FlareTail.helpers.kbd.assign(this.view.$container, map);
-};
-
-// Catch-all event handler
-FlareTail.widgets.RoleType.prototype.handleEvent = function (event) {
-  (this[`on${event.type}_extend`] || this[`on${event.type}`]).call(this, event);
-};
-
-FlareTail.widgets.RoleType.prototype.oncontextmenu = function (event) {
-  // Disable browser's context menu
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.RoleType.prototype.bind = function (...args) {
-  this.view.$container.addEventListener(...args);
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Structure (abstract role) extends RoleType
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Structure = function Structure () {};
-FlareTail.widgets.Structure.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
-FlareTail.widgets.Structure.prototype.constructor = FlareTail.widgets.Structure;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Section (abstract role) extends Structure
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Section = function Section () {};
-FlareTail.widgets.Section.prototype = Object.create(FlareTail.widgets.Structure.prototype);
-FlareTail.widgets.Section.prototype.constructor = FlareTail.widgets.Section;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Widget (abstract role) extends RoleType
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Widget = function Widget () {};
-FlareTail.widgets.Widget.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
-FlareTail.widgets.Widget.prototype.constructor = FlareTail.widgets.Widget;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Command (abstract role) extends Widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Command = function Command () {};
-FlareTail.widgets.Command.prototype = Object.create(FlareTail.widgets.Widget.prototype);
-FlareTail.widgets.Command.prototype.constructor = FlareTail.widgets.Command;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Button extends Command
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Button = function Button ($button) {
-  this.view = { $button };
-
-  this.data = new Proxy({
-    disabled: $button.matches('[aria-disabled="true"]'),
-    pressed: $button.matches('[aria-pressed="true"]')
-  },
-  {
-    set: (obj, prop, value) => {
-      if (prop === 'disabled' || prop === 'pressed') {
-        $button.setAttribute(`aria-${prop}`, value);
-      }
-
-      obj[prop] = value;
-
-      return true;
-    }
-  });
-
-  this.options = {
-    toggle: $button.hasAttribute('aria-pressed')
-  };
-
-  FlareTail.helpers.event.bind(this, $button, ['click', 'keydown']);
-
-  if ($button.matches('[aria-haspopup="true"]')) {
-    this.activate_popup();
-  }
-};
-
-FlareTail.widgets.Button.prototype = Object.create(FlareTail.widgets.Command.prototype);
-FlareTail.widgets.Button.prototype.constructor = FlareTail.widgets.Button;
-
-FlareTail.widgets.Button.prototype.onclick = function (event) {
-  let pressed = false;
-
-  FlareTail.helpers.event.ignore(event);
-
-  if (this.data.disabled) {
-    return;
+  assign_key_bindings (map) {
+    FlareTail.helpers.kbd.assign(this.view.$container, map);
   }
 
-  if (this.options.toggle) {
-    pressed = this.data.pressed = !this.data.pressed;
+  // Catch-all event handler
+  handleEvent (event) {
+    this[`on${event.type}`].call(this, event);
   }
 
-  FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
-};
-
-FlareTail.widgets.Button.prototype.onkeydown = function (event) {
-  let key = event.key;
-
-  if (key === ' ' || key === 'Enter') { // Space or Enter
-    this.onclick(event);
-  }
-
-  // Support menu button
-  if (this.view.$$menu) {
-    let menuitems = this.view.$$menu.view.members;
-
-    if (key === 'ArrowDown') {
-      this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[0];
-    }
-
-    if (key === 'ArrowUp') {
-      this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[menuitems.length -1];
-    }
-
-    if (key === 'Escape') {
-      this.view.$$menu.close();
-      this.view.$button.focus();
-      this.data.pressed = false;
-    }
-  }
-};
-
-FlareTail.widgets.Button.prototype.bind = function (...args) {
-  this.view.$button.addEventListener(...args);
-};
-
-FlareTail.widgets.Button.prototype.activate_popup = function () {
-  this.view.$popup = document.getElementById(this.view.$button.getAttribute('aria-owns'));
-
-  // Implement menu button
-  // http://www.w3.org/TR/wai-aria-practices/#menubutton
-  if (this.view.$popup.matches('[role="menu"]')) {
-    this.view.$menu = this.view.$popup;
-    this.view.$$menu = new FlareTail.widgets.Menu(this.view.$menu);
-
-    // Use a timer to avoid conflict with the following Pressed event
-    this.view.$$menu.bind('MenuClosed', event => window.setTimeout(() => {
-      this.view.$button.focus();
-      this.data.pressed = false;
-    }, 50));
-
-    this.bind('Pressed', event => {
-      if (event.detail.pressed) {
-        this.view.$$menu.open();
-      } else {
-        this.view.$$menu.close();
-      }
-    });
-  } else {
-    this.bind('Pressed', event => {
-      this.view.$popup.setAttribute('aria-expanded', event.detail.pressed);
-
-      if (event.detail.pressed) {
-        this.view.$popup.focus();
-      } else {
-        this.view.$button.focus();
-      }
-    });
-  }
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Composite (abstract role) extends Widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Composite = function Composite () {};
-FlareTail.widgets.Composite.prototype = Object.create(FlareTail.widgets.Widget.prototype);
-FlareTail.widgets.Composite.prototype.constructor = FlareTail.widgets.Composite;
-
-FlareTail.widgets.Composite.prototype.onfocus = function (event) {
-  if (this.view.members.includes(event.target) && event.target.id) {
-    this.view.$container.setAttribute('aria-activedescendant', event.target.id);
-  } else {
-    this.view.$container.removeAttribute('aria-activedescendant');
-  }
-};
-
-FlareTail.widgets.Composite.prototype.onblur = function (event) {
-  this.view.$container.removeAttribute('aria-activedescendant');
-  FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.Composite.prototype.onmousedown = function (event) {
-  if (!this.view.members.includes(event.target) || event.buttons > 1) {
-    return;
-  }
-
-  this.select_with_mouse(event);
-};
-
-FlareTail.widgets.Composite.prototype.onkeydown = function (event) {
-  this.select_with_keyboard(event);
-};
-
-FlareTail.widgets.Composite.prototype.select_with_mouse = function (event) {
-  let $target = event.target,
-      $container = this.view.$container,
-      items = this.view.members,
-      selected = [...this.view.selected],
-      multi = this.options.multiselectable;
-
-  if (event.shiftKey && multi) {
-    let start = items.indexOf(selected[0]),
-        end = items.indexOf($target);
-
-    selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
-  } else if (event.ctrlKey || event.metaKey) {
-    if (multi && !selected.includes($target)) {
-      // Add the item to selection
-      selected.push($target);
-    } else if (selected.includes($target)) {
-      // Remove the item from selection
-      selected.splice(selected.indexOf($target), 1);
-    }
-  } else {
-    selected = [$target];
-  }
-
-  this.view.selected = selected;
-  this.view.$focused = selected[selected.length - 1];
-};
-
-FlareTail.widgets.Composite.prototype.select_with_keyboard = function (event) {
-  let key = event.key;
-
-  // Focus shift with tab key
-  if (key === 'Tab') {
-    return true;
-  }
-
-  // Do nothing if Alt key is pressed
-  if (event.altKey) {
+  oncontextmenu (event) {
+    // Disable browser's context menu
     return FlareTail.helpers.event.ignore(event);
   }
 
-  let items = this.view.members,
-      selected = [...this.view.selected], // Clone the array
-      selected_idx = items.indexOf(selected[0]),
-      $focused = this.view.$focused,
-      focused_idx = items.indexOf($focused),
-      options = this.options,
-      ctrl = event.ctrlKey || event.metaKey,
-      cycle = options.focus_cycling,
-      multi = options.multiselectable,
-      expanding = multi && event.shiftKey;
+  bind (...args) {
+    this.view.$container.addEventListener(...args);
+  }
+}
 
-  switch (key) {
-    case ' ': { // Space
-      if (ctrl) {
-        break; // Move focus only
+/**
+ * Define the Structure abstract role.
+ * @extends FlareTail.widgets.RoleType
+ */
+FlareTail.widgets.Structure = class Structure extends FlareTail.widgets.RoleType {}
+
+/**
+ * Define the Section abstract role.
+ * @extends FlareTail.widgets.Structure
+ */
+FlareTail.widgets.Section = class Section extends FlareTail.widgets.Structure {}
+
+/**
+ * Define the Widget abstract role.
+ * @extends FlareTail.widgets.RoleType
+ */
+FlareTail.widgets.Widget = class Widget extends FlareTail.widgets.RoleType {}
+
+/**
+ * Define the Command abstract role.
+ * @extends FlareTail.widgets.Widget
+ */
+FlareTail.widgets.Command = class Command extends FlareTail.widgets.Widget {}
+
+/**
+ * Define the Button role.
+ * @extends FlareTail.widgets.Command
+ */
+FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
+  constructor ($button) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = { $button };
+
+    this.data = new Proxy({
+      disabled: $button.matches('[aria-disabled="true"]'),
+      pressed: $button.matches('[aria-pressed="true"]')
+    },
+    {
+      set: (obj, prop, value) => {
+        if (prop === 'disabled' || prop === 'pressed') {
+          $button.setAttribute(`aria-${prop}`, value);
+        }
+
+        obj[prop] = value;
+
+        return true;
+      }
+    });
+
+    this.options = {
+      toggle: $button.hasAttribute('aria-pressed')
+    };
+
+    FlareTail.helpers.event.bind(this, $button, ['click', 'keydown']);
+
+    if ($button.matches('[aria-haspopup="true"]')) {
+      this.activate_popup();
+    }
+  }
+
+  onclick (event) {
+    let pressed = false;
+
+    FlareTail.helpers.event.ignore(event);
+
+    if (this.data.disabled) {
+      return;
+    }
+
+    if (this.options.toggle) {
+      pressed = this.data.pressed = !this.data.pressed;
+    }
+
+    FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
+  }
+
+  onkeydown (event) {
+    let key = event.key;
+
+    if (key === ' ' || key === 'Enter') { // Space or Enter
+      this.onclick(event);
+    }
+
+    // Support menu button
+    if (this.view.$$menu) {
+      let menuitems = this.view.$$menu.view.members;
+
+      if (key === 'ArrowDown') {
+        this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[0];
       }
 
-      if (!multi) {
-        this.view.selected = $focused;
+      if (key === 'ArrowUp') {
+        this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[menuitems.length -1];
+      }
+
+      if (key === 'Escape') {
+        this.view.$$menu.close();
+        this.view.$button.focus();
+        this.data.pressed = false;
+      }
+    }
+  }
+
+  bind (...args) {
+    this.view.$button.addEventListener(...args);
+  }
+
+  activate_popup () {
+    this.view.$popup = document.getElementById(this.view.$button.getAttribute('aria-owns'));
+
+    // Implement menu button
+    // http://www.w3.org/TR/wai-aria-practices/#menubutton
+    if (this.view.$popup.matches('[role="menu"]')) {
+      this.view.$menu = this.view.$popup;
+      this.view.$$menu = new FlareTail.widgets.Menu(this.view.$menu);
+
+      // Use a timer to avoid conflict with the following Pressed event
+      this.view.$$menu.bind('MenuClosed', event => window.setTimeout(() => {
+        this.view.$button.focus();
+        this.data.pressed = false;
+      }, 50));
+
+      this.bind('Pressed', event => {
+        if (event.detail.pressed) {
+          this.view.$$menu.open();
+        } else {
+          this.view.$$menu.close();
+        }
+      });
+    } else {
+      this.bind('Pressed', event => {
+        this.view.$popup.setAttribute('aria-expanded', event.detail.pressed);
+
+        if (event.detail.pressed) {
+          this.view.$popup.focus();
+        } else {
+          this.view.$button.focus();
+        }
+      });
+    }
+  }
+}
+
+/**
+ * Define the Composite abstract role.
+ * @extends FlareTail.widgets.Widget
+ */
+FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
+  onfocus (event) {
+    if (this.view.members.includes(event.target) && event.target.id) {
+      this.view.$container.setAttribute('aria-activedescendant', event.target.id);
+    } else {
+      this.view.$container.removeAttribute('aria-activedescendant');
+    }
+  }
+
+  onblur (event) {
+    this.view.$container.removeAttribute('aria-activedescendant');
+    FlareTail.helpers.event.ignore(event);
+  }
+
+  onmousedown (event) {
+    if (!this.view.members.includes(event.target) || event.buttons > 1) {
+      return;
+    }
+
+    this.select_with_mouse(event);
+  }
+
+  onkeydown (event) {
+    this.select_with_keyboard(event);
+  }
+
+  select_with_mouse (event) {
+    let $target = event.target,
+        $container = this.view.$container,
+        items = this.view.members,
+        selected = [...this.view.selected],
+        multi = this.options.multiselectable;
+
+    if (event.shiftKey && multi) {
+      let start = items.indexOf(selected[0]),
+          end = items.indexOf($target);
+
+      selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
+    } else if (event.ctrlKey || event.metaKey) {
+      if (multi && !selected.includes($target)) {
+        // Add the item to selection
+        selected.push($target);
+      } else if (selected.includes($target)) {
+        // Remove the item from selection
+        selected.splice(selected.indexOf($target), 1);
+      }
+    } else {
+      selected = [$target];
+    }
+
+    this.view.selected = selected;
+    this.view.$focused = selected[selected.length - 1];
+  }
+
+  select_with_keyboard (event) {
+    let key = event.key;
+
+    // Focus shift with tab key
+    if (key === 'Tab') {
+      return true;
+    }
+
+    // Do nothing if Alt key is pressed
+    if (event.altKey) {
+      return FlareTail.helpers.event.ignore(event);
+    }
+
+    let items = this.view.members,
+        selected = [...this.view.selected], // Clone the array
+        selected_idx = items.indexOf(selected[0]),
+        $focused = this.view.$focused,
+        focused_idx = items.indexOf($focused),
+        options = this.options,
+        ctrl = event.ctrlKey || event.metaKey,
+        cycle = options.focus_cycling,
+        multi = options.multiselectable,
+        expanding = multi && event.shiftKey;
+
+    switch (key) {
+      case ' ': { // Space
+        if (ctrl) {
+          break; // Move focus only
+        }
+
+        if (!multi) {
+          this.view.selected = $focused;
+
+          break;
+        }
+
+        if (!selected.includes($focused)) {
+          // Add item
+          selected.push($focused);
+          this.view.selected = selected;
+        } else {
+          // Remove item
+          selected.splice(selected.indexOf($focused), 1);
+          this.view.selected = selected;
+        }
 
         break;
       }
 
-      if (!selected.includes($focused)) {
-        // Add item
-        selected.push($focused);
-        this.view.selected = selected;
-      } else {
-        // Remove item
-        selected.splice(selected.indexOf($focused), 1);
-        this.view.selected = selected;
-      }
+      // TODO: The behavior with Page Up/Down should be different
 
-      break;
-    }
+      case 'Home':
+      case 'PageUp': {
+        this.view.$focused = items[0];
 
-    // TODO: The behavior with Page Up/Down should be different
+        if (ctrl) {
+          break; // Move focus only
+        }
 
-    case 'Home':
-    case 'PageUp': {
-      this.view.$focused = items[0];
+        if (!expanding) {
+          this.view.selected = items[0];
 
-      if (ctrl) {
-        break; // Move focus only
-      }
+          break;
+        }
 
-      if (!expanding) {
-        this.view.selected = items[0];
+        this.view.selected = items.slice(0, selected_idx + 1).reverse();
 
         break;
       }
 
-      this.view.selected = items.slice(0, selected_idx + 1).reverse();
-
-      break;
-    }
-
-    case 'End':
-    case 'PageDown': {
-      this.view.$focused = items[items.length - 1];
-
-      if (ctrl) {
-        break; // Move focus only
-      }
-
-      if (!expanding) {
-        this.view.selected = items[items.length - 1];
-
-        break;
-      }
-
-      this.view.selected = items.slice(selected_idx);
-
-      break;
-    }
-
-    case 'ArrowUp':
-    case 'ArrowLeft': {
-      if (focused_idx > 0) {
-        this.view.$focused = items[focused_idx - 1];
-      } else if (cycle) {
+      case 'End':
+      case 'PageDown': {
         this.view.$focused = items[items.length - 1];
-      }
 
-      if (ctrl) {
-        break; // Move focus only
-      }
+        if (ctrl) {
+          break; // Move focus only
+        }
 
-      if (!expanding) {
-        this.view.selected = this.view.$focused;
+        if (!expanding) {
+          this.view.selected = items[items.length - 1];
 
-        break;
-      }
+          break;
+        }
 
-      if (!selected.includes($focused)) {
-        // Create new range
-        this.view.selected = items.slice(focused_idx - 1, focused_idx + 1).reverse();
-      } else if (!selected.includes(items[focused_idx - 1])) {
-        // Expand range
-        selected.push(this.view.$focused);
-        this.view.selected = selected;
-      } else {
-        // Reduce range
-        selected.pop();
-        this.view.selected = selected;
-      }
-
-      break;
-    }
-
-    case 'ArrowDown':
-    case 'ArrowRight': {
-      if (focused_idx < items.length - 1) {
-        this.view.$focused = items[focused_idx + 1];
-      } else if (cycle) {
-        this.view.$focused = items[0];
-      }
-
-      if (ctrl) {
-        break; // Move focus only
-      }
-
-      if (!expanding) {
-        this.view.selected = this.view.$focused;
+        this.view.selected = items.slice(selected_idx);
 
         break;
       }
 
-      if (!selected.includes($focused)) {
-        // Create new range
-        this.view.selected = items.slice(focused_idx, focused_idx + 2);
-      } else if (!selected.includes(items[focused_idx + 1])) {
-        // Expand range
-        selected.push(this.view.$focused);
-        this.view.selected = selected;
-      } else {
-        // Reduce range
-        selected.pop();
-        this.view.selected = selected;
-      }
+      case 'ArrowUp':
+      case 'ArrowLeft': {
+        if (focused_idx > 0) {
+          this.view.$focused = items[focused_idx - 1];
+        } else if (cycle) {
+          this.view.$focused = items[items.length - 1];
+        }
 
-      break;
-    }
+        if (ctrl) {
+          break; // Move focus only
+        }
 
-    default: {
-      // Select All
-      if (multi && ctrl && key.toUpperCase() === 'A') {
-        this.view.selected = items;
-        this.view.$focused = items[0];
+        if (!expanding) {
+          this.view.selected = this.view.$focused;
+
+          break;
+        }
+
+        if (!selected.includes($focused)) {
+          // Create new range
+          this.view.selected = items.slice(focused_idx - 1, focused_idx + 1).reverse();
+        } else if (!selected.includes(items[focused_idx - 1])) {
+          // Expand range
+          selected.push(this.view.$focused);
+          this.view.selected = selected;
+        } else {
+          // Reduce range
+          selected.pop();
+          this.view.selected = selected;
+        }
 
         break;
       }
 
-      if (ctrl || !options.search_enabled || !key.match(/^\S$/)) {
+      case 'ArrowDown':
+      case 'ArrowRight': {
+        if (focused_idx < items.length - 1) {
+          this.view.$focused = items[focused_idx + 1];
+        } else if (cycle) {
+          this.view.$focused = items[0];
+        }
+
+        if (ctrl) {
+          break; // Move focus only
+        }
+
+        if (!expanding) {
+          this.view.selected = this.view.$focused;
+
+          break;
+        }
+
+        if (!selected.includes($focused)) {
+          // Create new range
+          this.view.selected = items.slice(focused_idx, focused_idx + 2);
+        } else if (!selected.includes(items[focused_idx + 1])) {
+          // Expand range
+          selected.push(this.view.$focused);
+          this.view.selected = selected;
+        } else {
+          // Reduce range
+          selected.pop();
+          this.view.selected = selected;
+        }
+
         break;
       }
 
-      // Find As You Type: Incremental Search for simple list like ListBox or Tree
-      let input = key,
-          char = this.data.search_key || '';
+      default: {
+        // Select All
+        if (multi && ctrl && key.toUpperCase() === 'A') {
+          this.view.selected = items;
+          this.view.$focused = items[0];
 
-      char = char === input ? input : char + input;
+          break;
+        }
 
-      let pattern = new RegExp(`^${char}`, 'i');
+        if (ctrl || !options.search_enabled || !key.match(/^\S$/)) {
+          break;
+        }
 
-      let get_label = $item => {
-        let $element;
+        // Find As You Type: Incremental Search for simple list like ListBox or Tree
+        let input = key,
+            char = this.data.search_key || '';
 
-        if ($item.hasAttribute('aria-labelledby')) {
-          $element = document.getElementById($item.getAttribute('aria-labelledby'));
+        char = char === input ? input : char + input;
+
+        let pattern = new RegExp(`^${char}`, 'i');
+
+        let get_label = $item => {
+          let $element;
+
+          if ($item.hasAttribute('aria-labelledby')) {
+            $element = document.getElementById($item.getAttribute('aria-labelledby'));
+
+            if ($element) {
+              return $element.textContent;
+            }
+          }
+
+          $element = $item.querySelector('label');
 
           if ($element) {
             return $element.textContent;
           }
-        }
 
-        $element = $item.querySelector('label');
+          return $item.textContent;
+        };
 
-        if ($element) {
-          return $element.textContent;
-        }
-
-        return $item.textContent;
-      };
-
-      for (let i = focused_idx + 1; ; i++) {
-        if (items.length > 1 && i === items.length) {
-          i = 0; // Continue from top
-        }
-
-        if (i === focused_idx) {
-          break; // No match
-        }
-
-        let $item = items[i];
-
-        if (!get_label($item).match(pattern)) {
-          continue;
-        }
-
-        this.view.$focused = $item;
-
-        if (!expanding) {
-          this.view.selected = $item;
-
-          break;
-        }
-
-        let start = focused_idx,
-            end = i;
-
-        this.view.selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
-      }
-
-      // Remember the searched character(s) for later
-      this.data.search_key = char;
-
-      // Forget the character(s) after 1.5s
-      window.setTimeout(() => delete this.data.search_key, 1500);
-    }
-  }
-
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.Composite.prototype.update_view = function (obj, prop, newval) {
-  let attr = this.options.selected_attr,
-      oldval = obj[prop];
-
-  if (prop === 'selected') {
-    if (oldval) {
-      for (let $element of oldval) {
-        $element.setAttribute(attr, 'false');
-      }
-    }
-
-    if (newval) {
-      if (!Array.isArray(newval)) {
-        newval = [newval];
-      }
-
-      for (let $element of newval) {
-        $element.setAttribute(attr, 'true');
-      }
-    }
-
-    FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { detail: {
-      oldval,
-      items: newval || [],
-      ids: newval ? newval.map($item => $item.dataset.id || $item.id) : [],
-      labels: newval ? newval.map($item => $item.textContent) : [],
-    }});
-  }
-
-  if (prop === '$focused') {
-    let $element;
-
-    if (newval) {
-      $element = newval;
-      $element.tabIndex = 0;
-      $element.focus();
-    }
-
-    if (oldval) {
-      $element = oldval;
-      $element.tabIndex = -1;
-    }
-  }
-
-  obj[prop] = newval; // The default behavior
-
-  return true;
-};
-
-/**
- * Grid
- *
- * @constructor
- * @extends Composite
- * @argument {Element} $container - <table role="grid">
- * @argument {Object} [data] - Optional data including columns, rows and order.
- * @argument {Object} [options] - These attributes on the grid element are also supported:
- *  - aria-multiselectable: The default is true.
- *  - aria-readonly: The default is false.
- *  Attributes on the columnheader elements:
- *  - draggable: If false, the row cannot be reordered.
- *  - data-key: True/false, whether the key column or not.
- *  - data-type: String (default), Integer or Boolean.
- *  Attribute on the row elements:
- *  - aria-selected: If the attribute is set on the rows, the grid will be like a thread pane in a mail app.
- *  Attribute on the gridcell elements:
- *  - aria-selected: If the attribute is set on the cells, the grid will be like a spreadsheet app.
- * @return {Object} widget
- */
-FlareTail.widgets.Grid = function Grid ($container, data, options) {
-  // What can be selected on the grid
-  let dataset = $container.dataset,
-      role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
-                                      .hasAttribute('aria-selected') ? 'row' : 'gridcell';
-
-  // If the role is gridcell, the navigation management should be different
-  if (role === 'gridcell') {
-    throw new Error('Unimplemented role: gridcell');
-  }
-
-  this.view = { $container };
-
-  if (data) {
-    this.data = data;
-    this.options = options;
-    this.options.item_roles = [role];
-    this.options.item_selector = `.grid-body [role="${role}"]`;
-    // Build table from the given data
-    this.data.columns = data.columns;
-    this.data.rows = data.rows;
-    this.build_header();
-    this.build_body();
-  } else {
-    this.view.$header = $container.querySelector('.grid-header');
-    this.view.$body = $container.querySelector('.grid-body');
-    this.data = { columns: [], rows: [] };
-    this.options = {
-      item_roles: [role],
-      item_selector: `.grid-body [role="${role}"]`,
-      sortable: dataset.sortable === 'false' ? false : true,
-      reorderable: dataset.reorderable === 'false' ? false : true
-    };
-    // Retrieve data from the static table
-    this.get_data();
-  }
-
-  this.options = new Proxy(this.options, {
-    set: (obj, prop, value) => {
-      if (prop === 'adjust_scrollbar') {
-        this.view.$$scrollbar.options.adjusted = value;
-      }
-
-      obj[prop] = value;
-
-      return true;
-    }
-  });
-
-  // Columnpicker
-  this.init_columnpicker();
-
-  this.activate();
-  this.activate_extend();
-};
-
-FlareTail.widgets.Grid.prototype = Object.create(FlareTail.widgets.Composite.prototype);
-FlareTail.widgets.Grid.prototype.constructor = FlareTail.widgets.Grid;
-
-FlareTail.widgets.Grid.prototype.activate_extend = function () {
-  this.view = new Proxy(this.view, {
-    set: (obj, prop, value) => {
-      switch (prop) {
-        case 'selected': {
-          // Validation: this.selectd.value is always Array
-          if (!Array.isArray(value)) {
-            value = [value];
+        for (let i = focused_idx + 1; ; i++) {
+          if (items.length > 1 && i === items.length) {
+            i = 0; // Continue from top
           }
 
-          // Current selection
-          for (let $item of obj[prop]) {
-            $item.draggable = false;
-            $item.removeAttribute('aria-grabbed');
-            $item.setAttribute('aria-selected', 'false');
+          if (i === focused_idx) {
+            break; // No match
           }
 
-          // New selection
-          for (let $item of value) {
-            $item.draggable = true;
-            $item.setAttribute('aria-grabbed', 'false');
-            $item.setAttribute('aria-selected', 'true');
+          let $item = items[i];
+
+          if (!get_label($item).match(pattern)) {
+            continue;
           }
 
-          break;
+          this.view.$focused = $item;
+
+          if (!expanding) {
+            this.view.selected = $item;
+
+            break;
+          }
+
+          let start = focused_idx,
+              end = i;
+
+          this.view.selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
         }
+
+        // Remember the searched character(s) for later
+        this.data.search_key = char;
+
+        // Forget the character(s) after 1.5s
+        window.setTimeout(() => delete this.data.search_key, 1500);
       }
-
-      obj[prop] = value;
-
-      return true;
     }
-  });
-
-  this.options.sort_conditions = new Proxy(this.options.sort_conditions, { set: this.sort.bind(this) });
-
-  this.activate_columns();
-  this.activate_rows();
-};
-
-FlareTail.widgets.Grid.prototype.activate_columns = function () {
-  let columns = this.data.columns = new Proxy(this.data.columns, {
-    // Default behavior, or find column by id
-    get: (obj, prop) => prop in obj ? obj[prop] : obj.find(col => col.id === prop),
-  });
-
-  // Handler to show/hide column
-  let handler = {
-    get: (obj, prop) => {
-      let value;
-
-      switch (prop) {
-        case 'index': {
-          value = obj.$element.cellIndex;
-
-          break;
-        }
-
-        case 'width': {
-          value = Number.parseInt(FlareTail.helpers.style.get(obj.$element, 'width'));
-
-          break;
-        }
-
-        case 'left': {
-          value = obj.$element.offsetLeft;
-
-          break;
-        }
-
-        default: {
-          value = obj[prop];
-        }
-      }
-
-      return value;
-    },
-    set: (obj, prop, value) => {
-      switch (prop) {
-        case 'hidden': {
-          // Fire an event
-          FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { detail: { columns }});
-
-          // Reflect the change of row's visibility to UI
-          value === true ? this.hide_column(obj) : this.show_column(obj);
-
-          break;
-        }
-      }
-
-      obj[prop] = value;
-
-      return true;
-    }
-  };
-
-  for (let [i, col] of columns.entries()) {
-    columns[i] = new Proxy(col, handler);
-  }
-};
-
-FlareTail.widgets.Grid.prototype.activate_rows = function () {
-  let handler = {
-    set: (obj, prop, value) => {
-      // Reflect Data change into View
-      let row = this.data.rows.find(row => row.data.id === obj.id),
-          $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
-
-      this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value) : $elm.textContent = value;
-      obj[prop] = value;
-
-      return true;
-    }
-  };
-
-  let rows = this.data.rows,
-      $grid_body = this.view.$body,
-      $tbody = $grid_body.querySelector('tbody');
-
-  for (let row of rows) {
-    row.data = new Proxy(row.data, handler);
-  }
-
-  // Sort handler
-  this.data.rows = new Proxy(rows, {
-    set: (obj, prop, value) => {
-      if (!Number.isNaN(prop) && value.$element) {
-        $tbody.appendChild(value.$element);
-      }
-
-      obj[prop] = value;
-
-      return true;
-    }
-  });
-
-  // Custom scrollbar
-  let $$scrollbar = this.view.$$scrollbar = new FlareTail.widgets.ScrollBar($grid_body, true, false),
-      option = this.options.adjust_scrollbar;
-
-  $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
-};
-
-FlareTail.widgets.Grid.prototype.onmousedown_extend = function (event) {
-  let $target = event.target;
-
-  if ($target.matches('[role="columnheader"]')) {
-    if (event.buttons <= 1 && this.options.reorderable) {
-      FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
-    }
-
-    if (event.buttons === 2) {
-      this.build_columnpicker();
-    }
-
-    return;
-  }
-
-  // Editable checkbox in cells
-  if ($target.matches('[role="checkbox"]')) {
-    let index = $target.parentElement.parentElement.sectionRowIndex,
-        id = $target.parentElement.dataset.id,
-        value = !$target.matches('[aria-checked="true"]');
-
-    this.data.rows[index].data[id] = value;
 
     return FlareTail.helpers.event.ignore(event);
   }
 
-  // The default behavior
-  this.onmousedown(event);
-};
+  update_view (obj, prop, newval) {
+    let attr = this.options.selected_attr,
+        oldval = obj[prop];
 
-FlareTail.widgets.Grid.prototype.onmousemove = function (event) {
-  !this.data.drag ? this.start_column_reordering(event) : this.continue_column_reordering(event);
-};
-
-FlareTail.widgets.Grid.prototype.onmouseup = function (event) {
-  FlareTail.helpers.event.ignore(event);
-  FlareTail.helpers.event.unbind(this, window, ['mousemove', 'mouseup']);
-
-  if (event.button !== 0) {  // event.buttons is 0 since this is a mouseup event handler
-    return;
-  }
-
-  if (this.data.drag) {
-    this.stop_column_reordering(event);
-
-    return;
-  }
-
-  let $target = event.target,
-      options = this.options;
-
-  if ($target.matches('[role="columnheader"]') && options.sortable) {
-    options.sort_conditions.key = $target.dataset.id;
-  }
-};
-
-FlareTail.widgets.Grid.prototype.onkeydown_extend = function (event) {
-  let key = event.key;
-
-  // Focus shift with tab key
-  if (key === 'Tab') {
-    return true;
-  }
-
-  let items = this.view.members,
-      focused_idx = items.indexOf(this.view.$focused),
-      modifiers = event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
-
-  switch (key) {
-    case 'ArrowLeft':
-    case 'ArrowRight': {
-      // Do nothing
-      break;
-    }
-
-    case 'PageUp':
-    case 'PageDown':
-    case ' ' : { // Space
-      // Handled by the ScrollBar widget
-      return true;
-    }
-
-    default: {
-      // The default behavior
-      this.onkeydown(event);
-    }
-  }
-
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.Grid.prototype.build_header = function () {
-  let $grid = this.view.$container,
-      $grid_header = this.view.$header = document.createElement('header'),
-      $table = $grid_header.appendChild(document.createElement('table')),
-      $colgroup = $table.appendChild(document.createElement('colgroup')),
-      $row = $table.createTBody().insertRow(-1),
-      $_col = document.createElement('col'),
-      $_cell = document.createElement('th'),
-      cond = this.options.sort_conditions;
-
-  $_cell.scope = 'col';
-  $_cell.setAttribute('role', 'columnheader');
-  $_cell.appendChild(document.createElement('label'));
-
-  for (let column of this.data.columns) {
-    let $col = $colgroup.appendChild($_col.cloneNode(true)),
-        $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
-
-    $col.dataset.id = column.id || '';
-    $col.dataset.hidden = column.hidden === true;
-
-    $cell.firstElementChild.textContent = column.label;
-    $cell.title = column.title || `Click to sort by ${column.label}`; // l10n
-
-    if (cond && column.id === cond.key) {
-      $cell.setAttribute('aria-sort', cond.order);
-    }
-
-    $cell.dataset.id = column.id;
-    $cell.dataset.type = column.type || 'string';
-
-    if (column.key === true) {
-      $cell.dataset.key = 'true';
-    }
-  }
-
-  $grid_header.id = `${$grid.id}-header`;
-  $grid_header.className = 'grid-header';
-  $row.setAttribute('role', 'row');
-  $grid.appendChild($grid_header);
-};
-
-FlareTail.widgets.Grid.prototype.build_body = function (row_data) {
-  if (row_data) {
-    // Refresh the tbody with the passed data
-    this.data.rows = row_data;
-    this.view.$body.remove();
-  }
-
-  let $grid = this.view.$container,
-      $grid_body = this.view.$body = document.createElement('div'),
-      $table = $grid_body.appendChild(document.createElement('table')),
-      $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
-      $tbody = $table.createTBody(),
-      $_row = document.createElement('tr'),
-      cond = this.options.sort_conditions,
-      row_prefix = `${$grid.id}-row-`;
-
-  // Sort the data first
-  this.sort(cond, 'key', cond.key, null, true);
-
-  // Create a template row
-  $_row.draggable = false;
-  $_row.setAttribute('role', 'row');
-  $_row.setAttribute('aria-selected', 'false');
-
-  for (let column of this.data.columns) {
-    let $cell;
-
-    if (column.key) {
-      $cell = $_row.appendChild(document.createElement('th'));
-      $cell.scope = 'row';
-      $cell.setAttribute('role', 'rowheader');
-    } else {
-      $cell = $_row.insertCell(-1);
-      $cell.setAttribute('role', 'gridcell');
-    }
-
-    if (column.type === 'boolean') {
-      let $checkbox = $cell.appendChild(document.createElement('span'));
-
-      $checkbox.setAttribute('role', 'checkbox');
-      $cell.setAttribute('aria-readonly', 'false');
-    } else {
-      $cell.appendChild(document.createElement(column.type === 'time' ? 'time' : 'label'));
-    }
-
-    $cell.dataset.id = column.id;
-    $cell.dataset.type = column.type;
-  }
-
-  for (let row of this.data.rows) {
-    let $row = row.$element = $tbody.appendChild($_row.cloneNode(true));
-
-    $row.id = `${row_prefix}${row.data.id}`;
-    $row.dataset.id = row.data.id;
-
-    // Custom data
-    if (row.dataset && Object.keys(row.dataset).length) {
-      for (let [prop, value] of Object.entries(row.dataset)) {
-        $row.dataset[prop] = value;
-      }
-    }
-
-    for (let [i, column] of this.data.columns.entries()) {
-      let $child = $row.cells[i].firstElementChild,
-          value = row.data[column.id];
-
-      if (column.type === 'boolean') {
-        $child.setAttribute('aria-checked', value === true);
-      } else if (column.type === 'time') {
-        FlareTail.helpers.datetime.fill_element($child, value, this.options.date);
-      } else {
-        $child.textContent = value;
-      }
-    }
-  }
-
-  $grid_body.id = `${$grid.id}-body`;
-  $grid_body.className = 'grid-body';
-  $grid_body.tabIndex = -1;
-  $grid.appendChild($grid_body);
-
-  if (row_data) {
-    this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
-    this.activate_rows();
-    FlareTail.helpers.event.trigger($grid, 'Rebuilt');
-  }
-};
-
-FlareTail.widgets.Grid.prototype.get_data = function () {
-  let $header = this.view.$header,
-      $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
-
-  // Sort conditions
-  if (this.options.sortable && $sorter) {
-    this.options.sort_conditions = {
-      key: $sorter.dataset.id || null,
-      order: $sorter.getAttribute('aria-sort') || 'none'
-    };
-  }
-
-  // Fill the column database
-  this.data.columns = [...$header.querySelector('[role="row"]').cells].map($cell => ({
-    id: $cell.dataset.id,
-    type: $cell.dataset.type || 'string',
-    label: $cell.textContent,
-    hidden: false,
-    key: $cell.dataset.key ? true : false,
-    $element: $cell
-  }));
-
-  // Fill the row database
-  this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].map($row => {
-    let row = { id: $row.id, $element: $row, data: {} };
-
-    for (let [index, $cell] of [...$row.cells].entries()) {
-      let column = this.data.columns[index],
-          value,
-          normalized_value;
-
-      switch (column.type) {
-        case 'integer': {
-          value = Number.parseInt($cell.textContent);
-
-          break;
-        }
-
-        case 'boolean': { // checkbox
-          value = $cell.querySelector('[role="checkbox"]').matches('[aria-checked="true"]');
-
-          break;
-        }
-
-        default: { // string
-          value = $cell.textContent;
+    if (prop === 'selected') {
+      if (oldval) {
+        for (let $element of oldval) {
+          $element.setAttribute(attr, 'false');
         }
       }
 
-      row.data[column.id] = value;
-    };
+      if (newval) {
+        if (!Array.isArray(newval)) {
+          newval = [newval];
+        }
 
-    return row;
-  });
-};
+        for (let $element of newval) {
+          $element.setAttribute(attr, 'true');
+        }
+      }
 
-FlareTail.widgets.Grid.prototype.sort = function (cond, prop, value, receiver, data_only = false) {
-  let $grid = this.view.$container,
-      $tbody = this.view.$body.querySelector('tbody'),
-      $header = this.view.$header,
-      $sorter;
+      FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { detail: {
+        oldval,
+        items: newval || [],
+        ids: newval ? newval.map($item => $item.dataset.id || $item.id) : [],
+        labels: newval ? newval.map($item => $item.textContent) : [],
+      }});
+    }
 
-  if (data_only) {
-    cond.order = cond.order || 'ascending';
-    FlareTail.helpers.array.sort(this.data.rows, cond);
+    if (prop === '$focused') {
+      let $element;
+
+      if (newval) {
+        $element = newval;
+        $element.tabIndex = 0;
+        $element.focus();
+      }
+
+      if (oldval) {
+        $element = oldval;
+        $element.tabIndex = -1;
+      }
+    }
+
+    obj[prop] = newval; // The default behavior
 
     return true;
   }
+}
 
-  if (prop === 'order') {
-    cond.order = value;
-  } else if (prop === 'key' && cond.key === value) {
-    // The same column is selected; change the order
-    cond.order = cond.order === 'ascending' ? 'descending' : 'ascending';
-  } else {
-    cond.key = value;
-    cond.order = 'ascending';
-    $header.querySelector('[aria-sort]').removeAttribute('aria-sort');
-  }
+/**
+ * Define the Grid role.
+ * @extends FlareTail.widgets.Composite
+ */
+FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
+  /**
+   * Get a Grid instance.
+   * @constructor
+   * @argument {Element} $container - <table role="grid">
+   * @argument {Object} [data] - Optional data including columns, rows and order.
+   * @argument {Object} [options] - These attributes on the grid element are also supported:
+   *  - aria-multiselectable: The default is true.
+   *  - aria-readonly: The default is false.
+   *  Attributes on the columnheader elements:
+   *  - draggable: If false, the row cannot be reordered.
+   *  - data-key: True/false, whether the key column or not.
+   *  - data-type: String (default), Integer or Boolean.
+   *  Attribute on the row elements:
+   *  - aria-selected: If the attribute is set on the rows, the grid will be like a thread pane in a mail app.
+   *  Attribute on the gridcell elements:
+   *  - aria-selected: If the attribute is set on the cells, the grid will be like a spreadsheet app.
+   * @return {Object} widget
+   */
+  constructor ($container, data, options) {
+    super(); // This does nothing but is required before using `this`
 
-  $sorter = $header.querySelector(`[role="columnheader"][data-id="${CSS.escape(cond.key)}"]`);
-  cond.type = $sorter.dataset.type;
+    // What can be selected on the grid
+    let dataset = $container.dataset,
+        role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
+                                        .hasAttribute('aria-selected') ? 'row' : 'gridcell';
 
-  $tbody.setAttribute('aria-busy', 'true'); // display: none
+    // If the role is gridcell, the navigation management should be different
+    if (role === 'gridcell') {
+      throw new Error('Unimplemented role: gridcell');
+    }
 
-  FlareTail.helpers.array.sort(this.data.rows, cond);
+    this.view = { $container };
 
-  $tbody.removeAttribute('aria-busy');
-  $sorter.setAttribute('aria-sort', cond.order);
-
-  // Reorder the member list
-  this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
-
-  // Fire an event
-  FlareTail.helpers.event.trigger($grid, 'Sorted', { detail: {
-    conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
-  }});
-
-  let selected = this.view.selected;
-
-  if (selected && selected.length) {
-    this.ensure_row_visibility(selected[selected.length - 1]);
-  }
-
-  return true;
-};
-
-FlareTail.widgets.Grid.prototype.init_columnpicker = function () {
-  let $picker = this.view.$columnpicker = document.createElement('ul'),
-      $header = this.view.$header;
-
-  $picker.id = `${this.view.$container.id}-columnpicker`;
-  $picker.setAttribute('role', 'menu');
-  $picker.setAttribute('aria-expanded', 'false');
-  $header.appendChild($picker);
-  $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
-
-  let $$picker = this.data.$$columnpicker = new FlareTail.widgets.Menu($picker);
-
-  $$picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
-};
-
-FlareTail.widgets.Grid.prototype.build_columnpicker = function () {
-  this.data.$$columnpicker.build(this.data.columns.map(col => ({
-    id: `${this.view.$container.id}-columnpicker-${col.id}`,
-    label: col.label,
-    type: 'menuitemcheckbox',
-    disabled: col.key === true,
-    checked: !col.hidden,
-    data: { id: col.id }
-  })));
-};
-
-FlareTail.widgets.Grid.prototype.toggle_column = function (id) {
-  // Find column by id, thanks to Proxy
-  let col = this.data.columns[id];
-
-  col.hidden = !col.hidden;
-};
-
-FlareTail.widgets.Grid.prototype.show_column = function (col) {
-  let $grid = this.view.$container,
-      attr = `[data-id="${col.id}"]`;
-
-  $grid.querySelector(`[role="columnheader"]${attr}`).removeAttribute('aria-hidden');
-
-  for (let $cell of $grid.querySelectorAll(`[role="gridcell"]${attr}`)) {
-    $cell.removeAttribute('aria-hidden');
-  }
-
-  for (let $col of $grid.querySelectorAll(`col${attr}`)) {
-    $col.dataset.hidden = 'false';
-  }
-};
-
-FlareTail.widgets.Grid.prototype.hide_column = function (col) {
-  let $grid = this.view.$container,
-      attr = `[data-id="${col.id}"]`;
-
-  for (let $col of $grid.querySelectorAll(`col${attr}`)) {
-    $col.dataset.hidden = 'true';
-  }
-
-  $grid.querySelector(`[role="columnheader"]${attr}`).setAttribute('aria-hidden', 'true');
-
-  for (let $cell of $grid.querySelectorAll(`[role="gridcell"]${attr}`)) {
-    $cell.setAttribute('aria-hidden', 'true');
-  }
-};
-
-FlareTail.widgets.Grid.prototype.ensure_row_visibility = function ($row) {
-  let $outer = this.view.$container.querySelector('.grid-body');
-
-  if (!$outer) {
-    return;
-  }
-
-  let ost = $outer.scrollTop,
-      ooh = $outer.offsetHeight,
-      rot = $row.offsetTop,
-      roh = $row.offsetHeight;
-
-  if (ost > rot) {
-    $row.scrollIntoView({ block: 'start', behavior: 'smooth' });
-  }
-
-  if (ost + ooh < rot + roh) {
-    $row.scrollIntoView({ block: 'end', behavior: 'smooth' });
-  }
-};
-
-FlareTail.widgets.Grid.prototype.start_column_reordering = function (event) {
-  let $grid = this.view.$container,
-      $container = document.createElement('div'),
-      $_image = document.createElement('canvas'),
-      $follower,
-      headers = [],
-      rect = $grid.getBoundingClientRect(),
-      style = $container.style;
-
-  event.target.dataset.grabbed = 'true';
-  $container.id = 'column-drag-image-container';
-  style.top = `${rect.top}px`;
-  style.left = `${rect.left}px`;
-  style.width = `${$grid.offsetWidth}px`;
-  style.height = `${$grid.offsetHeight}px`;
-
-  for (let $chead of this.view.$header.querySelectorAll('[role="columnheader"]')) {
-    let $image = $container.appendChild($_image.cloneNode(true)),
-        left = $chead.offsetLeft,
-        width = $chead.offsetWidth,
-        index = $chead.cellIndex,
-        style = $image.style;
-
-    $image.id = `column-drag-image-${index}`;
-    style.left = `${left}px`;
-    style.width = `${width}px`;
-    style.height = `${$grid.offsetHeight}px`;
-    style.background = `-moz-element(#${$grid.id}) -${left}px 0`;
-
-    if ($chead.dataset.grabbed === 'true') {
-      // The follower shows the dragging position
-      $follower = $image;
-      $image.className = 'follower';
-      this.data.drag = {
-        $container,
-        $header: $chead,
-        $follower,
-        start_index: index,
-        current_index: index,
-        start_left: event.clientX - left,
-        row_width: width,
-        grid_width: $grid.offsetWidth,
+    if (data) {
+      this.data = data;
+      this.options = options;
+      this.options.item_roles = [role];
+      this.options.item_selector = `.grid-body [role="${role}"]`;
+      // Build table from the given data
+      this.data.columns = data.columns;
+      this.data.rows = data.rows;
+      this.build_header();
+      this.build_body();
+    } else {
+      this.view.$header = $container.querySelector('.grid-header');
+      this.view.$body = $container.querySelector('.grid-body');
+      this.data = { columns: [], rows: [] };
+      this.options = {
+        item_roles: [role],
+        item_selector: `.grid-body [role="${role}"]`,
+        sortable: dataset.sortable === 'false' ? false : true,
+        reorderable: dataset.reorderable === 'false' ? false : true
       };
+      // Retrieve data from the static table
+      this.get_data();
     }
 
-    headers.push(new Proxy({ index, left, width }, {
+    this.options = new Proxy(this.options, {
       set: (obj, prop, value) => {
-        if (prop === 'left') {
-          let $image = document.querySelector(`#column-drag-image-${obj.index}`);
+        if (prop === 'adjust_scrollbar') {
+          this.view.$$scrollbar.options.adjusted = value;
+        }
 
-          if ($image.className !== 'follower') {
-            $image.style.left = `${value}px`;
+        obj[prop] = value;
+
+        return true;
+      }
+    });
+
+    // Columnpicker
+    this.init_columnpicker();
+
+    super.activate();
+    this.activate();
+  }
+
+  activate () {
+    this.view = new Proxy(this.view, {
+      set: (obj, prop, value) => {
+        switch (prop) {
+          case 'selected': {
+            // Validation: this.selectd.value is always Array
+            if (!Array.isArray(value)) {
+              value = [value];
+            }
+
+            // Current selection
+            for (let $item of obj[prop]) {
+              $item.draggable = false;
+              $item.removeAttribute('aria-grabbed');
+              $item.setAttribute('aria-selected', 'false');
+            }
+
+            // New selection
+            for (let $item of value) {
+              $item.draggable = true;
+              $item.setAttribute('aria-grabbed', 'false');
+              $item.setAttribute('aria-selected', 'true');
+            }
+
+            break;
           }
         }
 
@@ -1285,1789 +696,2293 @@ FlareTail.widgets.Grid.prototype.start_column_reordering = function (event) {
 
         return true;
       }
-    }));
+    });
+
+    this.options.sort_conditions = new Proxy(this.options.sort_conditions, { set: this.sort.bind(this) });
+
+    this.activate_columns();
+    this.activate_rows();
   }
 
-  this.data.drag.headers = headers;
-  document.body.appendChild($container);
-  $grid.querySelector('[role="scrollbar"]').setAttribute('aria-hidden', 'true')
-};
+  activate_columns () {
+    let columns = this.data.columns = new Proxy(this.data.columns, {
+      // Default behavior, or find column by id
+      get: (obj, prop) => prop in obj ? obj[prop] : obj.find(col => col.id === prop),
+    });
 
-FlareTail.widgets.Grid.prototype.continue_column_reordering = function (event) {
-  let drag = this.data.drag,
-      pos = event.clientX - drag.start_left,
-      index = drag.current_index,
-      headers = drag.headers,
-      current = headers[index],
-      prev = headers[index - 1],
-      next = headers[index + 1];
+    // Handler to show/hide column
+    let handler = {
+      get: (obj, prop) => {
+        let value;
 
-  // Moving left
-  if (prev && pos < prev.left + prev.width / 2) {
-    [prev.index, current.index] = [current.index, prev.index];
-    [prev.width, current.width] = [current.width, prev.width];
-    current.left = prev.left + prev.width;
-    drag.current_index--;
+        switch (prop) {
+          case 'index': {
+            value = obj.$element.cellIndex;
 
-    return;
-  }
+            break;
+          }
 
-  // Moving right
-  if (next && pos + drag.row_width > next.left + next.width / 2) {
-    [current.index, next.index] = [next.index, current.index];
-    [current.width, next.width] = [next.width, current.width];
-    current.left = prev ? prev.left + prev.width : 0;
-    next.left = current.left + current.width;
-    drag.current_index++;
+          case 'width': {
+            value = Number.parseInt(FlareTail.helpers.style.get(obj.$element, 'width'));
 
-    return;
-  }
+            break;
+          }
 
-  // Move further
-  if (pos >= 0 && pos + drag.row_width <= drag.grid_width) {
-    drag.$follower.style.left = `${pos}px`;
-  }
-};
+          case 'left': {
+            value = obj.$element.offsetLeft;
 
-FlareTail.widgets.Grid.prototype.stop_column_reordering = function (event) {
-  let drag = this.data.drag,
-      start_idx = drag.start_index,
-      current_idx = drag.current_index,
-      $grid = this.view.$container,
-      columns = this.data.columns;
+            break;
+          }
 
-  // Actually change the position of rows
-  if (start_idx !== current_idx) {
-    // Data
-    columns.splice(current_idx, 0, columns.splice(start_idx, 1)[0]);
+          default: {
+            value = obj[prop];
+          }
+        }
 
-    // View
-    for (let $colgroup of $grid.querySelectorAll('colgroup')) {
-      let items = $colgroup.children;
-
-      $colgroup.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
-    }
-
-    for (let $row of $grid.querySelectorAll('[role="row"]')) {
-      let items = $row.children;
-
-      $row.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
-    }
-  }
-
-  // Fire an event
-  FlareTail.helpers.event.trigger($grid, 'ColumnModified', { detail: { columns }});
-
-  // Cleanup
-  drag.$header.removeAttribute('data-grabbed');
-  drag.$container.remove();
-  $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
-
-  delete this.data.drag;
-};
-
-FlareTail.widgets.Grid.prototype.filter = function (ids) {
-  let $grid_body = this.view.$body,
-      selected = [...this.view.selected];
-
-  $grid_body.setAttribute('aria-busy', 'true');
-
-  // Filter the rows
-  for (let $row of $grid_body.querySelectorAll('[role="row"]')) {
-    let id = $row.dataset.id;
-
-    // Support both literal IDs and numeric IDs
-    $row.setAttribute('aria-hidden', !ids.includes(Number.isNaN(id) ? id : Number(id)));
-  }
-
-  // Update the member list
-  this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
-
-  if (selected.length) {
-    for (let [index, $row] of selected.entries()) if ($row.getAttribute('aria-hidden') === 'true') {
-      selected.splice(index, 1);
-    }
-
-    this.view.selected = selected;
-  }
-
-  $grid_body.scrollTop = 0;
-  $grid_body.removeAttribute('aria-busy');
-
-  FlareTail.helpers.event.trigger(this.view.$container, 'Filtered');
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Select (abstract role) extends Composite
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Select = function Select () {};
-FlareTail.widgets.Select.prototype = Object.create(FlareTail.widgets.Composite.prototype);
-FlareTail.widgets.Select.prototype.constructor = FlareTail.widgets.Select;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * ComboBox extends Select
- * ------------------------------------------------------------------------------------------------------------------ */
-
-// TODO: Support aria-autocomplete="inline" and "both"
-// TODO: Add more HTMLSelectElement-compatible attributes
-// TODO: Add test cases
-
-FlareTail.widgets.ComboBox = function ComboBox ($container) {
-  this.$container = $container;
-  this.$container.setAttribute('aria-expanded', 'false');
-
-  this.$button = this.$container.querySelector('[role="button"]');
-  this.$input = this.$container.querySelector('[role="textbox"], [role="searchbox"]');
-  this.$listbox = this.$container.querySelector('[role="listbox"]');
-
-  this.autocomplete = this.$container.getAttribute('aria-autocomplete') || 'none';
-  this.autoexpand = this.$container.matches('[data-autoexpand="true"]');
-  this.nobutton = this.$container.matches('[data-nobutton="true"]');
-
-  Object.defineProperties(this, {
-    options: {
-      enumerable: true,
-      get: () => [...this.$listbox.querySelectorAll('[role="option"]')],
-    },
-    disabled: {
-      enumerable: true,
-      get: () => this.$container.matches('[aria-disabled="true"]'),
-    },
-    readonly: {
-      enumerable: true,
-      get: () => this.$input.matches('[aria-readonly="true"]'),
-    },
-    selected: {
-      enumerable: true,
-      get: () => this.$$input.value,
-      set: value => {
-        this.$selected = this.$listbox.querySelector(`[role="option"][data-value="${value}"]`);
-        this.$$input.value = value;
+        return value;
       },
-    },
-    $selected: {
-      enumerable: true,
-      get: () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
-      set: $selected => {
-        this.$$listbox.view.selected = this.$$listbox.view.$focused = $selected;
-        this.$$input.value = $selected.dataset.value || $selected.textContent;
-      },
-    },
-    selectedIndex: {
-      enumerable: true,
-      get: () => this.$$listbox.view.members.indexOf(this.$$listbox.view.selected[0]),
-      set: index => {
-        let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused = this.$$listbox.view.members[index];
-
-        this.$$input.value = $selected.dataset.value || $selected.textContent;
-      },
-    },
-  });
-
-  if (!this.$button && !this.nobutton) {
-    this.$button = this.$container.appendChild(document.createElement('span'));
-    this.$button.setAttribute('role', 'button');
-  }
-
-  if (this.$button) {
-    this.$button.tabIndex = 0;
-    this.$button.addEventListener('mousedown', event => this.button_onmousedown(event));
-  }
-
-  if (!this.$input) {
-    this.$input = this.$container.insertBefore(document.createElement('span'), this.$container.firstElementChild);
-    this.$input.setAttribute('role', 'textbox');
-    this.$input.setAttribute('aria-readonly', this.$container.matches('[aria-readonly="true"]'));
-  }
-
-  this.$input.tabIndex = 0;
-  this.$input.contentEditable = !this.readonly;
-  this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
-  this.$input.addEventListener('input', event => this.input_oninput(event));
-  this.$input.addEventListener('blur', event => this.input_onblur(event));
-  this.$$input = new FlareTail.widgets.TextBox(this.$input);
-
-  if (!this.$listbox) {
-    this.$listbox = this.$container.appendChild(document.createElement('ul'));
-    this.$listbox.setAttribute('role', 'listbox');
-  }
-
-  this.$listbox.addEventListener('mouseover', event => this.listbox_onmouseover(event));
-  this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
-  this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
-  this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
-  this.$$listbox = new FlareTail.widgets.ListBox(this.$listbox, undefined, { search_enabled: false });
-
-  this.$listbox_outer = this.$container.appendChild(document.createElement('div'));
-  this.$listbox_outer.className = 'listbox-outer';
-  this.$listbox_outer.appendChild(this.$listbox);
-  this.$listbox_outer.addEventListener('wheel', event => event.stopPropagation());
-  this.$$scrollbar = new FlareTail.widgets.ScrollBar(this.$listbox_outer);
-
-  let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
-
-  if ($selected) {
-    this.$$input.value = $selected.dataset.value || $selected.textContent;
-  }
-};
-
-FlareTail.widgets.ComboBox.prototype = Object.create(FlareTail.widgets.Select.prototype);
-FlareTail.widgets.ComboBox.prototype.constructor = FlareTail.widgets.ComboBox;
-
-FlareTail.widgets.ComboBox.prototype.on = function (...args) {
-  this.$container.addEventListener(...args);
-};
-
-FlareTail.widgets.ComboBox.prototype.show_dropdown = function () {
-  if (!this.$$listbox.view.members.length) {
-    return;
-  }
-
-  let input = this.$input.getBoundingClientRect(),
-      listbox = this.$listbox_outer.getBoundingClientRect(),
-      adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height,
-      $selected = this.$$listbox.view.selected[0];
-
-  if (!$selected) {
-    $selected = this.$$listbox.view.selected = this.$$listbox.view.members[0];
-  }
-
-  this.$container.setAttribute('aria-expanded', 'true');
-  this.$container.setAttribute('aria-activedescendant', $selected.id);
-  this.$$listbox.view.$focused = $selected;
-  this.$input.focus(); // Keep focus on <input>
-  this.$listbox_outer.dataset.position = adjusted ? 'above' : 'below';
-  this.$$scrollbar.set_height();
-};
-
-FlareTail.widgets.ComboBox.prototype.hide_dropdown = function () {
-  this.$container.setAttribute('aria-expanded', 'false');
-  this.$container.removeAttribute('aria-activedescendant');
-};
-
-FlareTail.widgets.ComboBox.prototype.toggle_dropdown = function () {
-  if (this.$container.getAttribute('aria-expanded') === 'false') {
-    this.show_dropdown();
-  } else {
-    this.hide_dropdown();
-  }
-};
-
-FlareTail.widgets.ComboBox.prototype.fill_dropdown = function ($element, addition = true) {
-  if (!addition) {
-    this.clear_dropdown();
-  }
-
-  this.$listbox.appendChild($element);
-  this.$$listbox.update_members();
-  this.$$listbox.get_data();
-
-  let $selected = this.$$listbox.view.selected[0];
-
-  if (this.autocomplete === 'list' && $selected) {
-    this.$$input.value = $selected.dataset.value || $selected.textContent;
-  }
-};
-
-FlareTail.widgets.ComboBox.prototype.empty = function () {
-  this.$listbox.innerHTML = '';
-  this.$$listbox.update_members();
-  this.$$listbox.get_data();
-};
-
-FlareTail.widgets.ComboBox.prototype.build = function (data) {
-  this.empty();
-
-  for (let { value, selected } of data) {
-    this.add(value, selected);
-  }
-};
-
-FlareTail.widgets.ComboBox.prototype.add = function (value, selected = false) {
-  let $option = document.createElement('li');
-
-  $option.dataset.value = $option.textContent = value;
-  $option.setAttribute('role', 'option');
-  $option.setAttribute('aria-selected', selected);
-
-  this.fill_dropdown($option);
-
-  return $option;
-};
-
-FlareTail.widgets.ComboBox.prototype.clear_dropdown = function () {
-  this.$listbox.innerHTML = '';
-};
-
-FlareTail.widgets.ComboBox.prototype.clear_input = function () {
-  this.$$input.clear();
-};
-
-FlareTail.widgets.ComboBox.prototype.button_onmousedown = function (event) {
-  this.toggle_dropdown();
-  event.preventDefault();
-};
-
-FlareTail.widgets.ComboBox.prototype.input_onkeydown = function (event) {
-  if (event.key === 'Tab') {
-    return true;
-  }
-
-  if (this.disabled) {
-    event.preventDefault();
-
-    return false;
-  }
-
-  if (this.$$listbox.view.members.length) {
-    if (event.key === 'Escape') {
-      this.hide_dropdown();
-    } else if (event.key === ' ') { // Space
-      this.toggle_dropdown();
-    } else if (event.key === 'Enter') {
-      this.listbox_onmousedown(event);
-    } else {
-      FlareTail.helpers.kbd.dispatch(this.$listbox, event.key);
-
-      if (event.key.match(/^Arrow(Up|Down)$/)) {
-
-        if (this.autoexpand) {
-          this.show_dropdown();
-        }
-
-        let $target = this.$$listbox.view.selected[0],
-            value = $target.dataset.value || $target.textContent;
-
-        if (this.autocomplete === 'list') {
-          this.$$input.value = value;
-          FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
-        }
-
-        this.$input.focus(); // Keep focus on <input>
-      }
-    }
-  }
-
-  if (this.readonly) {
-    event.preventDefault();
-  }
-
-  event.stopPropagation();
-
-  return true;
-};
-
-FlareTail.widgets.ComboBox.prototype.input_oninput = function (event) {
-  let value = this.$$input.value.trim();
-
-  this.clear_dropdown();
-
-  if (!value.match(/\S/)) {
-    this.hide_dropdown();
-
-    return;
-  }
-
-  FlareTail.helpers.event.trigger(this.$container, 'Input', { detail: { value, $target: this.$input }});
-
-  event.stopPropagation();
-};
-
-FlareTail.widgets.ComboBox.prototype.input_onblur = function (event) {
-  // Use a timer in case of the listbox getting focus for a second
-  window.setTimeout(() => {
-    if (!this.$input.matches(':focus')) {
-      this.hide_dropdown();
-    }
-  }, 50);
-};
-
-// Based on Menu.prototype.onmouseover
-FlareTail.widgets.ComboBox.prototype.listbox_onmouseover = function (event) {
-  if (this.$$listbox.view.members.includes(event.target)) {
-    this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
-    this.show_dropdown();
-  }
-
-  FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.ComboBox.prototype.listbox_onmousedown = function (event) {
-  let $target = this.$$listbox.view.selected[0],
-      value = $target.dataset.value || $target.textContent;
-
-  this.hide_dropdown();
-  this.$$input.value = value;
-  this.$input.focus();
-
-  FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
-  FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.ComboBox.prototype.listbox_onselect = function (event) {
-  this.$container.setAttribute('aria-activedescendant', event.detail.ids[0]);
-};
-
-FlareTail.widgets.ComboBox.prototype.bind = function (...args) {
-  this.$container.addEventListener(...args);
-};
-
-/**
- * ListBox
- *
- * @constructor
- * @extends Select
- * @argument {Element} $container - <menu role="listbox">
- * @argument {Array} [data]
- * @argument {Object} [options] - This attribute on the listbox element is also supported:
- *  - aria-multiselectable
- * @return {Object} widget
- */
-FlareTail.widgets.ListBox = function ListBox ($container, data = undefined, options = {}) {
-  this.view = { $container };
-
-  this.options = {
-    item_roles: ['option'],
-    item_selector: '[role="option"]',
-    search_enabled: options.search_enabled !== undefined ? options.search_enabled : true
-  };
-
-  this.handler = {
-    get: (obj, prop) => {
-      if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
-        return obj.$element.getAttribute(`aria-${prop}`) === 'true';
-      }
-
-      return obj[prop];
-    },
-    set: (obj, prop, value) => {
-      if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
-        obj.$element.setAttribute(`aria-${prop}`, value);
-      }
-
-      obj[prop] = value;
-
-      return true;
-    }
-  };
-
-  this.data = {};
-
-  if (data) {
-    this.data.structure = data;
-    this.build();
-  }
-
-  this.activate();
-
-  if (!data) {
-    this.get_data();
-  }
-};
-
-FlareTail.widgets.ListBox.prototype = Object.create(FlareTail.widgets.Select.prototype);
-FlareTail.widgets.ListBox.prototype.constructor = FlareTail.widgets.ListBox;
-
-FlareTail.widgets.ListBox.prototype.build = function () {
-  let map = this.data.map = new Map(),
-      $fragment = new DocumentFragment(),
-      $_item = document.createElement('li');
-
-  $_item.tabIndex = -1;
-  $_item.setAttribute('role', 'option');
-  $_item.appendChild(document.createElement('label'));
-
-  for (let item of this.data.structure) {
-    let $item = item.$element = $fragment.appendChild($_item.cloneNode(true));
-
-    $item.id = item.id;
-    $item.setAttribute('aria-selected', item.selected ? 'true' : 'false');
-    $item.firstElementChild.textContent = item.label;
-
-    if (item.data) {
-      for (let [prop, value] of Object.entries(item.data)) {
-        $item.dataset[prop] = value;
-      }
-    }
-
-    // Save the item/obj reference
-    map.set(item.label, new Proxy(item, this.handler));
-  }
-
-  this.view.$container.appendChild($fragment);
-};
-
-FlareTail.widgets.ListBox.prototype.get_data = function () {
-  let map = this.data.map = new Map();
-
-  this.data.structure = this.view.members.map($item => {
-    let item = { $element: $item, id: $item.id, label: $item.textContent };
-
-    if (Object.keys($item.dataset).length) {
-      item.data = {};
-
-      for (let [prop, value] of Object.entries($item.dataset)) {
-        item.data[prop] = value;
-      }
-    }
-
-    // Save the item/obj reference
-    map.set(item.label, new Proxy(item, this.handler));
-
-    return item;
-  });
-};
-
-FlareTail.widgets.ListBox.prototype.filter = function (list) {
-  let $container = this.view.$container;
-
-  $container.setAttribute('aria-busy', 'true'); // Prevent reflows
-
-  // Filter the options
-  for (let [name, item] of this.data.map) {
-    item.selected = false;
-    item.disabled = list.length && !list.includes(name);
-  }
-
-  // Update the member list
-  this.view.members = [...$container.querySelectorAll(
-    '[role="option"]:not([aria-disabled="true"]):not([aria-hidden="true"])')];
-
-  if (this.view.selected.length) {
-    this.view.selected = [];
-  }
-
-  $container.removeAttribute('aria-busy');
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Menu extends Select
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Menu = function Menu ($container, data = []) {
-  this.view = { $container };
-
-  this.options = {
-    item_roles: ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
-    item_selector: '[role^="menuitem"]',
-    focus_cycling: true
-  };
-
-  this.data = {};
-
-  if (data.length) {
-    this.data.structure = data;
-    this.build();
-  }
-
-  this.activate();
-  this.activate_extend();
-
-  // Context menu
-  let $owner = document.querySelector(`[aria-owns="${CSS.escape($container.id)}"]`);
-
-  if ($owner && !$owner.matches('[role="menuitem"]')) {
-    this.view.$owner = $owner;
-    FlareTail.helpers.event.bind(this, $owner, ['contextmenu', 'keydown']);
-  }
-
-  Object.defineProperties(this, {
-    closed: {
-      enumerable: true,
-      get: () => $container.getAttribute('aria-expanded') === 'false',
-      set: value => value ? this.open() : this.close()
-    }
-  });
-
-  // TEMP: Update the members of the menu when the aria-hidden attribute is changed
-  (new MutationObserver(mutations => {
-    if (mutations[0].target.matches(this.options.item_selector)) {
-      this.update_members();
-    }
-  })).observe($container, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['aria-disabled', 'aria-hidden']
-  });
-};
-
-FlareTail.widgets.Menu.prototype = Object.create(FlareTail.widgets.Select.prototype);
-FlareTail.widgets.Menu.prototype.constructor = FlareTail.widgets.Menu;
-
-FlareTail.widgets.Menu.prototype.activate_extend = function (rebuild = false) {
-  // Redefine items
-  let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
-      selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`,
-      items = this.view.members = [...document.querySelectorAll(selector)],
-      menus = this.data.menus = new WeakMap();
-
-  for (let $item of items) {
-    if ($item.hasAttribute('aria-owns')) {
-      let $menu = document.getElementById($item.getAttribute('aria-owns')),
-          $$menu = new FlareTail.widgets.Menu($menu);
-
-      $$menu.data.parent = this;
-      menus.set($item, $$menu);
-    }
-  }
-
-  if (rebuild) {
-    return;
-  }
-
-  this.view = new Proxy(this.view, {
-    set: (obj, prop, newval) => {
-      let oldval = obj[prop];
-
-      if (prop === '$focused') {
-        if (oldval && menus.has(oldval)) {
-          menus.get(oldval).close();
-        }
-
-        if (newval && menus.has(newval)) {
-          menus.get(newval).open();
-        }
-      }
-
-      obj[prop] = newval;
-
-      return true;
-    }
-  });
-}
-
-FlareTail.widgets.Menu.prototype.onmousedown = function (event) {
-  // Open link in a new tab
-  if (event.target.href && event.buttons <= 1) {
-    event.stopPropagation();
-    event.target.target = '_blank';
-
-    return;
-  }
-
-  if (event.buttons > 1) {
-    FlareTail.helpers.event.ignore(event);
-
-    return;
-  }
-
-  let parent = this.data.parent;
-
-  if (parent && event.target === parent.view.selected[0]) {
-    // Just opening the menu
-    return;
-  }
-
-  if (event.currentTarget === window) {
-    this.close(true);
-  } else if (!this.data.menus.has(event.target) && this.view.members.includes(event.target)) {
-    this.select(event)
-    this.close(true);
-  }
-
-  FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.Menu.prototype.onmouseover = function (event) {
-  if (this.view.members.includes(event.target)) {
-    this.view.selected = this.view.$focused = event.target;
-  }
-
-  FlareTail.helpers.event.ignore(event);
-}
-
-FlareTail.widgets.Menu.prototype.oncontextmenu = function (event) {
-  let $owner = this.view.$owner,
-      $container = this.view.$container;
-
-  if ($owner) {
-    let style = $container.style;
-
-    style.top = `${event.layerY}px`;
-    style.left = `${event.layerX}px`;
-
-    if (event.currentTarget === $owner) {
-      this.open(event);
-    }
-
-    if ($container.getBoundingClientRect().right > window.innerWidth) {
-      // The menu is shown beyond the window width. Reposition it
-      style.left = `${$owner.offsetWidth - $container.offsetWidth - 4}px`;
-    }
-  }
-
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.Menu.prototype.onkeydown_extend = function (event) {
-  let parent = this.data.parent,
-      menus = this.data.menus,
-      has_submenu = menus.has(event.target),
-      $owner = this.view.$owner,
-      key = event.key;
-
-  // Open link in a new tab
-  if (event.target.href && event.key === 'Enter') {
-    event.stopPropagation();
-    event.target.target = '_blank';
-
-    return;
-  }
-
-  // The owner of the context menu
-  if ($owner && event.currentTarget === $owner) {
-    let view = this.view,
-        items = view.members;
-
-    switch (key) {
-      case 'ArrowUp':
-      case 'End': {
-        view.selected = view.$focused = items[items.length - 1];
-
-        break;
-      }
-
-      case 'ArrowDown':
-      case 'ArrowRight':
-      case 'Home': {
-        view.selected = view.$focused = items[0];
-
-        break;
-      }
-
-      case 'Escape':
-      case 'Tab': {
-        this.close();
-
-        break;
-      }
-    }
-
-    return;
-  }
-
-  FlareTail.helpers.event.ignore(event);
-
-  switch (key) {
-    case 'ArrowRight': {
-      if (has_submenu) {
-        // Select the first item in the submenu
-        let view = menus.get(event.target).view;
-
-        view.selected = view.$focused = view.members[0];
-      } else if (parent) {
-        // Select the next (or first) item in the parent menu
-        let view = parent.view,
-            items = view.members,
-            $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
-
-        view.selected = view.$focused = $target;
-      }
-
-      break;
-    }
-
-    case 'ArrowLeft': {
-      if (parent) {
-        let view = parent.view,
-            items = view.members,
-            $target = view.$container.matches('[role="menubar"]')
-                    ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1] : view.selected[0];
-
-        view.selected = view.$focused = $target;
-      }
-
-      break;
-    }
-
-    case 'Escape': {
-      this.close();
-
-      break;
-    }
-
-    case 'Enter':
-    case ' ': { // Space
-      if (!has_submenu) {
-        this.select(event);
-        this.close(true);
-      }
-
-      break;
-    }
-
-    default: {
-      // The default behavior
-      this.onkeydown(event);
-    }
-  }
-};
-
-FlareTail.widgets.Menu.prototype.onblur_extend = function (event) {
-  if (event.currentTarget === window) {
-    this.close(true);
-  }
-
-  // The default behavior
-  this.onblur(event);
-};
-
-FlareTail.widgets.Menu.prototype.build = function (data) {
-  let $container = this.view.$container,
-      $fragment = new DocumentFragment(),
-      $_separator = document.createElement('li'),
-      $_outer = document.createElement('li'),
-      rebuild = false;
-
-  if (data) {
-    // Empty & rebuild menu
-    rebuild = true;
-    $container.innerHTML = '';
-  } else {
-    data = this.data.structure;
-  }
-
-  $_separator.setAttribute('role', 'separator');
-  $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
-
-  this.data.structure = data.map(item => {
-    if (item.type === 'separator') {
-      $fragment.appendChild($_separator.cloneNode(true));
-
-      return null;
-    }
-
-    let $item = item.$element = $fragment.appendChild($_outer.cloneNode(true)).firstElementChild;
-
-    $item.id = item.id;
-    $item.setAttribute('role', item.type || 'menuitem');
-    $item.setAttribute('aria-disabled', item.disabled === true);
-    $item.setAttribute('aria-checked', item.checked === true);
-    $item.firstElementChild.textContent = item.label;
-
-    if (item.data) {
-      for (let [prop, value] of Object.entries(item.data)) {
-        $item.dataset[prop] = value;
-      }
-    }
-
-    return item;
-  }).filter(item => item !== null);
-
-  $container.appendChild($fragment);
-
-  if (rebuild) {
-    this.activate(true);
-    this.activate_extend(true);
-  }
-};
-
-FlareTail.widgets.Menu.prototype.open = function () {
-  let $container = this.view.$container;
-
-  $container.setAttribute('aria-expanded', 'true');
-  $container.removeAttribute('aria-activedescendant');
-  FlareTail.helpers.event.trigger($container, 'MenuOpened');
-
-  let parent = this.data.parent;
-
-  // Show the submenu on the left if there is not enough space
-  if ($container.getBoundingClientRect().right > window.innerWidth ||
-      parent && parent.view.$container.matches('.dir-left')) {
-    $container.classList.add('dir-left');
-  }
-
-  FlareTail.helpers.event.bind(this, window, ['mousedown', 'blur']);
-};
-
-FlareTail.widgets.Menu.prototype.select = function (event) {
-  FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
-    bubbles: true,
-    cancelable: false,
-    detail: {
-      target: event.target,
-      command: event.target.dataset.command || event.target.id
-    }
-  });
-}
-
-FlareTail.widgets.Menu.prototype.close = function (propagation) {
-  FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
-
-  let $container = this.view.$container,
-      parent = this.data.parent;
-
-  $container.setAttribute('aria-expanded', 'false');
-  $container.removeAttribute('aria-activedescendant');
-  FlareTail.helpers.event.trigger($container, 'MenuClosed');
-  this.view.selected = [];
-
-  if (parent) {
-    if (parent.view.$focused) {
-      parent.view.$focused.focus();
-    }
-
-    if (propagation) {
-      parent.close(true);
-    }
-  } else {
-    // Context menu
-    let $owner = this.view.$owner;
-
-    if ($owner) {
-      $owner.focus();
-    }
-  }
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * MenuBar extends Menu
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.MenuBar = function MenuBar ($container, data) {
-  this.view = { $container };
-
-  this.options = {
-    item_roles: ['menuitem'],
-    item_selector: '[role="menuitem"]',
-    focus_cycling: true
-  };
-
-  this.activate();
-  this.activate_extend();
-};
-
-FlareTail.widgets.MenuBar.prototype = Object.create(FlareTail.widgets.Menu.prototype);
-FlareTail.widgets.MenuBar.prototype.constructor = FlareTail.widgets.MenuBar;
-
-FlareTail.widgets.MenuBar.prototype.onmousedown = function (event) {
-  if (event.buttons > 1) {
-    FlareTail.helpers.event.ignore(event);
-
-    return;
-  }
-
-  if (this.view.members.includes(event.target)) {
-    event.target !== this.view.selected[0] ? this.open(event) : this.close();
-  } else if (this.view.selected.length) {
-    this.close();
-  } else {
-    FlareTail.helpers.event.ignore(event);
-  }
-};
-
-FlareTail.widgets.MenuBar.prototype.onmouseover = function (event) {
-  if (this.view.selected.length && this.view.members.includes(event.target)) {
-    this.view.selected = this.view.$focused = event.target;
-  }
-
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.MenuBar.prototype.onkeydown_extend = function (event) {
-  let menu = this.data.menus.get(event.target).view,
-      menuitems = menu.members;
-
-  switch (event.key) {
-    case 'Tab': {
-      return true; // Focus management
-    }
-
-    case 'Home':
-    case 'ArrowDown': {
-      menu.selected = menu.$focused = menuitems[0];
-
-      break;
-    }
-
-    case 'End':
-    case 'ArrowUp': {
-      menu.selected = menu.$focused = menuitems[menuitems.length - 1];
-
-      break;
-    }
-
-    case ' ': { // Space
-      if (event.target.matches('[aria-selected="true"]')) {
-        menu.$container.setAttribute('aria-expanded', 'false');
-        this.view.selected = [];
-      } else {
-        menu.$container.setAttribute('aria-expanded', 'true');
-        this.view.selected = event.target;
-      }
-
-      break;
-    }
-
-    case 'Escape': {
-      if (event.target.matches('[aria-selected="true"]')) {
-        menu.$container.setAttribute('aria-expanded', 'false');
-        this.view.selected = [];
-      }
-
-      break;
-    }
-
-    default: {
-      // The default behavior
-      this.onkeydown(event);
-    }
-  }
-
-  return FlareTail.helpers.event.ignore(event);
-};
-
-FlareTail.widgets.MenuBar.prototype.open = function (event) {
-  this.select_with_mouse(event);
-};
-
-FlareTail.widgets.MenuBar.prototype.close = function () {
-  FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
-
-  this.view.selected = [];
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * RadioGroup extends Select
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.RadioGroup = function RadioGroup ($container, data) {
-  this.view = { $container };
-
-  this.options = {
-    item_roles: ['radio'],
-    item_selector: '[role="radio"]',
-    selected_attr: 'aria-checked',
-    focus_cycling: true
-  };
-
-  this.activate();
-};
-
-FlareTail.widgets.RadioGroup.prototype = Object.create(FlareTail.widgets.Select.prototype);
-FlareTail.widgets.RadioGroup.prototype.constructor = FlareTail.widgets.RadioGroup;
-
-/**
- * Tree
- *
- * @constructor
- * @extends Select
- * @argument {Element} $container - <menu role="tree">
- * @argument {Array} data - Optional data
- * @return {Object} widget
- */
-FlareTail.widgets.Tree = function Tree ($container, data) {
-  this.view = { $container };
-
-  this.options = {
-    search_enabled: true,
-    item_roles: ['treeitem'],
-    item_selector: '[role="treeitem"]',
-  };
-
-  this.data = {};
-
-  if (data) {
-    this.data.structure = data;
-    this.build();
-  }
-
-  this.activate();
-
-  if (!data) {
-    this.get_data();
-  }
-};
-
-FlareTail.widgets.Tree.prototype = Object.create(FlareTail.widgets.Select.prototype);
-FlareTail.widgets.Tree.prototype.constructor = FlareTail.widgets.Tree;
-
-FlareTail.widgets.Tree.prototype.onmousedown_extend = function (event) {
-  if (event.target.matches('.expander')) {
-    this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
-  } else {
-    // The default behavior
-    this.onmousedown(event);
-  }
-};
-
-FlareTail.widgets.Tree.prototype.onkeydown_extend = function (event) {
-  let $item = event.target,
-      items = this.view.members;
-
-  switch (event.key) {
-    case 'ArrowLeft': {
-      if ($item.matches('[aria-expanded="true"]')) {
-        this.expand($item); // Collapse the subgroup
-      } else {
-        // Select the parent item
-        let level = Number($item.getAttribute('aria-level')),
-            $selected = items[0];
-
-        for (let i = items.indexOf($item) - 1; i >= 0; i--) {
-          if (Number(items[i].getAttribute('aria-level')) === level - 1) {
-            $selected = items[i];
+      set: (obj, prop, value) => {
+        switch (prop) {
+          case 'hidden': {
+            // Fire an event
+            FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { detail: { columns }});
+
+            // Reflect the change of row's visibility to UI
+            value === true ? this.hide_column(obj) : this.show_column(obj);
 
             break;
           }
         }
 
-        this.view.selected = this.view.$focused = $selected;
+        obj[prop] = value;
+
+        return true;
       }
+    };
 
-      break;
-    }
-
-    case 'ArrowRight': {
-      if ($item.matches('[aria-expanded="false"]')) {
-        this.expand($item); // Expand the subgroup
-      } else if ($item.hasAttribute('aria-expanded')) {
-        // Select the item just below
-        let $selected = items[items.indexOf($item) + 1];
-
-        this.view.selected = this.view.$focused = $selected;
-      }
-
-      break;
-    }
-
-    default: {
-      // The default behavior
-      this.onkeydown(event);
+    for (let [i, col] of columns.entries()) {
+      columns[i] = new Proxy(col, handler);
     }
   }
-};
 
-FlareTail.widgets.Tree.prototype.ondblclick = function (event) {
-  if (event.target.hasAttribute('aria-expanded')) {
-    this.expand(event.target);
-  }
-};
+  activate_rows () {
+    let handler = {
+      set: (obj, prop, value) => {
+        // Reflect Data change into View
+        let row = this.data.rows.find(row => row.data.id === obj.id),
+            $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
 
-FlareTail.widgets.Tree.prototype.build = function () {
-  let $tree = this.view.$container,
-      $fragment = new DocumentFragment(),
-      $outer = document.createElement('li'),
-      $treeitem = document.createElement('span'),
-      $expander = document.createElement('span'),
-      $group = document.createElement('ul'),
-      structure = this.data.structure,
-      map = this.data.map = new WeakMap(),
-      level = 1;
+        this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
+                                                   : $elm.textContent = value;
+        obj[prop] = value;
 
-  $outer.setAttribute('role', 'none');
-  $treeitem.setAttribute('role', 'treeitem');
-  $treeitem.appendChild(document.createElement('label'));
-  $expander.className = 'expander';
-  $expander.setAttribute('role', 'none');
-  $group.setAttribute('role', 'group');
-
-  let get_item = obj => {
-    let $item = $treeitem.cloneNode(true),
-        $_outer = $outer.cloneNode(false),
-        item_id = `${$tree.id}-${obj.id}`;
-
-    $item.firstChild.textContent = obj.label;
-    $item.id = item_id;
-    $item.setAttribute('aria-level', level);
-    $item.setAttribute('aria-selected', obj.selected ? 'true' : 'false');
-
-    // Save the item/obj reference
-    map.set($item, obj);
-    obj.$element = $item;
-
-    $_outer.appendChild($item);
-
-    if (obj.data) {
-      for (let [prop, value] of Object.entries(obj.data)) {
-        $item.dataset[prop] = value;
+        return true;
       }
+    };
+
+    let rows = this.data.rows,
+        $grid_body = this.view.$body,
+        $tbody = $grid_body.querySelector('tbody');
+
+    for (let row of rows) {
+      row.data = new Proxy(row.data, handler);
     }
 
-    if (obj.sub) {
-      $_outer.appendChild($expander.cloneNode(false));
-      $item.setAttribute('aria-expanded', obj.selected !== false);
-      $item.setAttribute('aria-owns', `${item_id}-group`);
+    // Sort handler
+    this.data.rows = new Proxy(rows, {
+      set: (obj, prop, value) => {
+        if (!Number.isNaN(prop) && value.$element) {
+          $tbody.appendChild(value.$element);
+        }
 
-      let $_group = $_outer.appendChild($group.cloneNode(false));
+        obj[prop] = value;
 
-      $_group.id = `${item_id}-group`;
-      level++;
+        return true;
+      }
+    });
 
-      for (let sub of obj.sub) {
-        $_group.appendChild(get_item(sub));
+    // Custom scrollbar
+    let $$scrollbar = this.view.$$scrollbar = new FlareTail.widgets.ScrollBar($grid_body, true, false),
+        option = this.options.adjust_scrollbar;
+
+    $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
+  }
+
+  onmousedown (event) {
+    let $target = event.target;
+
+    if ($target.matches('[role="columnheader"]')) {
+      if (event.buttons <= 1 && this.options.reorderable) {
+        FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
       }
 
-      level--;
+      if (event.buttons === 2) {
+        this.build_columnpicker();
+      }
+
+      return;
     }
 
-    return $_outer;
-  };
+    // Editable checkbox in cells
+    if ($target.matches('[role="checkbox"]')) {
+      let index = $target.parentElement.parentElement.sectionRowIndex,
+          id = $target.parentElement.dataset.id,
+          value = !$target.matches('[aria-checked="true"]');
 
-  // Build the tree recursively
-  for (let obj of structure) {
-    $fragment.appendChild(get_item(obj));
-  }
+      this.data.rows[index].data[id] = value;
 
-  $tree.appendChild($fragment);
-};
-
-FlareTail.widgets.Tree.prototype.get_data = function () {
-  let map = this.data.map = new WeakMap(),
-      structure = this.data.structure = [];
-
-  // TODO: generate structure data
-
-  for (let $item of this.view.members) {
-    let level = Number($item.getAttribute('aria-level')),
-        item = {
-          $element: $item,
-          id: $item.id,
-          label: $item.textContent,
-          level,
-          sub: []
-        };
-
-    if (Object.keys($item.dataset).length) {
-      item.data = {};
-
-      for (let [prop, value] of Object.entries($item.dataset)) {
-        item.data[prop] = value;
-      }
+      return FlareTail.helpers.event.ignore(event);
     }
 
-    // Save the item/obj reference
-    map.set($item, item);
-  };
-};
-
-FlareTail.widgets.Tree.prototype.expand = function ($item) {
-  let expanded = $item.matches('[aria-expanded="true"]'),
-      items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
-      selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`,
-      children = [...document.querySelectorAll(selector)];
-
-  $item.setAttribute('aria-expanded', !expanded);
-
-  // Update data with visible items
-  this.view.members = items.filter($item => $item.offsetParent !== null);
-
-  if (!children.length) {
-    return;
+    // The default behavior
+    super.onmousedown(event);
   }
 
-  this.view.$focused = $item;
-
-  if (!this.options.multiselectable) {
-    this.view.selected = $item;
-
-    return;
+  onmousemove (event) {
+    !this.data.drag ? this.start_column_reordering(event) : this.continue_column_reordering(event);
   }
 
-  // Remove the item's children from selection
-  let selected = this.view.selected.filter($item => !children.includes($item));
+  onmouseup (event) {
+    FlareTail.helpers.event.ignore(event);
+    FlareTail.helpers.event.unbind(this, window, ['mousemove', 'mouseup']);
 
-  // Add the item to selection
-  selected.push($item);
-  this.view.selected = selected;
-};
+    if (event.button !== 0) {  // event.buttons is 0 since this is a mouseup event handler
+      return;
+    }
 
-/* ------------------------------------------------------------------------------------------------------------------
- * TreeGrid extends Tree and Grid
- * ------------------------------------------------------------------------------------------------------------------ */
+    if (this.data.drag) {
+      this.stop_column_reordering(event);
 
-FlareTail.widgets.TreeGrid = function TreeGrid () {};
-FlareTail.widgets.TreeGrid.prototype = Object.create(FlareTail.widgets.Grid.prototype);
-FlareTail.widgets.TreeGrid.prototype.constructor = FlareTail.widgets.TreeGrid;
+      return;
+    }
 
-/**
- * TabList
- *
- * @constructor
- * @extends Composite
- * @argument {Element} $container - <ul role="tablist">. Those attributes are supported as options:
- *  - data-removable: If true, tabs can be opened and/or closed (default: false)
- *  - data-reorderable: If true, tabs can be reordered by drag (default: false)
- *  Those attributes on the tab elements are also supported:
- *  - aria-selected: If true, the tab will be selected first
- *  - draggable and aria-grabbed: Tabs can be dragged (to reorder)
- * @return {Object} widget
- */
-FlareTail.widgets.TabList = function TabList ($container) {
-  // TODO: aria-multiselectable support for accordion UI
-  // http://www.w3.org/WAI/PF/aria-practices/#accordion
-  if ($container.matches('[aria-multiselectable="true"]')) {
-    throw new Error('Multi-selectable tab list is not supported yet.');
+    let $target = event.target,
+        options = this.options;
+
+    if ($target.matches('[role="columnheader"]') && options.sortable) {
+      options.sort_conditions.key = $target.dataset.id;
+    }
   }
 
-  this.view = { $container };
+  onkeydown (event) {
+    let key = event.key;
 
-  this.options = {
-    item_roles: ['tab'],
-    item_selector: '[role="tab"]',
-    focus_cycling: true,
-    removable: $container.dataset.removable === 'true',
-    reorderable: $container.dataset.reorderable === 'true'
-  };
-
-  this.activate();
-
-  this.view = new Proxy(this.view, {
-    set: (obj, prop, value) => {
-      if (prop === 'selected') {
-        value = Array.isArray(value) ? value : [value];
-        this.switch_tabpanel(obj[prop][0], value[0]);
-      }
-
-      obj[prop] = value;
-
+    // Focus shift with tab key
+    if (key === 'Tab') {
       return true;
     }
-  });
 
-  if (this.options.removable) {
-    for (let $tab of this.view.members) {
-      this.set_close_button($tab);
-    }
-  }
-
-  // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
-  (new MutationObserver(mutations => {
-    if (mutations[0].target.matches(this.options.item_selector)) {
-      this.update_members();
-    }
-  })).observe($container, {
-    subtree: true,
-    childList: true,
-    attributes: true,
-    attributeFilter: ['aria-disabled', 'aria-hidden']
-  });
-};
-
-FlareTail.widgets.TabList.prototype = Object.create(FlareTail.widgets.Composite.prototype);
-FlareTail.widgets.TabList.prototype.constructor = FlareTail.widgets.TabList;
-
-FlareTail.widgets.TabList.prototype.onclick = function (event) {
-  if (event.currentTarget === this.view.$container && event.target.matches('.close')) {
-    this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
-  }
-};
-
-FlareTail.widgets.TabList.prototype.switch_tabpanel = function ($current_tab, $new_tab) {
-  let $panel;
-
-  // Current tabpanel
-  $panel = document.getElementById($current_tab.getAttribute('aria-controls'))
-  $panel.tabIndex = -1;
-  $panel.setAttribute('aria-hidden', 'true');
-
-  // New tabpanel
-  $panel = document.getElementById($new_tab.getAttribute('aria-controls'))
-  $panel.tabIndex = 0;
-  $panel.setAttribute('aria-hidden', 'false');
-};
-
-FlareTail.widgets.TabList.prototype.set_close_button = function ($tab) {
-  let $button = document.createElement('span');
-
-  $button.className = 'close';
-  $button.title = 'Close Tab'; // l10n
-  $button.setAttribute('role', 'button');
-  $button.setAttribute('aria-controls', $tab.id);
-  $tab.appendChild($button);
-};
-
-FlareTail.widgets.TabList.prototype.add_tab = function (name, title, label, $panel, position = 'last', dataset = {}) {
-  let items = this.view.members,
-      $tab = items[0].cloneNode(true),
-      $selected = this.view.selected[0],
-      index = items.indexOf($selected),
-      $next_tab = items[index + 1];
-
-  $tab.id = `tab-${name}`;
-  $tab.title = label || title;
-  $tab.tabIndex = -1;
-  $tab.setAttribute('aria-selected', 'false');
-  $tab.setAttribute('aria-controls', `tabpanel-${name}`);
-  $tab.querySelector('label').textContent = title;
-  $tab.querySelector('[role="button"]').setAttribute('aria-controls', $tab.id);
-
-  if (dataset) {
-    for (let [prop, value] of Object.entries(dataset)) {
-      $tab.dataset[prop] = value;
-    }
-  }
-
-  // Add tab
-  if (position === 'next' && $next_tab) {
-    this.view.$container.insertBefore($tab, $next_tab); // Update view
-    items.splice(index + 1, 0, $tab); // Update data
-  } else {
-    this.view.$container.appendChild($tab); // Update view
-    items.push($tab); // Update data
-  }
-
-  $panel = $panel || document.createElement('section');
-  $panel.id = `tabpanel-${name}`;
-  $panel.tabIndex = -1;
-  $panel.setAttribute('role', 'tabpanel');
-  $panel.setAttribute('aria-hidden', 'true');
-  $panel.setAttribute('aria-labelledby', $tab.id);
-
-  // Add tabpanel
-  document.getElementById($selected.getAttribute('aria-controls')).parentElement.appendChild($panel);
-
-  return $tab;
-};
-
-FlareTail.widgets.TabList.prototype.close_tab = function ($tab) {
-  let items = this.view.members,
-      index = items.indexOf($tab);
-
-  // Switch tab
-  if (this.view.selected[0] === $tab) {
-    let $new_tab = items[index - 1] || items[index + 1];
-
-    this.view.selected = this.view.$focused = $new_tab;
-  }
-
-  // Remove tabpanel
-  document.getElementById($tab.getAttribute('aria-controls')).remove();
-
-  // Remove tab
-  items.splice(index, 1); // Update data
-  $tab.remove(); // Update view
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Input (abstract role) extends Widget
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Input = function Input () {};
-FlareTail.widgets.Input.prototype = Object.create(FlareTail.widgets.Widget.prototype);
-FlareTail.widgets.Input.prototype.constructor = FlareTail.widgets.Input;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * TextBox extends Input
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.TextBox = function TextBox ($textbox, richtext = false) {
-  this.$textbox = $textbox;
-  this.richtext = richtext || this.$textbox.matches('[data-richtext="true"]');
-  this.nobreak = !richtext || this.$textbox.matches('[data-nobreak="true"]');
-
-  Object.defineProperties(this, {
-    value: {
-      enumerable: true,
-      get: () => this.$textbox.textContent,
-      set: str => this.$textbox.textContent = str
-    },
-    readonly: {
-      enumerable: true,
-      get: () => this.$textbox.matches('[aria-readonly="true"]'),
-    },
-  });
-
-  FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
-};
-
-FlareTail.widgets.TextBox.prototype = Object.create(FlareTail.widgets.Input.prototype);
-FlareTail.widgets.TextBox.prototype.constructor = FlareTail.widgets.TextBox;
-
-FlareTail.widgets.TextBox.prototype.oncut = function (event) {
-  let selection = window.getSelection();
-
-  if (!this.richtext) {
-    // Mimic the plaintext editor's behaviour
-    event.clipboardData.setData('text/plain', selection.toString());
-    event.preventDefault();
-    selection.deleteFromDocument();
-  }
-
-  this.onedit();
-};
-
-FlareTail.widgets.TextBox.prototype.oncopy = function (event) {
-  let selection = window.getSelection();
-
-  if (!this.richtext) {
-    // Mimic the plaintext editor's behaviour
-    event.clipboardData.setData('text/plain', selection.toString());
-    event.preventDefault();
-  }
-};
-
-FlareTail.widgets.TextBox.prototype.onpaste = function (event) {
-  let selection = window.getSelection(),
-      range = selection.getRangeAt(0);
-
-  if (!this.richtext) {
-    // Mimic the plaintext editor's behaviour
-    event.preventDefault();
-    range.deleteContents();
-    range.insertNode(document.createTextNode(event.clipboardData.getData('text/plain')));
-    range.collapse(false);
-  }
-
-  this.onedit();
-};
-
-FlareTail.widgets.TextBox.prototype.onkeydown = function (event) {
-  event.stopPropagation();
-
-  if (this.readonly) {
-    event.preventDefault();
-
-    return false;
-  }
-
-  if (this.nobreak && event.key === 'Enter') {
-    event.preventDefault();
-  }
-
-  return true;
-};
-
-
-FlareTail.widgets.TextBox.prototype.oninput = function (event) {
-  this.onedit();
-};
-
-FlareTail.widgets.TextBox.prototype.onedit = function () {
-  FlareTail.helpers.event.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
-};
-
-FlareTail.widgets.TextBox.prototype.clear = function () {
-  this.$textbox.textContent = '';
-  this.onedit();
-};
-
-FlareTail.widgets.TextBox.prototype.bind = function (...args) {
-  this.$textbox.addEventListener(...args);
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * CheckBox extends Input
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.CheckBox = function CheckBox ($checkbox) {
-  this.view = { $checkbox };
-
-  $checkbox.tabIndex = 0;
-
-  Object.defineProperties(this, {
-    checked: {
-      enumerable: true,
-      get: () => $checkbox.getAttribute('aria-checked') === 'true',
-      set: checked => {
-        $checkbox.setAttribute('aria-checked', checked);
-        FlareTail.helpers.event.trigger($checkbox, 'Toggled', { detail: { checked }});
-
-        // Set Microdata when necessary
-        if ($checkbox.matches('meta[content]')) {
-          $checkbox.setAttribute('content', checked);
-        }
-      }
-    }
-  });
-
-  FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
-};
-
-FlareTail.widgets.CheckBox.prototype = Object.create(FlareTail.widgets.Input.prototype);
-FlareTail.widgets.CheckBox.prototype.constructor = FlareTail.widgets.CheckBox;
-
-FlareTail.widgets.CheckBox.prototype.onkeydown = function (event) {
-  if (event.key === ' ') { // Space
-    this.view.$checkbox.click();
-  }
-}
-
-FlareTail.widgets.CheckBox.prototype.onclick = function (event) {
-  this.checked = !this.checked;
-  this.view.$checkbox.focus();
-
-  return false;
-};
-
-FlareTail.widgets.CheckBox.prototype.bind = function (...args) {
-  this.view.$checkbox.addEventListener(...args);
-};
-
-/**
- * ScrollBar
- *
- * @constructor
- * @extends Input
- * @argument {Element} $owner - Element to be scrolled.
- * @argument {Boolean} [adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
- * @argument {Boolean} [arrow_keys_enabled=false] - Enable scrolling with the up/down arrow keys. Should be false on
- *  Grid, Tree and ListBox.
- * @return {Object} widget
- */
-FlareTail.widgets.ScrollBar = function ScrollBar ($owner, adjusted = false, arrow_keys_enabled = true) {
-  let $controller = document.createElement('div'),
-      $content = document.createElement('div'),
-      FTue = FlareTail.helpers.event;
-
-  this.view = { $owner, $content, $controller };
-  this.data = {};
-  this.options = { adjusted, arrow_keys_enabled };
-
-  $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
-
-  for (let $child of [...$owner.children]) {
-    $content.appendChild($child);
-  }
-
-  $content.className = 'scrollable-area-content';
-
-  // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
-  if (FlareTail.helpers.env.device.mobile) {
-    $owner.appendChild($content);
-    $owner.style.removeProperty('display');
-
-    return false;
-  }
-
-  $content.appendChild(this.get_observer());
-
-  $controller.tabIndex = -1;
-  $controller.style.top = '2px';
-  $controller.setAttribute('role', 'scrollbar');
-  $controller.setAttribute('aria-controls', $owner.id);
-  $controller.setAttribute('aria-disabled', 'true');
-  $controller.setAttribute('aria-valuemin', '0');
-  $controller.setAttribute('aria-valuenow', '0');
-
-  $owner.appendChild($content);
-  $owner.appendChild($controller);
-  $owner.appendChild(this.get_observer());
-  $owner.style.removeProperty('display');
-
-  FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
-  FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
-
-  this.set_height();
-};
-
-FlareTail.widgets.ScrollBar.prototype = Object.create(FlareTail.widgets.Input.prototype);
-FlareTail.widgets.ScrollBar.prototype.constructor = FlareTail.widgets.ScrollBar;
-
-FlareTail.widgets.ScrollBar.prototype.onmousedown = function (event) {
-  this.scroll_with_mouse(event);
-};
-
-FlareTail.widgets.ScrollBar.prototype.onmousemove = function (event) {
-  this.scroll_with_mouse(event);
-};
-
-FlareTail.widgets.ScrollBar.prototype.onmouseup = function (event) {
-  this.scroll_with_mouse(event);
-};
-
-FlareTail.widgets.ScrollBar.prototype.onwheel = function (event) {
-  event.preventDefault();
-
-  let $owner = this.view.$owner,
-      top = $owner.scrollTop + event.deltaY * (event.deltaMode === event.DOM_DELTA_LINE ? 12 : 1);
-
-  if (top < 0) {
-    top = 0;
-  }
-
-  if (top > $owner.scrollTopMax) {
-    top = $owner.scrollTopMax;
-  }
-
-  if ($owner.scrollTop !== top) {
-    $owner.scrollTop = top;
-  }
-};
-
-FlareTail.widgets.ScrollBar.prototype.onscroll = function (event) {
-  let $owner = this.view.$owner,
-      $controller = this.view.$controller;
-
-  // Scroll by row
-  if (this.options.adjusted) {
-    let rect = $owner.getBoundingClientRect(),
-        $elm = document.elementFromPoint(rect.left, rect.top),
-        top = 0;
-
-    while ($elm) {
-      if ($elm.matches('[role="row"], [role="option"], [role="treeitem"]')) {
+    let items = this.view.members,
+        focused_idx = items.indexOf(this.view.$focused),
+        modifiers = event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
+
+    switch (key) {
+      case 'ArrowLeft':
+      case 'ArrowRight': {
+        // Do nothing
         break;
       }
 
-      $elm = $elm.parentElement;
+      case 'PageUp':
+      case 'PageDown':
+      case ' ' : { // Space
+        // Handled by the ScrollBar widget
+        return true;
+      }
+
+      default: {
+        // The default behavior
+        super.onkeydown(event);
+      }
     }
 
-    if (!$elm) {
-      return; // traversal failed
+    return FlareTail.helpers.event.ignore(event);
+  }
+
+  build_header () {
+    let $grid = this.view.$container,
+        $grid_header = this.view.$header = document.createElement('header'),
+        $table = $grid_header.appendChild(document.createElement('table')),
+        $colgroup = $table.appendChild(document.createElement('colgroup')),
+        $row = $table.createTBody().insertRow(-1),
+        $_col = document.createElement('col'),
+        $_cell = document.createElement('th'),
+        cond = this.options.sort_conditions;
+
+    $_cell.scope = 'col';
+    $_cell.setAttribute('role', 'columnheader');
+    $_cell.appendChild(document.createElement('label'));
+
+    for (let column of this.data.columns) {
+      let $col = $colgroup.appendChild($_col.cloneNode(true)),
+          $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
+
+      $col.dataset.id = column.id || '';
+      $col.dataset.hidden = column.hidden === true;
+
+      $cell.firstElementChild.textContent = column.label;
+      $cell.title = column.title || `Click to sort by ${column.label}`; // l10n
+
+      if (cond && column.id === cond.key) {
+        $cell.setAttribute('aria-sort', cond.order);
+      }
+
+      $cell.dataset.id = column.id;
+      $cell.dataset.type = column.type || 'string';
+
+      if (column.key === true) {
+        $cell.dataset.key = 'true';
+      }
     }
 
-    top = $owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling
-        ? $elm.offsetTop : $elm.nextElementSibling.offsetTop;
-
-    $owner.scrollTop = top;
+    $grid_header.id = `${$grid.id}-header`;
+    $grid_header.className = 'grid-header';
+    $row.setAttribute('role', 'row');
+    $grid.appendChild($grid_header);
   }
 
-  let st = $owner.scrollTop,
-      ch = $owner.clientHeight,
-      sh = $owner.scrollHeight,
-      ctrl_height = Number.parseInt($controller.style.height),
-      ctrl_adj = 0;
+  build_body (row_data) {
+    if (row_data) {
+      // Refresh the tbody with the passed data
+      this.data.rows = row_data;
+      this.view.$body.remove();
+    }
 
-  // Consider scrollbar's min-height
-  if (ctrl_height < 16) {
-    ctrl_adj = 20 - ctrl_height;
+    let $grid = this.view.$container,
+        $grid_body = this.view.$body = document.createElement('div'),
+        $table = $grid_body.appendChild(document.createElement('table')),
+        $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
+        $tbody = $table.createTBody(),
+        $_row = document.createElement('tr'),
+        cond = this.options.sort_conditions,
+        row_prefix = `${$grid.id}-row-`;
+
+    // Sort the data first
+    this.sort(cond, 'key', cond.key, null, true);
+
+    // Create a template row
+    $_row.draggable = false;
+    $_row.setAttribute('role', 'row');
+    $_row.setAttribute('aria-selected', 'false');
+
+    for (let column of this.data.columns) {
+      let $cell;
+
+      if (column.key) {
+        $cell = $_row.appendChild(document.createElement('th'));
+        $cell.scope = 'row';
+        $cell.setAttribute('role', 'rowheader');
+      } else {
+        $cell = $_row.insertCell(-1);
+        $cell.setAttribute('role', 'gridcell');
+      }
+
+      if (column.type === 'boolean') {
+        let $checkbox = $cell.appendChild(document.createElement('span'));
+
+        $checkbox.setAttribute('role', 'checkbox');
+        $cell.setAttribute('aria-readonly', 'false');
+      } else {
+        $cell.appendChild(document.createElement(column.type === 'time' ? 'time' : 'label'));
+      }
+
+      $cell.dataset.id = column.id;
+      $cell.dataset.type = column.type;
+    }
+
+    for (let row of this.data.rows) {
+      let $row = row.$element = $tbody.appendChild($_row.cloneNode(true));
+
+      $row.id = `${row_prefix}${row.data.id}`;
+      $row.dataset.id = row.data.id;
+
+      // Custom data
+      if (row.dataset && Object.keys(row.dataset).length) {
+        for (let [prop, value] of Object.entries(row.dataset)) {
+          $row.dataset[prop] = value;
+        }
+      }
+
+      for (let [i, column] of this.data.columns.entries()) {
+        let $child = $row.cells[i].firstElementChild,
+            value = row.data[column.id];
+
+        if (column.type === 'boolean') {
+          $child.setAttribute('aria-checked', value === true);
+        } else if (column.type === 'time') {
+          FlareTail.helpers.datetime.fill_element($child, value, this.options.date);
+        } else {
+          $child.textContent = value;
+        }
+      }
+    }
+
+    $grid_body.id = `${$grid.id}-body`;
+    $grid_body.className = 'grid-body';
+    $grid_body.tabIndex = -1;
+    $grid.appendChild($grid_body);
+
+    if (row_data) {
+      this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
+      this.activate_rows();
+      FlareTail.helpers.event.trigger($grid, 'Rebuilt');
+    }
   }
 
-  $controller.setAttribute('aria-valuenow', st);
-  $controller.style.top = `${st + 2 + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
-};
+  get_data () {
+    let $header = this.view.$header,
+        $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
 
-FlareTail.widgets.ScrollBar.prototype.onkeydown = function (event) {
-  this.scroll_with_keyboard(event);
-};
+    // Sort conditions
+    if (this.options.sortable && $sorter) {
+      this.options.sort_conditions = {
+        key: $sorter.dataset.id || null,
+        order: $sorter.getAttribute('aria-sort') || 'none'
+      };
+    }
 
-FlareTail.widgets.ScrollBar.prototype.onoverflow = function (event) {
-  if (event.target === event.currentTarget) {
-    this.set_height();
-    this.view.$controller.setAttribute('aria-disabled', 'false');
-    this.view.$controller.tabIndex = 0;
+    // Fill the column database
+    this.data.columns = [...$header.querySelector('[role="row"]').cells].map($cell => ({
+      id: $cell.dataset.id,
+      type: $cell.dataset.type || 'string',
+      label: $cell.textContent,
+      hidden: false,
+      key: $cell.dataset.key ? true : false,
+      $element: $cell
+    }));
+
+    // Fill the row database
+    this.data.rows = [...this.view.$body.querySelectorAll('[role="row"]')].map($row => {
+      let row = { id: $row.id, $element: $row, data: {} };
+
+      for (let [index, $cell] of [...$row.cells].entries()) {
+        let column = this.data.columns[index],
+            value,
+            normalized_value;
+
+        switch (column.type) {
+          case 'integer': {
+            value = Number.parseInt($cell.textContent);
+
+            break;
+          }
+
+          case 'boolean': { // checkbox
+            value = $cell.querySelector('[role="checkbox"]').matches('[aria-checked="true"]');
+
+            break;
+          }
+
+          default: { // string
+            value = $cell.textContent;
+          }
+        }
+
+        row.data[column.id] = value;
+      };
+
+      return row;
+    });
   }
-};
 
-FlareTail.widgets.ScrollBar.prototype.onunderflow = function (event) {
-  if (event.target === event.currentTarget) {
-    this.view.$controller.setAttribute('aria-disabled', 'true');
-    this.view.$controller.tabIndex = -1;
+  sort (cond, prop, value, receiver, data_only = false) {
+    let $grid = this.view.$container,
+        $tbody = this.view.$body.querySelector('tbody'),
+        $header = this.view.$header,
+        $sorter;
+
+    if (data_only) {
+      cond.order = cond.order || 'ascending';
+      FlareTail.helpers.array.sort(this.data.rows, cond);
+
+      return true;
+    }
+
+    if (prop === 'order') {
+      cond.order = value;
+    } else if (prop === 'key' && cond.key === value) {
+      // The same column is selected; change the order
+      cond.order = cond.order === 'ascending' ? 'descending' : 'ascending';
+    } else {
+      cond.key = value;
+      cond.order = 'ascending';
+      $header.querySelector('[aria-sort]').removeAttribute('aria-sort');
+    }
+
+    $sorter = $header.querySelector(`[role="columnheader"][data-id="${CSS.escape(cond.key)}"]`);
+    cond.type = $sorter.dataset.type;
+
+    $tbody.setAttribute('aria-busy', 'true'); // display: none
+
+    FlareTail.helpers.array.sort(this.data.rows, cond);
+
+    $tbody.removeAttribute('aria-busy');
+    $sorter.setAttribute('aria-sort', cond.order);
+
+    // Reorder the member list
+    this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
+
+    // Fire an event
+    FlareTail.helpers.event.trigger($grid, 'Sorted', { detail: {
+      conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
+    }});
+
+    let selected = this.view.selected;
+
+    if (selected && selected.length) {
+      this.ensure_row_visibility(selected[selected.length - 1]);
+    }
+
+    return true;
   }
-};
 
-FlareTail.widgets.ScrollBar.prototype.scroll_with_mouse = function (event) {
-  let $owner = this.view.$owner,
-      FTue = FlareTail.helpers.event;
+  init_columnpicker () {
+    let $picker = this.view.$columnpicker = document.createElement('ul'),
+        $header = this.view.$header;
 
-  if (event.type === 'mousedown') {
-    this.data.rect = {
-      st: $owner.scrollTop,
-      sh: $owner.scrollHeight,
-      ch: $owner.clientHeight,
-      cy: event.clientY
+    $picker.id = `${this.view.$container.id}-columnpicker`;
+    $picker.setAttribute('role', 'menu');
+    $picker.setAttribute('aria-expanded', 'false');
+    $header.appendChild($picker);
+    $header.setAttribute('aria-owns', $picker.id); // Set this attr before initializing the widget
+
+    let $$picker = this.data.$$columnpicker = new FlareTail.widgets.Menu($picker);
+
+    $$picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
+  }
+
+  build_columnpicker () {
+    this.data.$$columnpicker.build(this.data.columns.map(col => ({
+      id: `${this.view.$container.id}-columnpicker-${col.id}`,
+      label: col.label,
+      type: 'menuitemcheckbox',
+      disabled: col.key === true,
+      checked: !col.hidden,
+      data: { id: col.id }
+    })));
+  }
+
+  toggle_column (id) {
+    // Find column by id, thanks to Proxy
+    let col = this.data.columns[id];
+
+    col.hidden = !col.hidden;
+  }
+
+  show_column (col) {
+    let $grid = this.view.$container,
+        attr = `[data-id="${col.id}"]`;
+
+    $grid.querySelector(`[role="columnheader"]${attr}`).removeAttribute('aria-hidden');
+
+    for (let $cell of $grid.querySelectorAll(`[role="gridcell"]${attr}`)) {
+      $cell.removeAttribute('aria-hidden');
+    }
+
+    for (let $col of $grid.querySelectorAll(`col${attr}`)) {
+      $col.dataset.hidden = 'false';
+    }
+  }
+
+  hide_column (col) {
+    let $grid = this.view.$container,
+        attr = `[data-id="${col.id}"]`;
+
+    for (let $col of $grid.querySelectorAll(`col${attr}`)) {
+      $col.dataset.hidden = 'true';
+    }
+
+    $grid.querySelector(`[role="columnheader"]${attr}`).setAttribute('aria-hidden', 'true');
+
+    for (let $cell of $grid.querySelectorAll(`[role="gridcell"]${attr}`)) {
+      $cell.setAttribute('aria-hidden', 'true');
+    }
+  }
+
+  ensure_row_visibility ($row) {
+    let $outer = this.view.$container.querySelector('.grid-body');
+
+    if (!$outer) {
+      return;
+    }
+
+    let ost = $outer.scrollTop,
+        ooh = $outer.offsetHeight,
+        rot = $row.offsetTop,
+        roh = $row.offsetHeight;
+
+    if (ost > rot) {
+      $row.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    }
+
+    if (ost + ooh < rot + roh) {
+      $row.scrollIntoView({ block: 'end', behavior: 'smooth' });
+    }
+  }
+
+  start_column_reordering (event) {
+    let $grid = this.view.$container,
+        $container = document.createElement('div'),
+        $_image = document.createElement('canvas'),
+        $follower,
+        headers = [],
+        rect = $grid.getBoundingClientRect(),
+        style = $container.style;
+
+    event.target.dataset.grabbed = 'true';
+    $container.id = 'column-drag-image-container';
+    style.top = `${rect.top}px`;
+    style.left = `${rect.left}px`;
+    style.width = `${$grid.offsetWidth}px`;
+    style.height = `${$grid.offsetHeight}px`;
+
+    for (let $chead of this.view.$header.querySelectorAll('[role="columnheader"]')) {
+      let $image = $container.appendChild($_image.cloneNode(true)),
+          left = $chead.offsetLeft,
+          width = $chead.offsetWidth,
+          index = $chead.cellIndex,
+          style = $image.style;
+
+      $image.id = `column-drag-image-${index}`;
+      style.left = `${left}px`;
+      style.width = `${width}px`;
+      style.height = `${$grid.offsetHeight}px`;
+      style.background = `-moz-element(#${$grid.id}) -${left}px 0`;
+
+      if ($chead.dataset.grabbed === 'true') {
+        // The follower shows the dragging position
+        $follower = $image;
+        $image.className = 'follower';
+        this.data.drag = {
+          $container,
+          $header: $chead,
+          $follower,
+          start_index: index,
+          current_index: index,
+          start_left: event.clientX - left,
+          row_width: width,
+          grid_width: $grid.offsetWidth,
+        };
+      }
+
+      headers.push(new Proxy({ index, left, width }, {
+        set: (obj, prop, value) => {
+          if (prop === 'left') {
+            let $image = document.querySelector(`#column-drag-image-${obj.index}`);
+
+            if ($image.className !== 'follower') {
+              $image.style.left = `${value}px`;
+            }
+          }
+
+          obj[prop] = value;
+
+          return true;
+        }
+      }));
+    }
+
+    this.data.drag.headers = headers;
+    document.body.appendChild($container);
+    $grid.querySelector('[role="scrollbar"]').setAttribute('aria-hidden', 'true')
+  }
+
+  continue_column_reordering (event) {
+    let drag = this.data.drag,
+        pos = event.clientX - drag.start_left,
+        index = drag.current_index,
+        headers = drag.headers,
+        current = headers[index],
+        prev = headers[index - 1],
+        next = headers[index + 1];
+
+    // Moving left
+    if (prev && pos < prev.left + prev.width / 2) {
+      [prev.index, current.index] = [current.index, prev.index];
+      [prev.width, current.width] = [current.width, prev.width];
+      current.left = prev.left + prev.width;
+      drag.current_index--;
+
+      return;
+    }
+
+    // Moving right
+    if (next && pos + drag.row_width > next.left + next.width / 2) {
+      [current.index, next.index] = [next.index, current.index];
+      [current.width, next.width] = [next.width, current.width];
+      current.left = prev ? prev.left + prev.width : 0;
+      next.left = current.left + current.width;
+      drag.current_index++;
+
+      return;
+    }
+
+    // Move further
+    if (pos >= 0 && pos + drag.row_width <= drag.grid_width) {
+      drag.$follower.style.left = `${pos}px`;
+    }
+  }
+
+  stop_column_reordering (event) {
+    let drag = this.data.drag,
+        start_idx = drag.start_index,
+        current_idx = drag.current_index,
+        $grid = this.view.$container,
+        columns = this.data.columns;
+
+    // Actually change the position of rows
+    if (start_idx !== current_idx) {
+      // Data
+      columns.splice(current_idx, 0, columns.splice(start_idx, 1)[0]);
+
+      // View
+      for (let $colgroup of $grid.querySelectorAll('colgroup')) {
+        let items = $colgroup.children;
+
+        $colgroup.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
+      }
+
+      for (let $row of $grid.querySelectorAll('[role="row"]')) {
+        let items = $row.children;
+
+        $row.insertBefore(items[start_idx], items[start_idx > current_idx ? current_idx : current_idx + 1]);
+      }
+    }
+
+    // Fire an event
+    FlareTail.helpers.event.trigger($grid, 'ColumnModified', { detail: { columns }});
+
+    // Cleanup
+    drag.$header.removeAttribute('data-grabbed');
+    drag.$container.remove();
+    $grid.querySelector('[role="scrollbar"]').removeAttribute('aria-hidden');
+
+    delete this.data.drag;
+  }
+
+  filter (ids) {
+    let $grid_body = this.view.$body,
+        selected = [...this.view.selected];
+
+    $grid_body.setAttribute('aria-busy', 'true');
+
+    // Filter the rows
+    for (let $row of $grid_body.querySelectorAll('[role="row"]')) {
+      let id = $row.dataset.id;
+
+      // Support both literal IDs and numeric IDs
+      $row.setAttribute('aria-hidden', !ids.includes(Number.isNaN(id) ? id : Number(id)));
+    }
+
+    // Update the member list
+    this.view.members = [...$grid_body.querySelectorAll('[role="row"][aria-hidden="false"]')];
+
+    if (selected.length) {
+      for (let [index, $row] of selected.entries()) if ($row.getAttribute('aria-hidden') === 'true') {
+        selected.splice(index, 1);
+      }
+
+      this.view.selected = selected;
+    }
+
+    $grid_body.scrollTop = 0;
+    $grid_body.removeAttribute('aria-busy');
+
+    FlareTail.helpers.event.trigger(this.view.$container, 'Filtered');
+  }
+}
+
+/**
+ * Define the Select abstract role.
+ * @extends FlareTail.widgets.Composite
+ */
+FlareTail.widgets.Select = class Select extends FlareTail.widgets.Composite {}
+
+/**
+ * Define the ComboBox role.
+ * TODO: Support aria-autocomplete="inline" and "both"
+ * TODO: Add more HTMLSelectElement-compatible attributes
+ * TODO: Add test cases
+ * @extends FlareTail.widgets.Select
+ */
+FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
+  constructor ($container) {
+    super(); // This does nothing but is required before using `this`
+
+    this.$container = $container;
+    this.$container.setAttribute('aria-expanded', 'false');
+
+    this.$button = this.$container.querySelector('[role="button"]');
+    this.$input = this.$container.querySelector('[role="textbox"], [role="searchbox"]');
+    this.$listbox = this.$container.querySelector('[role="listbox"]');
+
+    this.autocomplete = this.$container.getAttribute('aria-autocomplete') || 'none';
+    this.autoexpand = this.$container.matches('[data-autoexpand="true"]');
+    this.nobutton = this.$container.matches('[data-nobutton="true"]');
+
+    Object.defineProperties(this, {
+      options: {
+        enumerable: true,
+        get: () => [...this.$listbox.querySelectorAll('[role="option"]')],
+      },
+      disabled: {
+        enumerable: true,
+        get: () => this.$container.matches('[aria-disabled="true"]'),
+      },
+      readonly: {
+        enumerable: true,
+        get: () => this.$input.matches('[aria-readonly="true"]'),
+      },
+      selected: {
+        enumerable: true,
+        get: () => this.$$input.value,
+        set: value => {
+          this.$selected = this.$listbox.querySelector(`[role="option"][data-value="${value}"]`);
+          this.$$input.value = value;
+        },
+      },
+      $selected: {
+        enumerable: true,
+        get: () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
+        set: $selected => {
+          this.$$listbox.view.selected = this.$$listbox.view.$focused = $selected;
+          this.$$input.value = $selected.dataset.value || $selected.textContent;
+        },
+      },
+      selectedIndex: {
+        enumerable: true,
+        get: () => this.$$listbox.view.members.indexOf(this.$$listbox.view.selected[0]),
+        set: index => {
+          let $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused
+                        = this.$$listbox.view.members[index];
+
+          this.$$input.value = $selected.dataset.value || $selected.textContent;
+        },
+      },
+    });
+
+    if (!this.$button && !this.nobutton) {
+      this.$button = this.$container.appendChild(document.createElement('span'));
+      this.$button.setAttribute('role', 'button');
+    }
+
+    if (this.$button) {
+      this.$button.tabIndex = 0;
+      this.$button.addEventListener('mousedown', event => this.button_onmousedown(event));
+    }
+
+    if (!this.$input) {
+      this.$input = this.$container.insertBefore(document.createElement('span'), this.$container.firstElementChild);
+      this.$input.setAttribute('role', 'textbox');
+      this.$input.setAttribute('aria-readonly', this.$container.matches('[aria-readonly="true"]'));
+    }
+
+    this.$input.tabIndex = 0;
+    this.$input.contentEditable = !this.readonly;
+    this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
+    this.$input.addEventListener('input', event => this.input_oninput(event));
+    this.$input.addEventListener('blur', event => this.input_onblur(event));
+    this.$$input = new FlareTail.widgets.TextBox(this.$input);
+
+    if (!this.$listbox) {
+      this.$listbox = this.$container.appendChild(document.createElement('ul'));
+      this.$listbox.setAttribute('role', 'listbox');
+    }
+
+    this.$listbox.addEventListener('mouseover', event => this.listbox_onmouseover(event));
+    this.$listbox.addEventListener('mousedown', event => this.listbox_onmousedown(event));
+    this.$listbox.addEventListener('click', event => this.listbox_onclick(event));
+    this.$listbox.addEventListener('Selected', event => this.listbox_onselect(event));
+    this.$$listbox = new FlareTail.widgets.ListBox(this.$listbox, undefined, { search_enabled: false });
+
+    this.$listbox_outer = this.$container.appendChild(document.createElement('div'));
+    this.$listbox_outer.className = 'listbox-outer';
+    this.$listbox_outer.appendChild(this.$listbox);
+    this.$listbox_outer.addEventListener('wheel', event => event.stopPropagation());
+    this.$$scrollbar = new FlareTail.widgets.ScrollBar(this.$listbox_outer);
+
+    let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
+
+    if ($selected) {
+      this.$$input.value = $selected.dataset.value || $selected.textContent;
+    }
+  }
+
+  on (...args) {
+    this.$container.addEventListener(...args);
+  }
+
+  show_dropdown () {
+    if (!this.$$listbox.view.members.length) {
+      return;
+    }
+
+    let input = this.$input.getBoundingClientRect(),
+        listbox = this.$listbox_outer.getBoundingClientRect(),
+        adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height,
+        $selected = this.$$listbox.view.selected[0];
+
+    if (!$selected) {
+      $selected = this.$$listbox.view.selected = this.$$listbox.view.members[0];
+    }
+
+    this.$container.setAttribute('aria-expanded', 'true');
+    this.$container.setAttribute('aria-activedescendant', $selected.id);
+    this.$$listbox.view.$focused = $selected;
+    this.$input.focus(); // Keep focus on <input>
+    this.$listbox_outer.dataset.position = adjusted ? 'above' : 'below';
+    this.$$scrollbar.set_height();
+  }
+
+  hide_dropdown () {
+    this.$container.setAttribute('aria-expanded', 'false');
+    this.$container.removeAttribute('aria-activedescendant');
+  }
+
+  toggle_dropdown () {
+    if (this.$container.getAttribute('aria-expanded') === 'false') {
+      this.show_dropdown();
+    } else {
+      this.hide_dropdown();
+    }
+  }
+
+  fill_dropdown ($element, addition = true) {
+    if (!addition) {
+      this.clear_dropdown();
+    }
+
+    this.$listbox.appendChild($element);
+    this.$$listbox.update_members();
+    this.$$listbox.get_data();
+
+    let $selected = this.$$listbox.view.selected[0];
+
+    if (this.autocomplete === 'list' && $selected) {
+      this.$$input.value = $selected.dataset.value || $selected.textContent;
+    }
+  }
+
+  empty () {
+    this.$listbox.innerHTML = '';
+    this.$$listbox.update_members();
+    this.$$listbox.get_data();
+  }
+
+  build (data) {
+    this.empty();
+
+    for (let { value, selected } of data) {
+      this.add(value, selected);
+    }
+  }
+
+  add (value, selected = false) {
+    let $option = document.createElement('li');
+
+    $option.dataset.value = $option.textContent = value;
+    $option.setAttribute('role', 'option');
+    $option.setAttribute('aria-selected', selected);
+
+    this.fill_dropdown($option);
+
+    return $option;
+  }
+
+  clear_dropdown () {
+    this.$listbox.innerHTML = '';
+  }
+
+  clear_input () {
+    this.$$input.clear();
+  }
+
+  button_onmousedown (event) {
+    this.toggle_dropdown();
+    event.preventDefault();
+  }
+
+  input_onkeydown (event) {
+    if (event.key === 'Tab') {
+      return true;
+    }
+
+    if (this.disabled) {
+      event.preventDefault();
+
+      return false;
+    }
+
+    if (this.$$listbox.view.members.length) {
+      if (event.key === 'Escape') {
+        this.hide_dropdown();
+      } else if (event.key === ' ') { // Space
+        this.toggle_dropdown();
+      } else if (event.key === 'Enter') {
+        this.listbox_onmousedown(event);
+      } else {
+        FlareTail.helpers.kbd.dispatch(this.$listbox, event.key);
+
+        if (event.key.match(/^Arrow(Up|Down)$/)) {
+
+          if (this.autoexpand) {
+            this.show_dropdown();
+          }
+
+          let $target = this.$$listbox.view.selected[0],
+              value = $target.dataset.value || $target.textContent;
+
+          if (this.autocomplete === 'list') {
+            this.$$input.value = value;
+            FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
+          }
+
+          this.$input.focus(); // Keep focus on <input>
+        }
+      }
+    }
+
+    if (this.readonly) {
+      event.preventDefault();
+    }
+
+    event.stopPropagation();
+
+    return true;
+  }
+
+  input_oninput (event) {
+    let value = this.$$input.value.trim();
+
+    this.clear_dropdown();
+
+    if (!value.match(/\S/)) {
+      this.hide_dropdown();
+
+      return;
+    }
+
+    FlareTail.helpers.event.trigger(this.$container, 'Input', { detail: { value, $target: this.$input }});
+
+    event.stopPropagation();
+  }
+
+  input_onblur (event) {
+    // Use a timer in case of the listbox getting focus for a second
+    window.setTimeout(() => {
+      if (!this.$input.matches(':focus')) {
+        this.hide_dropdown();
+      }
+    }, 50);
+  }
+
+  // Based on Menu.prototype.onmouseover
+  listbox_onmouseover (event) {
+    if (this.$$listbox.view.members.includes(event.target)) {
+      this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
+      this.show_dropdown();
+    }
+
+    FlareTail.helpers.event.ignore(event);
+  }
+
+  listbox_onmousedown (event) {
+    let $target = this.$$listbox.view.selected[0],
+        value = $target.dataset.value || $target.textContent;
+
+    this.hide_dropdown();
+    this.$$input.value = value;
+    this.$input.focus();
+
+    FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
+    FlareTail.helpers.event.ignore(event);
+  }
+
+  listbox_onselect (event) {
+    this.$container.setAttribute('aria-activedescendant', event.detail.ids[0]);
+  }
+
+  bind (...args) {
+    this.$container.addEventListener(...args);
+  }
+}
+
+/**
+ * Define the ListBox role.
+ * @extends FlareTail.widgets.Select
+ */
+FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
+  /**
+   * Get a ListBox instance.
+   * @constructor
+   * @argument {Element} $container - <menu role="listbox">
+   * @argument {Array} [data]
+   * @argument {Object} [options] - This attribute on the listbox element is also supported:
+   *  - aria-multiselectable
+   * @return {Object} widget
+   */
+  constructor ($container, data = undefined, options = {}) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = { $container };
+
+    this.options = {
+      item_roles: ['option'],
+      item_selector: '[role="option"]',
+      search_enabled: options.search_enabled !== undefined ? options.search_enabled : true
     };
 
-    FTue.bind(this, window, ['mousemove', 'mouseup']);
+    this.handler = {
+      get: (obj, prop) => {
+        if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
+          return obj.$element.getAttribute(`aria-${prop}`) === 'true';
+        }
+
+        return obj[prop];
+      },
+      set: (obj, prop, value) => {
+        if (prop === 'selected' || prop === 'disabled' || prop === 'hidden') {
+          obj.$element.setAttribute(`aria-${prop}`, value);
+        }
+
+        obj[prop] = value;
+
+        return true;
+      }
+    };
+
+    this.data = {};
+
+    if (data) {
+      this.data.structure = data;
+      this.build();
+    }
+
+    this.activate();
+
+    if (!data) {
+      this.get_data();
+    }
   }
 
-  if (event.type === 'mousemove') {
-    let rect = this.data.rect,
-        delta = rect.st + event.clientY - rect.cy,
-        top = Math.floor(delta * rect.sh / rect.ch);
+  build () {
+    let map = this.data.map = new Map(),
+        $fragment = new DocumentFragment(),
+        $_item = document.createElement('li');
+
+    $_item.tabIndex = -1;
+    $_item.setAttribute('role', 'option');
+    $_item.appendChild(document.createElement('label'));
+
+    for (let item of this.data.structure) {
+      let $item = item.$element = $fragment.appendChild($_item.cloneNode(true));
+
+      $item.id = item.id;
+      $item.setAttribute('aria-selected', item.selected ? 'true' : 'false');
+      $item.firstElementChild.textContent = item.label;
+
+      if (item.data) {
+        for (let [prop, value] of Object.entries(item.data)) {
+          $item.dataset[prop] = value;
+        }
+      }
+
+      // Save the item/obj reference
+      map.set(item.label, new Proxy(item, this.handler));
+    }
+
+    this.view.$container.appendChild($fragment);
+  }
+
+  get_data () {
+    let map = this.data.map = new Map();
+
+    this.data.structure = this.view.members.map($item => {
+      let item = { $element: $item, id: $item.id, label: $item.textContent };
+
+      if (Object.keys($item.dataset).length) {
+        item.data = {};
+
+        for (let [prop, value] of Object.entries($item.dataset)) {
+          item.data[prop] = value;
+        }
+      }
+
+      // Save the item/obj reference
+      map.set(item.label, new Proxy(item, this.handler));
+
+      return item;
+    });
+  }
+
+  filter (list) {
+    let $container = this.view.$container;
+
+    $container.setAttribute('aria-busy', 'true'); // Prevent reflows
+
+    // Filter the options
+    for (let [name, item] of this.data.map) {
+      item.selected = false;
+      item.disabled = list.length && !list.includes(name);
+    }
+
+    // Update the member list
+    this.view.members = [...$container.querySelectorAll(
+      '[role="option"]:not([aria-disabled="true"]):not([aria-hidden="true"])')];
+
+    if (this.view.selected.length) {
+      this.view.selected = [];
+    }
+
+    $container.removeAttribute('aria-busy');
+  }
+}
+
+/**
+ * Define the Menu role.
+ * @extends FlareTail.widgets.Select
+ */
+FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
+  constructor ($container, data = [], subclass = false) {
+    super(); // This does nothing but is required before using `this`
+
+    // MenuBar activates the widget in its own constructor
+    if (subclass) {
+      return this;
+    }
+
+    this.view = { $container };
+
+    this.options = {
+      item_roles: ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
+      item_selector: '[role^="menuitem"]',
+      focus_cycling: true
+    };
+
+    this.data = {};
+
+    if (data.length) {
+      this.data.structure = data;
+      this.build();
+    }
+
+    super.activate();
+    this.activate();
+
+    // Context menu
+    let $owner = document.querySelector(`[aria-owns="${CSS.escape($container.id)}"]`);
+
+    if ($owner && !$owner.matches('[role="menuitem"]')) {
+      this.view.$owner = $owner;
+      FlareTail.helpers.event.bind(this, $owner, ['contextmenu', 'keydown']);
+    }
+
+    Object.defineProperties(this, {
+      closed: {
+        enumerable: true,
+        get: () => $container.getAttribute('aria-expanded') === 'false',
+        set: value => value ? this.open() : this.close()
+      }
+    });
+
+    // TEMP: Update the members of the menu when the aria-hidden attribute is changed
+    (new MutationObserver(mutations => {
+      if (mutations[0].target.matches(this.options.item_selector)) {
+        this.update_members();
+      }
+    })).observe($container, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['aria-disabled', 'aria-hidden']
+    });
+  }
+
+  activate (rebuild = false) {
+    // Redefine items
+    let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
+        selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`,
+        items = this.view.members = [...document.querySelectorAll(selector)],
+        menus = this.data.menus = new WeakMap();
+
+    for (let $item of items) {
+      if ($item.hasAttribute('aria-owns')) {
+        let $menu = document.getElementById($item.getAttribute('aria-owns')),
+            $$menu = new FlareTail.widgets.Menu($menu);
+
+        $$menu.data.parent = this;
+        menus.set($item, $$menu);
+      }
+    }
+
+    if (rebuild) {
+      return;
+    }
+
+    this.view = new Proxy(this.view, {
+      set: (obj, prop, newval) => {
+        let oldval = obj[prop];
+
+        if (prop === '$focused') {
+          if (oldval && menus.has(oldval)) {
+            menus.get(oldval).close();
+          }
+
+          if (newval && menus.has(newval)) {
+            menus.get(newval).open();
+          }
+        }
+
+        obj[prop] = newval;
+
+        return true;
+      }
+    });
+  }
+
+  onmousedown (event) {
+    // Open link in a new tab
+    if (event.target.href && event.buttons <= 1) {
+      event.stopPropagation();
+      event.target.target = '_blank';
+
+      return;
+    }
+
+    if (event.buttons > 1) {
+      FlareTail.helpers.event.ignore(event);
+
+      return;
+    }
+
+    let parent = this.data.parent;
+
+    if (parent && event.target === parent.view.selected[0]) {
+      // Just opening the menu
+      return;
+    }
+
+    if (event.currentTarget === window) {
+      this.close(true);
+    } else if (!this.data.menus.has(event.target) && this.view.members.includes(event.target)) {
+      this.select(event)
+      this.close(true);
+    }
+
+    FlareTail.helpers.event.ignore(event);
+  }
+
+  onmouseover (event) {
+    if (this.view.members.includes(event.target)) {
+      this.view.selected = this.view.$focused = event.target;
+    }
+
+    FlareTail.helpers.event.ignore(event);
+  }
+
+  oncontextmenu (event) {
+    let $owner = this.view.$owner,
+        $container = this.view.$container;
+
+    if ($owner) {
+      let style = $container.style;
+
+      style.top = `${event.layerY}px`;
+      style.left = `${event.layerX}px`;
+
+      if (event.currentTarget === $owner) {
+        this.open(event);
+      }
+
+      if ($container.getBoundingClientRect().right > window.innerWidth) {
+        // The menu is shown beyond the window width. Reposition it
+        style.left = `${$owner.offsetWidth - $container.offsetWidth - 4}px`;
+      }
+    }
+
+    return FlareTail.helpers.event.ignore(event);
+  }
+
+  onkeydown (event) {
+    let parent = this.data.parent,
+        menus = this.data.menus,
+        has_submenu = menus.has(event.target),
+        $owner = this.view.$owner,
+        key = event.key;
+
+    // Open link in a new tab
+    if (event.target.href && event.key === 'Enter') {
+      event.stopPropagation();
+      event.target.target = '_blank';
+
+      return;
+    }
+
+    // The owner of the context menu
+    if ($owner && event.currentTarget === $owner) {
+      let view = this.view,
+          items = view.members;
+
+      switch (key) {
+        case 'ArrowUp':
+        case 'End': {
+          view.selected = view.$focused = items[items.length - 1];
+
+          break;
+        }
+
+        case 'ArrowDown':
+        case 'ArrowRight':
+        case 'Home': {
+          view.selected = view.$focused = items[0];
+
+          break;
+        }
+
+        case 'Escape':
+        case 'Tab': {
+          this.close();
+
+          break;
+        }
+      }
+
+      return;
+    }
+
+    FlareTail.helpers.event.ignore(event);
+
+    switch (key) {
+      case 'ArrowRight': {
+        if (has_submenu) {
+          // Select the first item in the submenu
+          let view = menus.get(event.target).view;
+
+          view.selected = view.$focused = view.members[0];
+        } else if (parent) {
+          // Select the next (or first) item in the parent menu
+          let view = parent.view,
+              items = view.members,
+              $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
+
+          view.selected = view.$focused = $target;
+        }
+
+        break;
+      }
+
+      case 'ArrowLeft': {
+        if (parent) {
+          let view = parent.view,
+              items = view.members,
+              $target = view.$container.matches('[role="menubar"]')
+                      ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1] : view.selected[0];
+
+          view.selected = view.$focused = $target;
+        }
+
+        break;
+      }
+
+      case 'Escape': {
+        this.close();
+
+        break;
+      }
+
+      case 'Enter':
+      case ' ': { // Space
+        if (!has_submenu) {
+          this.select(event);
+          this.close(true);
+        }
+
+        break;
+      }
+
+      default: {
+        // The default behavior
+        super.onkeydown(event);
+      }
+    }
+  }
+
+  onblur (event) {
+    if (event.currentTarget === window) {
+      this.close(true);
+    }
+
+    // The default behavior
+    super.onblur(event);
+  }
+
+  build (data) {
+    let $container = this.view.$container,
+        $fragment = new DocumentFragment(),
+        $_separator = document.createElement('li'),
+        $_outer = document.createElement('li'),
+        rebuild = false;
+
+    if (data) {
+      // Empty & rebuild menu
+      rebuild = true;
+      $container.innerHTML = '';
+    } else {
+      data = this.data.structure;
+    }
+
+    $_separator.setAttribute('role', 'separator');
+    $_outer.appendChild(document.createElement('span')).appendChild(document.createElement('label'));
+
+    this.data.structure = data.map(item => {
+      if (item.type === 'separator') {
+        $fragment.appendChild($_separator.cloneNode(true));
+
+        return null;
+      }
+
+      let $item = item.$element = $fragment.appendChild($_outer.cloneNode(true)).firstElementChild;
+
+      $item.id = item.id;
+      $item.setAttribute('role', item.type || 'menuitem');
+      $item.setAttribute('aria-disabled', item.disabled === true);
+      $item.setAttribute('aria-checked', item.checked === true);
+      $item.firstElementChild.textContent = item.label;
+
+      if (item.data) {
+        for (let [prop, value] of Object.entries(item.data)) {
+          $item.dataset[prop] = value;
+        }
+      }
+
+      return item;
+    }).filter(item => item !== null);
+
+    $container.appendChild($fragment);
+
+    if (rebuild) {
+      super.activate(true);
+      this.activate(true);
+    }
+  }
+
+  open () {
+    let $container = this.view.$container;
+
+    $container.setAttribute('aria-expanded', 'true');
+    $container.removeAttribute('aria-activedescendant');
+    FlareTail.helpers.event.trigger($container, 'MenuOpened');
+
+    let parent = this.data.parent;
+
+    // Show the submenu on the left if there is not enough space
+    if ($container.getBoundingClientRect().right > window.innerWidth ||
+        parent && parent.view.$container.matches('.dir-left')) {
+      $container.classList.add('dir-left');
+    }
+
+    FlareTail.helpers.event.bind(this, window, ['mousedown', 'blur']);
+  }
+
+  select (event) {
+    FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
+      bubbles: true,
+      cancelable: false,
+      detail: {
+        target: event.target,
+        command: event.target.dataset.command || event.target.id
+      }
+    });
+  }
+
+  close (propagation) {
+    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
+
+    let $container = this.view.$container,
+        parent = this.data.parent;
+
+    $container.setAttribute('aria-expanded', 'false');
+    $container.removeAttribute('aria-activedescendant');
+    FlareTail.helpers.event.trigger($container, 'MenuClosed');
+    this.view.selected = [];
+
+    if (parent) {
+      if (parent.view.$focused) {
+        parent.view.$focused.focus();
+      }
+
+      if (propagation) {
+        parent.close(true);
+      }
+    } else {
+      // Context menu
+      let $owner = this.view.$owner;
+
+      if ($owner) {
+        $owner.focus();
+      }
+    }
+  }
+}
+
+/**
+ * Define the MenuBar role.
+ * @extends FlareTail.widgets.Menu
+ */
+FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
+  constructor ($container, data) {
+    super($container, [], true); // This does nothing but is required before using `this`
+
+    this.view = { $container };
+
+    this.options = {
+      item_roles: ['menuitem'],
+      item_selector: '[role="menuitem"]',
+      focus_cycling: true
+    };
+
+    FlareTail.widgets.Composite.prototype.activate.call(this);
+    super.activate();
+  }
+
+  onmousedown (event) {
+    if (event.buttons > 1) {
+      FlareTail.helpers.event.ignore(event);
+
+      return;
+    }
+
+    if (this.view.members.includes(event.target)) {
+      event.target !== this.view.selected[0] ? this.open(event) : this.close();
+    } else if (this.view.selected.length) {
+      this.close();
+    } else {
+      FlareTail.helpers.event.ignore(event);
+    }
+  }
+
+  onmouseover (event) {
+    if (this.view.selected.length && this.view.members.includes(event.target)) {
+      this.view.selected = this.view.$focused = event.target;
+    }
+
+    return FlareTail.helpers.event.ignore(event);
+  }
+
+  onkeydown (event) {
+    let menu = this.data.menus.get(event.target).view,
+        menuitems = menu.members;
+
+    switch (event.key) {
+      case 'Tab': {
+        return true; // Focus management
+      }
+
+      case 'Home':
+      case 'ArrowDown': {
+        menu.selected = menu.$focused = menuitems[0];
+
+        break;
+      }
+
+      case 'End':
+      case 'ArrowUp': {
+        menu.selected = menu.$focused = menuitems[menuitems.length - 1];
+
+        break;
+      }
+
+      case ' ': { // Space
+        if (event.target.matches('[aria-selected="true"]')) {
+          menu.$container.setAttribute('aria-expanded', 'false');
+          this.view.selected = [];
+        } else {
+          menu.$container.setAttribute('aria-expanded', 'true');
+          this.view.selected = event.target;
+        }
+
+        break;
+      }
+
+      case 'Escape': {
+        if (event.target.matches('[aria-selected="true"]')) {
+          menu.$container.setAttribute('aria-expanded', 'false');
+          this.view.selected = [];
+        }
+
+        break;
+      }
+
+      default: {
+        // The default behavior
+        FlareTail.widgets.Composite.prototype.onkeydown.call(this, event);
+      }
+    }
+
+    return FlareTail.helpers.event.ignore(event);
+  }
+
+  open (event) {
+    this.select_with_mouse(event);
+  }
+
+  close () {
+    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
+
+    this.view.selected = [];
+  }
+}
+
+/**
+ * Define the RadioGroup role.
+ * @extends FlareTail.widgets.Select
+ */
+FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select {
+  constructor ($container, data) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = { $container };
+
+    this.options = {
+      item_roles: ['radio'],
+      item_selector: '[role="radio"]',
+      selected_attr: 'aria-checked',
+      focus_cycling: true
+    };
+
+    this.activate();
+  }
+}
+
+/**
+ * Define the Tree role.
+ * @extends FlareTail.widgets.Select
+ */
+FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
+  /**
+   * Get a Tree instance.
+   * @constructor
+   * @argument {Element} $container - <menu role="tree">
+   * @argument {Array} data - Optional data
+   * @return {Object} widget
+   */
+  constructor ($container, data) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = { $container };
+
+    this.options = {
+      search_enabled: true,
+      item_roles: ['treeitem'],
+      item_selector: '[role="treeitem"]',
+    };
+
+    this.data = {};
+
+    if (data) {
+      this.data.structure = data;
+      this.build();
+    }
+
+    this.activate();
+
+    if (!data) {
+      this.get_data();
+    }
+  }
+
+  onmousedown (event) {
+    if (event.target.matches('.expander')) {
+      this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
+    } else {
+      // The default behavior
+      super.onmousedown(event);
+    }
+  }
+
+  onkeydown (event) {
+    let $item = event.target,
+        items = this.view.members;
+
+    switch (event.key) {
+      case 'ArrowLeft': {
+        if ($item.matches('[aria-expanded="true"]')) {
+          this.expand($item); // Collapse the subgroup
+        } else {
+          // Select the parent item
+          let level = Number($item.getAttribute('aria-level')),
+              $selected = items[0];
+
+          for (let i = items.indexOf($item) - 1; i >= 0; i--) {
+            if (Number(items[i].getAttribute('aria-level')) === level - 1) {
+              $selected = items[i];
+
+              break;
+            }
+          }
+
+          this.view.selected = this.view.$focused = $selected;
+        }
+
+        break;
+      }
+
+      case 'ArrowRight': {
+        if ($item.matches('[aria-expanded="false"]')) {
+          this.expand($item); // Expand the subgroup
+        } else if ($item.hasAttribute('aria-expanded')) {
+          // Select the item just below
+          let $selected = items[items.indexOf($item) + 1];
+
+          this.view.selected = this.view.$focused = $selected;
+        }
+
+        break;
+      }
+
+      default: {
+        // The default behavior
+        super.onkeydown(event);
+      }
+    }
+  }
+
+  ondblclick (event) {
+    if (event.target.hasAttribute('aria-expanded')) {
+      this.expand(event.target);
+    }
+  }
+
+  build () {
+    let $tree = this.view.$container,
+        $fragment = new DocumentFragment(),
+        $outer = document.createElement('li'),
+        $treeitem = document.createElement('span'),
+        $expander = document.createElement('span'),
+        $group = document.createElement('ul'),
+        structure = this.data.structure,
+        map = this.data.map = new WeakMap(),
+        level = 1;
+
+    $outer.setAttribute('role', 'none');
+    $treeitem.setAttribute('role', 'treeitem');
+    $treeitem.appendChild(document.createElement('label'));
+    $expander.className = 'expander';
+    $expander.setAttribute('role', 'none');
+    $group.setAttribute('role', 'group');
+
+    let get_item = obj => {
+      let $item = $treeitem.cloneNode(true),
+          $_outer = $outer.cloneNode(false),
+          item_id = `${$tree.id}-${obj.id}`;
+
+      $item.firstChild.textContent = obj.label;
+      $item.id = item_id;
+      $item.setAttribute('aria-level', level);
+      $item.setAttribute('aria-selected', obj.selected ? 'true' : 'false');
+
+      // Save the item/obj reference
+      map.set($item, obj);
+      obj.$element = $item;
+
+      $_outer.appendChild($item);
+
+      if (obj.data) {
+        for (let [prop, value] of Object.entries(obj.data)) {
+          $item.dataset[prop] = value;
+        }
+      }
+
+      if (obj.sub) {
+        $_outer.appendChild($expander.cloneNode(false));
+        $item.setAttribute('aria-expanded', obj.selected !== false);
+        $item.setAttribute('aria-owns', `${item_id}-group`);
+
+        let $_group = $_outer.appendChild($group.cloneNode(false));
+
+        $_group.id = `${item_id}-group`;
+        level++;
+
+        for (let sub of obj.sub) {
+          $_group.appendChild(get_item(sub));
+        }
+
+        level--;
+      }
+
+      return $_outer;
+    };
+
+    // Build the tree recursively
+    for (let obj of structure) {
+      $fragment.appendChild(get_item(obj));
+    }
+
+    $tree.appendChild($fragment);
+  }
+
+  get_data () {
+    let map = this.data.map = new WeakMap(),
+        structure = this.data.structure = [];
+
+    // TODO: generate structure data
+
+    for (let $item of this.view.members) {
+      let level = Number($item.getAttribute('aria-level')),
+          item = {
+            $element: $item,
+            id: $item.id,
+            label: $item.textContent,
+            level,
+            sub: []
+          };
+
+      if (Object.keys($item.dataset).length) {
+        item.data = {};
+
+        for (let [prop, value] of Object.entries($item.dataset)) {
+          item.data[prop] = value;
+        }
+      }
+
+      // Save the item/obj reference
+      map.set($item, item);
+    };
+  }
+
+  expand ($item) {
+    let expanded = $item.matches('[aria-expanded="true"]'),
+        items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
+        selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`,
+        children = [...document.querySelectorAll(selector)];
+
+    $item.setAttribute('aria-expanded', !expanded);
+
+    // Update data with visible items
+    this.view.members = items.filter($item => $item.offsetParent !== null);
+
+    if (!children.length) {
+      return;
+    }
+
+    this.view.$focused = $item;
+
+    if (!this.options.multiselectable) {
+      this.view.selected = $item;
+
+      return;
+    }
+
+    // Remove the item's children from selection
+    let selected = this.view.selected.filter($item => !children.includes($item));
+
+    // Add the item to selection
+    selected.push($item);
+    this.view.selected = selected;
+  }
+}
+
+/**
+ * Define the TreeGrid role.
+ * @extends FlareTail.widgets.Grid
+ */
+FlareTail.widgets.TreeGrid = class TreeGrid extends FlareTail.widgets.Grid {}
+
+/**
+ * Define the TabList role.
+ * @extends FlareTail.widgets.Composite
+ */
+FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
+  /**
+   * Get a TabList instance.
+   * @constructor
+   * @argument {Element} $container - <ul role="tablist">. Those attributes are supported as options:
+   *  - data-removable: If true, tabs can be opened and/or closed (default: false)
+   *  - data-reorderable: If true, tabs can be reordered by drag (default: false)
+   *  Those attributes on the tab elements are also supported:
+   *  - aria-selected: If true, the tab will be selected first
+   *  - draggable and aria-grabbed: Tabs can be dragged (to reorder)
+   * @return {Object} widget
+   */
+  constructor ($container) {
+    super(); // This does nothing but is required before using `this`
+
+    // TODO: aria-multiselectable support for accordion UI
+    // http://www.w3.org/WAI/PF/aria-practices/#accordion
+    if ($container.matches('[aria-multiselectable="true"]')) {
+      throw new Error('Multi-selectable tab list is not supported yet.');
+    }
+
+    this.view = { $container };
+
+    this.options = {
+      item_roles: ['tab'],
+      item_selector: '[role="tab"]',
+      focus_cycling: true,
+      removable: $container.dataset.removable === 'true',
+      reorderable: $container.dataset.reorderable === 'true'
+    };
+
+    this.activate();
+
+    this.view = new Proxy(this.view, {
+      set: (obj, prop, value) => {
+        if (prop === 'selected') {
+          value = Array.isArray(value) ? value : [value];
+          this.switch_tabpanel(obj[prop][0], value[0]);
+        }
+
+        obj[prop] = value;
+
+        return true;
+      }
+    });
+
+    if (this.options.removable) {
+      for (let $tab of this.view.members) {
+        this.set_close_button($tab);
+      }
+    }
+
+    // TEMP: Update the members of the tablist when the aria-hidden attribute is changed
+    (new MutationObserver(mutations => {
+      if (mutations[0].target.matches(this.options.item_selector)) {
+        this.update_members();
+      }
+    })).observe($container, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['aria-disabled', 'aria-hidden']
+    });
+  }
+
+  onclick (event) {
+    if (event.currentTarget === this.view.$container && event.target.matches('.close')) {
+      this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
+    }
+  }
+
+  switch_tabpanel ($current_tab, $new_tab) {
+    let $panel;
+
+    // Current tabpanel
+    $panel = document.getElementById($current_tab.getAttribute('aria-controls'))
+    $panel.tabIndex = -1;
+    $panel.setAttribute('aria-hidden', 'true');
+
+    // New tabpanel
+    $panel = document.getElementById($new_tab.getAttribute('aria-controls'))
+    $panel.tabIndex = 0;
+    $panel.setAttribute('aria-hidden', 'false');
+  }
+
+  set_close_button ($tab) {
+    let $button = document.createElement('span');
+
+    $button.className = 'close';
+    $button.title = 'Close Tab'; // l10n
+    $button.setAttribute('role', 'button');
+    $button.setAttribute('aria-controls', $tab.id);
+    $tab.appendChild($button);
+  }
+
+  add_tab (name, title, label, $panel, position = 'last', dataset = {}) {
+    let items = this.view.members,
+        $tab = items[0].cloneNode(true),
+        $selected = this.view.selected[0],
+        index = items.indexOf($selected),
+        $next_tab = items[index + 1];
+
+    $tab.id = `tab-${name}`;
+    $tab.title = label || title;
+    $tab.tabIndex = -1;
+    $tab.setAttribute('aria-selected', 'false');
+    $tab.setAttribute('aria-controls', `tabpanel-${name}`);
+    $tab.querySelector('label').textContent = title;
+    $tab.querySelector('[role="button"]').setAttribute('aria-controls', $tab.id);
+
+    if (dataset) {
+      for (let [prop, value] of Object.entries(dataset)) {
+        $tab.dataset[prop] = value;
+      }
+    }
+
+    // Add tab
+    if (position === 'next' && $next_tab) {
+      this.view.$container.insertBefore($tab, $next_tab); // Update view
+      items.splice(index + 1, 0, $tab); // Update data
+    } else {
+      this.view.$container.appendChild($tab); // Update view
+      items.push($tab); // Update data
+    }
+
+    $panel = $panel || document.createElement('section');
+    $panel.id = `tabpanel-${name}`;
+    $panel.tabIndex = -1;
+    $panel.setAttribute('role', 'tabpanel');
+    $panel.setAttribute('aria-hidden', 'true');
+    $panel.setAttribute('aria-labelledby', $tab.id);
+
+    // Add tabpanel
+    document.getElementById($selected.getAttribute('aria-controls')).parentElement.appendChild($panel);
+
+    return $tab;
+  }
+
+  close_tab ($tab) {
+    let items = this.view.members,
+        index = items.indexOf($tab);
+
+    // Switch tab
+    if (this.view.selected[0] === $tab) {
+      let $new_tab = items[index - 1] || items[index + 1];
+
+      this.view.selected = this.view.$focused = $new_tab;
+    }
+
+    // Remove tabpanel
+    document.getElementById($tab.getAttribute('aria-controls')).remove();
+
+    // Remove tab
+    items.splice(index, 1); // Update data
+    $tab.remove(); // Update view
+  }
+}
+
+/**
+ * Define the Input abstract role.
+ * @extends FlareTail.widgets.Widget
+ */
+FlareTail.widgets.Input = class Input extends FlareTail.widgets.Widget {}
+
+/**
+ * Define the TextBox role.
+ * @extends FlareTail.widgets.Input
+ */
+FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
+  constructor ($textbox, richtext = false) {
+    super(); // This does nothing but is required before using `this`
+
+    this.$textbox = $textbox;
+    this.richtext = richtext || this.$textbox.matches('[data-richtext="true"]');
+    this.nobreak = !richtext || this.$textbox.matches('[data-nobreak="true"]');
+
+    Object.defineProperties(this, {
+      value: {
+        enumerable: true,
+        get: () => this.$textbox.textContent,
+        set: str => this.$textbox.textContent = str
+      },
+      readonly: {
+        enumerable: true,
+        get: () => this.$textbox.matches('[aria-readonly="true"]'),
+      },
+    });
+
+    FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
+  }
+
+  oncut (event) {
+    let selection = window.getSelection();
+
+    if (!this.richtext) {
+      // Mimic the plaintext editor's behaviour
+      event.clipboardData.setData('text/plain', selection.toString());
+      event.preventDefault();
+      selection.deleteFromDocument();
+    }
+
+    this.onedit();
+  }
+
+  oncopy (event) {
+    let selection = window.getSelection();
+
+    if (!this.richtext) {
+      // Mimic the plaintext editor's behaviour
+      event.clipboardData.setData('text/plain', selection.toString());
+      event.preventDefault();
+    }
+  }
+
+  onpaste (event) {
+    let selection = window.getSelection(),
+        range = selection.getRangeAt(0);
+
+    if (!this.richtext) {
+      // Mimic the plaintext editor's behaviour
+      event.preventDefault();
+      range.deleteContents();
+      range.insertNode(document.createTextNode(event.clipboardData.getData('text/plain')));
+      range.collapse(false);
+    }
+
+    this.onedit();
+  }
+
+  onkeydown (event) {
+    event.stopPropagation();
+
+    if (this.readonly) {
+      event.preventDefault();
+
+      return false;
+    }
+
+    if (this.nobreak && event.key === 'Enter') {
+      event.preventDefault();
+    }
+
+    return true;
+  }
+
+  oninput (event) {
+    this.onedit();
+  }
+
+  onedit () {
+    FlareTail.helpers.event.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
+  }
+
+  clear () {
+    this.$textbox.textContent = '';
+    this.onedit();
+  }
+
+  bind (...args) {
+    this.$textbox.addEventListener(...args);
+  }
+}
+
+/**
+ * Define the CheckBox role.
+ * @extends FlareTail.widgets.Input
+ */
+FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
+  constructor ($checkbox) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = { $checkbox };
+
+    $checkbox.tabIndex = 0;
+
+    Object.defineProperties(this, {
+      checked: {
+        enumerable: true,
+        get: () => $checkbox.getAttribute('aria-checked') === 'true',
+        set: checked => {
+          $checkbox.setAttribute('aria-checked', checked);
+          FlareTail.helpers.event.trigger($checkbox, 'Toggled', { detail: { checked }});
+
+          // Set Microdata when necessary
+          if ($checkbox.matches('meta[content]')) {
+            $checkbox.setAttribute('content', checked);
+          }
+        }
+      }
+    });
+
+    FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+  }
+
+  onkeydown (event) {
+    if (event.key === ' ') { // Space
+      this.view.$checkbox.click();
+    }
+  }
+
+  onclick (event) {
+    this.checked = !this.checked;
+    this.view.$checkbox.focus();
+
+    return false;
+  }
+
+  bind (...args) {
+    this.view.$checkbox.addEventListener(...args);
+  }
+}
+
+/**
+ * Define the ScrollBar role.
+ * @extends FlareTail.widgets.Input
+ */
+FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
+  /**
+   * Get a ScrollBar instance.
+   * @constructor
+   * @argument {Element} $owner - Element to be scrolled.
+   * @argument {Boolean} [adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
+   * @argument {Boolean} [arrow_keys_enabled=false] - Enable scrolling with the up/down arrow keys. Should be false on
+   *  Grid, Tree and ListBox.
+   * @return {Object} widget
+   */
+  constructor ($owner, adjusted = false, arrow_keys_enabled = true) {
+    super(); // This does nothing but is required before using `this`
+
+    let $controller = document.createElement('div'),
+        $content = document.createElement('div'),
+        FTue = FlareTail.helpers.event;
+
+    this.view = { $owner, $content, $controller };
+    this.data = {};
+    this.options = { adjusted, arrow_keys_enabled };
+
+    $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
+
+    for (let $child of [...$owner.children]) {
+      $content.appendChild($child);
+    }
+
+    $content.className = 'scrollable-area-content';
+
+    // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
+    if (FlareTail.helpers.env.device.mobile) {
+      $owner.appendChild($content);
+      $owner.style.removeProperty('display');
+
+      return false;
+    }
+
+    $content.appendChild(this.get_observer());
+
+    $controller.tabIndex = -1;
+    $controller.style.top = '2px';
+    $controller.setAttribute('role', 'scrollbar');
+    $controller.setAttribute('aria-controls', $owner.id);
+    $controller.setAttribute('aria-disabled', 'true');
+    $controller.setAttribute('aria-valuemin', '0');
+    $controller.setAttribute('aria-valuenow', '0');
+
+    $owner.appendChild($content);
+    $owner.appendChild($controller);
+    $owner.appendChild(this.get_observer());
+    $owner.style.removeProperty('display');
+
+    FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
+    FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
+
+    this.set_height();
+  }
+
+  onmousedown (event) {
+    this.scroll_with_mouse(event);
+  }
+
+  onmousemove (event) {
+    this.scroll_with_mouse(event);
+  }
+
+  onmouseup (event) {
+    this.scroll_with_mouse(event);
+  }
+
+  onwheel (event) {
+    event.preventDefault();
+
+    let $owner = this.view.$owner,
+        top = $owner.scrollTop + event.deltaY * (event.deltaMode === event.DOM_DELTA_LINE ? 12 : 1);
 
     if (top < 0) {
       top = 0;
@@ -3082,424 +2997,489 @@ FlareTail.widgets.ScrollBar.prototype.scroll_with_mouse = function (event) {
     }
   }
 
-  if (event.type === 'mouseup') {
-    delete this.data.rect;
+  onscroll (event) {
+    let $owner = this.view.$owner,
+        $controller = this.view.$controller;
 
-    FTue.unbind(this, window, ['mousemove', 'mouseup']);
-  }
-};
+    // Scroll by row
+    if (this.options.adjusted) {
+      let rect = $owner.getBoundingClientRect(),
+          $elm = document.elementFromPoint(rect.left, rect.top),
+          top = 0;
 
-FlareTail.widgets.ScrollBar.prototype.scroll_with_keyboard = function (event) {
-  let $owner = this.view.$owner,
-      $controller = this.view.$controller,
-      adjusted = this.options.adjusted,
-      arrow = this.options.arrow_keys_enabled,
-      key = event.key,
-      ch = $owner.clientHeight;
+      while ($elm) {
+        if ($elm.matches('[role="row"], [role="option"], [role="treeitem"]')) {
+          break;
+        }
 
-  switch (key) {
-    case 'Tab': {
-      return true; // Focus management
-    }
-
-    case 'Home':
-    case 'End': {
-      if (!adjusted) {
-        $owner.scrollTop = key === 'Home' ? 0 : $owner.scrollTopMax;
+        $elm = $elm.parentElement;
       }
 
-      break;
-    }
-
-    case ' ': // Space
-    case 'PageUp':
-    case 'PageDown': {
-      $owner.scrollTop += key === 'PageUp' || key === ' ' && event.shiftKey ? -ch : ch;
-
-      break;
-    }
-
-    case 'ArrowUp':
-    case 'ArrowDown': {
-      if (!adjusted && (event.target === $controller || event.currentTarget === $owner && arrow)) {
-        $owner.scrollTop += key === 'ArrowUp' ? -40 : 40;
+      if (!$elm) {
+        return; // traversal failed
       }
 
-      break;
+      top = $owner.scrollTop < $elm.offsetTop + $elm.offsetHeight / 2 || !$elm.nextElementSibling
+          ? $elm.offsetTop : $elm.nextElementSibling.offsetTop;
+
+      $owner.scrollTop = top;
     }
+
+    let st = $owner.scrollTop,
+        ch = $owner.clientHeight,
+        sh = $owner.scrollHeight,
+        ctrl_height = Number.parseInt($controller.style.height),
+        ctrl_adj = 0;
+
+    // Consider scrollbar's min-height
+    if (ctrl_height < 16) {
+      ctrl_adj = 20 - ctrl_height;
+    }
+
+    $controller.setAttribute('aria-valuenow', st);
+    $controller.style.top = `${st + 2 + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
   }
 
-  if (event.target === $controller) {
-    return FlareTail.helpers.event.ignore(event);
+  onkeydown (event) {
+    this.scroll_with_keyboard(event);
   }
 
-  return true;
-};
-
-FlareTail.widgets.ScrollBar.prototype.set_height = function () {
-  let $owner = this.view.$owner,
-      $controller = this.view.$controller,
-      sh = $owner.scrollHeight,
-      ch = $owner.clientHeight,
-      ctrl_height = Math.floor(ch * ch / sh) - 4;
-
-  $controller.style.height = `${ctrl_height < 0 ? 0 : ctrl_height}px`;
-  $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
-
-  // Reposition the scrollbar
-  this.onscroll();
-};
-
-FlareTail.widgets.ScrollBar.prototype.get_observer = function () {
-  let $iframe = document.createElement('iframe');
-
-  $iframe.addEventListener('load', event => {
-    let $doc = $iframe.contentDocument;
-
-    $doc.body.style.margin = 0;
-    $doc.addEventListener('MozScrolledAreaChanged', event => {
-      if (event.height === 0) {
-        this.view.$controller.setAttribute('aria-disabled', 'true');
-        this.view.$controller.tabIndex = -1;
-      }
-
+  onoverflow (event) {
+    if (event.target === event.currentTarget) {
       this.set_height();
-    });
-  });
-  $iframe.className = 'scrollable-area-observer';
-  $iframe.tabIndex = -1;
-  $iframe.src = 'about:blank';
-
-  return $iframe;
-};
-
-FlareTail.widgets.ScrollBar.prototype.bind = function (...args) {
-  this.view.$controller.addEventListener(...args);
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Window (abstract role) extends RoleType
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Window = function Window () {};
-FlareTail.widgets.Window.prototype = Object.create(FlareTail.widgets.RoleType.prototype);
-FlareTail.widgets.Window.prototype.constructor = FlareTail.widgets.Window;
-
-/**
- * Dialog
- *
- * @constructor
- * @extends Window
- * @argument {Object} options
- *  - id (optional)
- *  - type: alert, confirm or prompt
- *  - title
- *  - message
- *  - button_accept_label (optional)
- *  - button_cancel_label (optional)
- *  - onaccept (callback function, optional)
- *  - oncancel (callback function, optional)
- *  - value (for prompt, optional)
- * @return {Object} widget
- */
-FlareTail.widgets.Dialog = function Dialog (options) {
-  this.options = {
-    id: options.id || Date.now(),
-    type: options.type,
-    title: options.title,
-    message: options.message,
-    button_accept_label: options.button_accept_label || 'OK',
-    button_cancel_label: options.button_cancel_label || 'Cancel',
-    onaccept: options.onaccept,
-    oncancel: options.oncancel,
-    value: options.value || ''
-  };
-
-  this.view = {};
-
-  this.build();
-  this.activate();
-};
-
-FlareTail.widgets.Dialog.prototype = Object.create(FlareTail.widgets.Window.prototype);
-FlareTail.widgets.Dialog.prototype.constructor = FlareTail.widgets.Dialog;
-
-FlareTail.widgets.Dialog.prototype.build = function () {
-  let options = this.options,
-      $wrapper = this.view.$wrapper = document.createElement('div'),
-      $dialog = this.view.$dialog = document.createElement('aside'),
-      $header = $dialog.appendChild(document.createElement('header')),
-      $title,
-      $message = $dialog.appendChild(document.createElement('p')),
-      $input,
-      $footer = $dialog.appendChild(document.createElement('footer')),
-      $button = document.createElement('span'),
-      $button_accept,
-      $button_cancel;
-
-  $dialog.id = `dialog-${options.id}`;
-  $dialog.tabIndex = 0;
-  $dialog.setAttribute('role', options.type === 'alert' ? 'alertdialog' : 'dialog');
-  $dialog.setAttribute('aria-describedby', `dialog-${options.id}-message`);
-  $dialog.setAttribute('aria-modal', 'true');
-
-  if (options.title) {
-    $title = $header.appendChild(document.createElement('h2'));
-    $title.id = `dialog-${options.id}-title`;
-    $title.textContent = options.title;
-    $dialog.setAttribute('aria-labelledby', `dialog-${options.id}-title`);
-  }
-
-  $message.innerHTML = options.message;
-  $message.id = `dialog-${options.id}-message`;
-
-  if (options.type === 'prompt') {
-    $input = this.view.$input = $dialog.insertBefore(document.createElement('input'), $footer);
-    $input.value = options.value || '';
-    $input.setAttribute('role', 'textbox');
-  }
-
-  $button.tabIndex = 0;
-  $button.setAttribute('role', 'button');
-
-  $button_accept = this.view.$button_accept = $footer.appendChild($button.cloneNode(true)),
-  $button_accept.textContent = options.button_accept_label;
-  $button_accept.dataset.action = 'accept';
-  (new FlareTail.widgets.Button($button_accept)).bind('Pressed', event => this.hide('accept'));
-
-  if (options.type !== 'alert') {
-    $button_cancel = this.view.$button_cancel = $footer.appendChild($button.cloneNode(true)),
-    $button_cancel.textContent = options.button_cancel_label;
-    $button_cancel.dataset.action = 'cancel';
-    (new FlareTail.widgets.Button($button_cancel)).bind('Pressed', event => this.hide('cancel'));
-  }
-
-  $wrapper.className = 'dialog-wrapper';
-  $wrapper.appendChild($dialog)
-};
-
-FlareTail.widgets.Dialog.prototype.activate = function () {
-  // Add event listeners
-  FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
-};
-
-FlareTail.widgets.Dialog.prototype.onkeypress = function (event) {
-  if (event.key === 'Enter') {
-    this.hide('accept');
-  }
-
-  if (event.key === 'Escape') {
-    this.hide('cancel');
-  }
-
-  event.stopPropagation();
-};
-
-FlareTail.widgets.Dialog.prototype.show = function () {
-  this.focus_map = new Map();
-  this.focus_origial = document.activeElement;
-
-  // Prevent elements outside the dialog being focused
-  for (let $element of document.querySelectorAll(':link, [tabindex]')) {
-    this.focus_map.set($element, $element.getAttribute('tabindex'));
-    $element.tabIndex = -1;
-  }
-
-  document.body.appendChild(this.view.$wrapper);
-  this.view.$dialog.focus();
-};
-
-FlareTail.widgets.Dialog.prototype.hide = function (action) {
-  for (let [$element, tabindex] of this.focus_map) {
-    tabindex ? $element.tabIndex = tabindex : $element.removeAttribute('tabindex');
-  }
-
-  this.focus_map.clear();
-  this.focus_origial.focus();
-  this.view.$wrapper.remove();
-
-  if (action === 'accept' && typeof this.options.onaccept === 'function') {
-    this.options.onaccept(this.options.type === 'prompt' ? this.view.$input.value : null);
-  }
-
-  if (action === 'cancel' && typeof this.options.oncancel === 'function') {
-    this.options.oncancel();
-  }
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
- * AlertDialog (abstract role) extends Dialog
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.AlertDialog = function AlertDialog () {};
-FlareTail.widgets.AlertDialog.prototype = Object.create(FlareTail.widgets.Dialog.prototype);
-FlareTail.widgets.AlertDialog.prototype.constructor = FlareTail.widgets.AlertDialog;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Separator extends Structure
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Separator = function Separator () {};
-FlareTail.widgets.Separator.prototype = Object.create(FlareTail.widgets.Structure.prototype);
-FlareTail.widgets.Separator.prototype.constructor = FlareTail.widgets.Separator;
-
-/**
- * Splitter (custom widget)
- *
- * @constructor
- * @extends Separator
- * @argument {Element} $splitter - <div class="splitter" role="separator">
- * @return {Object} widget
- */
-FlareTail.widgets.Splitter = function Splitter ($splitter) {
-  this.view = {
-    $splitter,
-    $outer: $splitter.parentElement,
-    controls: {}
-  };
-
-  let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop)),
-      $outer = this.view.$outer,
-      orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
-      outer_bounds = $outer.getBoundingClientRect(),
-      outer_size = orientation === 'horizontal' ? outer_bounds.height : outer_bounds.width,
-      flex = $splitter.dataset.flex !== 'false',
-      position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
-
-  this.data = new Proxy({
-    outer: new Proxy({
-      id: $outer.id,
-      top: outer_bounds.top,
-      left: outer_bounds.left,
-    }, {
-      get: (obj, prop) => {
-        if (prop === 'size') {
-          // The dimension of the element can be changed when the window is resized.
-          // Return the current width or height
-          let rect = $outer.getBoundingClientRect();
-
-          return this.data.orientation === 'horizontal' ? rect.height : rect.width;
-        }
-
-        return obj[prop];
-      }
-    }),
-    orientation,
-    flex,
-    position: flex ? `${(position / outer_size * 100).toFixed(2)}%` : `${position}px`,
-    controls: {},
-    grabbed: false
-  }, {
-    set: (obj, prop, value) => {
-      if (prop === 'orientation') {
-        this.data.position = 'default';
-        $splitter.setAttribute('aria-orientation', value);
-      }
-
-      if (prop === 'position') {
-        let outer = this.data.outer,
-            before = this.data.controls.before,
-            after = this.data.controls.after,
-            $before = this.view.controls.$before,
-            $after = this.view.controls.$after;
-
-        if (Number.isNaN(value) && value.match(/^(\d+)px$/)) {
-          value = Number.parseInt(value);
-        }
-
-        if (value === 'default') {
-          value = null; // Reset the position
-        } else if (String(value).match(/^\d+\%$/)) {
-          // Keep the value
-        } else if (value <= 0) {
-          if (Number.parseInt(obj.position) === 0) {
-            return;
-          }
-
-          value = !before.min || before.collapsible ? 0 : before.min;
-        } else if (value >= outer.size || value === '100%') {
-          if (obj.position === '100%') {
-            return;
-          }
-
-          value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
-        } else if (before.min && value < before.min) {
-          // Reached min-height of the before element
-          if (!before.expanded) {
-            return;
-          }
-
-          if (before.collapsible) {
-            before.expanded = false;
-            value = 0;
-          } else {
-            value = before.min;
-          }
-        } else if (!before.expanded) {
-          before.expanded = true;
-          value = before.min;
-        } else if (before.max && value > before.max) {
-          value = before.max;
-        } else if (after.min && outer.size - value < after.min) {
-          // Reached min-height of the after element
-          if (!after.expanded) {
-            return;
-          }
-
-          if (after.collapsible) {
-            after.expanded = false;
-            value = '100%';
-          } else {
-            value = outer.size - after.min;
-          }
-        } else if (!after.expanded) {
-          after.expanded = true;
-          value = outer.size - after.min;
-        } else if (after.max && outer.size - value > after.max) {
-          value = outer.size - after.max;
-        }
-
-        if (value) {
-          if (String(value).match(/^\d+$/)) {
-            value = this.data.flex ? `${(value / outer.size * 100).toFixed(2)}%` : `${value}px`;
-          }
-
-          $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
-          FlareTail.helpers.event.trigger($splitter, 'Resized', { detail: { position: value }});
-        }
-      }
-
-      obj[prop] = value;
-
-      return true;
+      this.view.$controller.setAttribute('aria-disabled', 'false');
+      this.view.$controller.tabIndex = 0;
     }
-  });
+  }
 
-  // Add event listeners
-  FlareTail.helpers.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
+  onunderflow (event) {
+    if (event.target === event.currentTarget) {
+      this.view.$controller.setAttribute('aria-disabled', 'true');
+      this.view.$controller.tabIndex = -1;
+    }
+  }
 
-  for (let [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
-    let $target = document.getElementById(id),
-        position = i === 0 ? 'before' : 'after';
+  scroll_with_mouse (event) {
+    let $owner = this.view.$owner,
+        FTue = FlareTail.helpers.event;
 
-    this.data.controls[position] = new Proxy({
-      id,
-      collapsible: $target.hasAttribute('aria-expanded'),
-      expanded: $target.getAttribute('aria-expanded') !== 'false'
-    },
-    {
-      get: (obj, prop) => {
-        if (prop === 'min' || prop === 'max') {
-          let horizontal = this.data.orientation === 'horizontal';
+    if (event.type === 'mousedown') {
+      this.data.rect = {
+        st: $owner.scrollTop,
+        sh: $owner.scrollHeight,
+        ch: $owner.clientHeight,
+        cy: event.clientY
+      };
 
-          return style($target, `${prop}-${horizontal ? 'height' : 'width'}`);
+      FTue.bind(this, window, ['mousemove', 'mouseup']);
+    }
+
+    if (event.type === 'mousemove') {
+      let rect = this.data.rect,
+          delta = rect.st + event.clientY - rect.cy,
+          top = Math.floor(delta * rect.sh / rect.ch);
+
+      if (top < 0) {
+        top = 0;
+      }
+
+      if (top > $owner.scrollTopMax) {
+        top = $owner.scrollTopMax;
+      }
+
+      if ($owner.scrollTop !== top) {
+        $owner.scrollTop = top;
+      }
+    }
+
+    if (event.type === 'mouseup') {
+      delete this.data.rect;
+
+      FTue.unbind(this, window, ['mousemove', 'mouseup']);
+    }
+  }
+
+  scroll_with_keyboard (event) {
+    let $owner = this.view.$owner,
+        $controller = this.view.$controller,
+        adjusted = this.options.adjusted,
+        arrow = this.options.arrow_keys_enabled,
+        key = event.key,
+        ch = $owner.clientHeight;
+
+    switch (key) {
+      case 'Tab': {
+        return true; // Focus management
+      }
+
+      case 'Home':
+      case 'End': {
+        if (!adjusted) {
+          $owner.scrollTop = key === 'Home' ? 0 : $owner.scrollTopMax;
         }
 
-        return obj[prop];
-      },
+        break;
+      }
+
+      case ' ': // Space
+      case 'PageUp':
+      case 'PageDown': {
+        $owner.scrollTop += key === 'PageUp' || key === ' ' && event.shiftKey ? -ch : ch;
+
+        break;
+      }
+
+      case 'ArrowUp':
+      case 'ArrowDown': {
+        if (!adjusted && (event.target === $controller || event.currentTarget === $owner && arrow)) {
+          $owner.scrollTop += key === 'ArrowUp' ? -40 : 40;
+        }
+
+        break;
+      }
+    }
+
+    if (event.target === $controller) {
+      return FlareTail.helpers.event.ignore(event);
+    }
+
+    return true;
+  }
+
+  set_height () {
+    let $owner = this.view.$owner,
+        $controller = this.view.$controller,
+        sh = $owner.scrollHeight,
+        ch = $owner.clientHeight,
+        ctrl_height = Math.floor(ch * ch / sh) - 4;
+
+    $controller.style.height = `${ctrl_height < 0 ? 0 : ctrl_height}px`;
+    $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
+
+    // Reposition the scrollbar
+    this.onscroll();
+  }
+
+  get_observer () {
+    let $iframe = document.createElement('iframe');
+
+    $iframe.addEventListener('load', event => {
+      let $doc = $iframe.contentDocument;
+
+      $doc.body.style.margin = 0;
+      $doc.addEventListener('MozScrolledAreaChanged', event => {
+        if (event.height === 0) {
+          this.view.$controller.setAttribute('aria-disabled', 'true');
+          this.view.$controller.tabIndex = -1;
+        }
+
+        this.set_height();
+      });
+    });
+    $iframe.className = 'scrollable-area-observer';
+    $iframe.tabIndex = -1;
+    $iframe.src = 'about:blank';
+
+    return $iframe;
+  }
+
+  bind (...args) {
+    this.view.$controller.addEventListener(...args);
+  }
+}
+
+/**
+ * Define the Window abstract role.
+ * @extends FlareTail.widgets.RoleType
+ */
+FlareTail.widgets.Window = class Window extends FlareTail.widgets.RoleType {}
+
+/**
+ * Define the Dialog role.
+ * @extends FlareTail.widgets.Window
+ */
+FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
+  /**
+   * Get a Dialog instance.
+   * @constructor
+   * @argument {Object} options
+   *  - id (optional)
+   *  - type: alert, confirm or prompt
+   *  - title
+   *  - message
+   *  - button_accept_label (optional)
+   *  - button_cancel_label (optional)
+   *  - onaccept (callback function, optional)
+   *  - oncancel (callback function, optional)
+   *  - value (for prompt, optional)
+   * @return {Object} widget
+   */
+  constructor (options) {
+    super(); // This does nothing but is required before using `this`
+
+    this.options = {
+      id: options.id || Date.now(),
+      type: options.type,
+      title: options.title,
+      message: options.message,
+      button_accept_label: options.button_accept_label || 'OK',
+      button_cancel_label: options.button_cancel_label || 'Cancel',
+      onaccept: options.onaccept,
+      oncancel: options.oncancel,
+      value: options.value || ''
+    };
+
+    this.view = {};
+
+    this.build();
+    this.activate();
+  }
+
+  build () {
+    let options = this.options,
+        $wrapper = this.view.$wrapper = document.createElement('div'),
+        $dialog = this.view.$dialog = document.createElement('aside'),
+        $header = $dialog.appendChild(document.createElement('header')),
+        $title,
+        $message = $dialog.appendChild(document.createElement('p')),
+        $input,
+        $footer = $dialog.appendChild(document.createElement('footer')),
+        $button = document.createElement('span'),
+        $button_accept,
+        $button_cancel;
+
+    $dialog.id = `dialog-${options.id}`;
+    $dialog.tabIndex = 0;
+    $dialog.setAttribute('role', options.type === 'alert' ? 'alertdialog' : 'dialog');
+    $dialog.setAttribute('aria-describedby', `dialog-${options.id}-message`);
+    $dialog.setAttribute('aria-modal', 'true');
+
+    if (options.title) {
+      $title = $header.appendChild(document.createElement('h2'));
+      $title.id = `dialog-${options.id}-title`;
+      $title.textContent = options.title;
+      $dialog.setAttribute('aria-labelledby', `dialog-${options.id}-title`);
+    }
+
+    $message.innerHTML = options.message;
+    $message.id = `dialog-${options.id}-message`;
+
+    if (options.type === 'prompt') {
+      $input = this.view.$input = $dialog.insertBefore(document.createElement('input'), $footer);
+      $input.value = options.value || '';
+      $input.setAttribute('role', 'textbox');
+    }
+
+    $button.tabIndex = 0;
+    $button.setAttribute('role', 'button');
+
+    $button_accept = this.view.$button_accept = $footer.appendChild($button.cloneNode(true)),
+    $button_accept.textContent = options.button_accept_label;
+    $button_accept.dataset.action = 'accept';
+    (new FlareTail.widgets.Button($button_accept)).bind('Pressed', event => this.hide('accept'));
+
+    if (options.type !== 'alert') {
+      $button_cancel = this.view.$button_cancel = $footer.appendChild($button.cloneNode(true)),
+      $button_cancel.textContent = options.button_cancel_label;
+      $button_cancel.dataset.action = 'cancel';
+      (new FlareTail.widgets.Button($button_cancel)).bind('Pressed', event => this.hide('cancel'));
+    }
+
+    $wrapper.className = 'dialog-wrapper';
+    $wrapper.appendChild($dialog)
+  }
+
+  activate () {
+    // Add event listeners
+    FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
+  }
+
+  onkeypress (event) {
+    if (event.key === 'Enter') {
+      this.hide('accept');
+    }
+
+    if (event.key === 'Escape') {
+      this.hide('cancel');
+    }
+
+    event.stopPropagation();
+  }
+
+  show () {
+    this.focus_map = new Map();
+    this.focus_origial = document.activeElement;
+
+    // Prevent elements outside the dialog being focused
+    for (let $element of document.querySelectorAll(':link, [tabindex]')) {
+      this.focus_map.set($element, $element.getAttribute('tabindex'));
+      $element.tabIndex = -1;
+    }
+
+    document.body.appendChild(this.view.$wrapper);
+    this.view.$dialog.focus();
+  }
+
+  hide (action) {
+    for (let [$element, tabindex] of this.focus_map) {
+      tabindex ? $element.tabIndex = tabindex : $element.removeAttribute('tabindex');
+    }
+
+    this.focus_map.clear();
+    this.focus_origial.focus();
+    this.view.$wrapper.remove();
+
+    if (action === 'accept' && typeof this.options.onaccept === 'function') {
+      this.options.onaccept(this.options.type === 'prompt' ? this.view.$input.value : null);
+    }
+
+    if (action === 'cancel' && typeof this.options.oncancel === 'function') {
+      this.options.oncancel();
+    }
+  }
+}
+
+/**
+ * Define the AlertDialog role.
+ * @extends FlareTail.widgets.Dialog
+ */
+FlareTail.widgets.AlertDialog = class AlertDialog extends FlareTail.widgets.Dialog {}
+
+/**
+ * Define the Separator role.
+ * @extends FlareTail.widgets.Structure
+ */
+FlareTail.widgets.Separator = class Separator extends FlareTail.widgets.Structure {}
+
+/**
+ * Define the Splitter custom role.
+ * @extends FlareTail.widgets.Separator
+ */
+FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator {
+  /**
+   * Get a Splitter instance.
+   * @constructor
+   * @argument {Element} $splitter - <div class="splitter" role="separator">
+   * @return {Object} widget
+   */
+  constructor ($splitter) {
+    super(); // This does nothing but is required before using `this`
+
+    this.view = {
+      $splitter,
+      $outer: $splitter.parentElement,
+      controls: {}
+    };
+
+    let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop)),
+        $outer = this.view.$outer,
+        orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
+        outer_bounds = $outer.getBoundingClientRect(),
+        outer_size = orientation === 'horizontal' ? outer_bounds.height : outer_bounds.width,
+        flex = $splitter.dataset.flex !== 'false',
+        position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
+
+    this.data = new Proxy({
+      outer: new Proxy({
+        id: $outer.id,
+        top: outer_bounds.top,
+        left: outer_bounds.left,
+      }, {
+        get: (obj, prop) => {
+          if (prop === 'size') {
+            // The dimension of the element can be changed when the window is resized.
+            // Return the current width or height
+            let rect = $outer.getBoundingClientRect();
+
+            return this.data.orientation === 'horizontal' ? rect.height : rect.width;
+          }
+
+          return obj[prop];
+        }
+      }),
+      orientation,
+      flex,
+      position: flex ? `${(position / outer_size * 100).toFixed(2)}%` : `${position}px`,
+      controls: {},
+      grabbed: false
+    }, {
       set: (obj, prop, value) => {
-        if (prop === 'expanded') {
-          document.getElementById(obj.id).setAttribute('aria-expanded', value);
+        if (prop === 'orientation') {
+          this.data.position = 'default';
+          $splitter.setAttribute('aria-orientation', value);
+        }
+
+        if (prop === 'position') {
+          let outer = this.data.outer,
+              before = this.data.controls.before,
+              after = this.data.controls.after,
+              $before = this.view.controls.$before,
+              $after = this.view.controls.$after;
+
+          if (Number.isNaN(value) && value.match(/^(\d+)px$/)) {
+            value = Number.parseInt(value);
+          }
+
+          if (value === 'default') {
+            value = null; // Reset the position
+          } else if (String(value).match(/^\d+\%$/)) {
+            // Keep the value
+          } else if (value <= 0) {
+            if (Number.parseInt(obj.position) === 0) {
+              return;
+            }
+
+            value = !before.min || before.collapsible ? 0 : before.min;
+          } else if (value >= outer.size || value === '100%') {
+            if (obj.position === '100%') {
+              return;
+            }
+
+            value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
+          } else if (before.min && value < before.min) {
+            // Reached min-height of the before element
+            if (!before.expanded) {
+              return;
+            }
+
+            if (before.collapsible) {
+              before.expanded = false;
+              value = 0;
+            } else {
+              value = before.min;
+            }
+          } else if (!before.expanded) {
+            before.expanded = true;
+            value = before.min;
+          } else if (before.max && value > before.max) {
+            value = before.max;
+          } else if (after.min && outer.size - value < after.min) {
+            // Reached min-height of the after element
+            if (!after.expanded) {
+              return;
+            }
+
+            if (after.collapsible) {
+              after.expanded = false;
+              value = '100%';
+            } else {
+              value = outer.size - after.min;
+            }
+          } else if (!after.expanded) {
+            after.expanded = true;
+            value = outer.size - after.min;
+          } else if (after.max && outer.size - value > after.max) {
+            value = outer.size - after.max;
+          }
+
+          if (value) {
+            if (String(value).match(/^\d+$/)) {
+              value = this.data.flex ? `${(value / outer.size * 100).toFixed(2)}%` : `${value}px`;
+            }
+
+            $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
+            FlareTail.helpers.event.trigger($splitter, 'Resized', { detail: { position: value }});
+          }
         }
 
         obj[prop] = value;
@@ -3508,162 +3488,179 @@ FlareTail.widgets.Splitter = function Splitter ($splitter) {
       }
     });
 
-    this.view.controls[`$${position}`] = $target;
-  };
-};
+    // Add event listeners
+    FlareTail.helpers.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
-FlareTail.widgets.Splitter.prototype = Object.create(FlareTail.widgets.Separator.prototype);
-FlareTail.widgets.Splitter.prototype.constructor = FlareTail.widgets.Splitter;
+    for (let [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
+      let $target = document.getElementById(id),
+          position = i === 0 ? 'before' : 'after';
 
-FlareTail.widgets.Splitter.prototype.onmousedown = function (event) {
-  if (event.buttons > 1) {
-    event.preventDefault();
+      this.data.controls[position] = new Proxy({
+        id,
+        collapsible: $target.hasAttribute('aria-expanded'),
+        expanded: $target.getAttribute('aria-expanded') !== 'false'
+      },
+      {
+        get: (obj, prop) => {
+          if (prop === 'min' || prop === 'max') {
+            let horizontal = this.data.orientation === 'horizontal';
 
-    return;
+            return style($target, `${prop}-${horizontal ? 'height' : 'width'}`);
+          }
+
+          return obj[prop];
+        },
+        set: (obj, prop, value) => {
+          if (prop === 'expanded') {
+            document.getElementById(obj.id).setAttribute('aria-expanded', value);
+          }
+
+          obj[prop] = value;
+
+          return true;
+        }
+      });
+
+      this.view.controls[`$${position}`] = $target;
+    };
   }
 
-  this.view.$splitter.setAttribute('aria-grabbed', 'true');
-  this.data.grabbed = true;
+  onmousedown (event) {
+    if (event.buttons > 1) {
+      event.preventDefault();
 
-  this.view.$outer.dataset.splitter = this.data.orientation;
-
-  // Add event listeners
-  FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
-};
-
-FlareTail.widgets.Splitter.prototype.onmousemove = function (event) {
-  if (!this.data.grabbed) {
-    return;
-  }
-
-  this.data.position = this.data.orientation === 'horizontal'
-                     ? event.clientY - this.data.outer.top : event.clientX - this.data.outer.left;
-};
-
-FlareTail.widgets.Splitter.prototype.onmouseup = function (event) {
-  if (!this.data.grabbed) {
-    return;
-  }
-
-  this.data.grabbed = false;
-  this.view.$splitter.setAttribute('aria-grabbed', 'false');
-
-  // Cleanup
-  FlareTail.helpers.event.unbind(this, document.body, ['mousemove', 'mouseup']);
-
-  delete this.view.$outer.dataset.splitter;
-};
-
-FlareTail.widgets.Splitter.prototype.onkeydown = function (event) {
-  let value = null,
-      position = this.data.position,
-      outer = this.data.outer,
-      before = this.data.controls.before,
-      after = this.data.controls.after;
-
-  switch (event.key) {
-    case 'Home': {
-      value = !before.min || before.collapsible ? 0 : before.min;
-
-      break;
+      return;
     }
 
-    case 'End': {
-      value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
+    this.view.$splitter.setAttribute('aria-grabbed', 'true');
+    this.data.grabbed = true;
 
-      break;
+    this.view.$outer.dataset.splitter = this.data.orientation;
+
+    // Add event listeners
+    FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
+  }
+
+  onmousemove (event) {
+    if (!this.data.grabbed) {
+      return;
     }
 
-    case 'PageUp':
-    case 'ArrowUp':
-    case 'ArrowLeft': {
-      let delta = event.key === 'PageUp' || event.shiftKey ? 50 : 10;
+    this.data.position = this.data.orientation === 'horizontal'
+                       ? event.clientY - this.data.outer.top : event.clientX - this.data.outer.left;
+  }
 
-      if (position === '100%') {
-        value = outer.size - (this.data.controls.after.min || delta);
-      } else if (Number.parseInt(position) !== 0) {
-        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) - delta;
+  onmouseup (event) {
+    if (!this.data.grabbed) {
+      return;
+    }
+
+    this.data.grabbed = false;
+    this.view.$splitter.setAttribute('aria-grabbed', 'false');
+
+    // Cleanup
+    FlareTail.helpers.event.unbind(this, document.body, ['mousemove', 'mouseup']);
+
+    delete this.view.$outer.dataset.splitter;
+  }
+
+  onkeydown (event) {
+    let value = null,
+        position = this.data.position,
+        outer = this.data.outer,
+        before = this.data.controls.before,
+        after = this.data.controls.after;
+
+    switch (event.key) {
+      case 'Home': {
+        value = !before.min || before.collapsible ? 0 : before.min;
+
+        break;
       }
 
-      break;
-    }
+      case 'End': {
+        value = !after.min || after.collapsible ? '100%' : outer.size - after.min;
 
-    case 'PageDown':
-    case 'ArrowDown':
-    case 'ArrowRight': {
-      let delta = event.key === 'PageDown' || event.shiftKey ? 50 : 10;
-
-      if (Number.parseInt(position) === 0) {
-        value = this.data.controls.before.min || delta;
-      } else if (position !== '100%') {
-        value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) + delta;
+        break;
       }
 
-      break;
+      case 'PageUp':
+      case 'ArrowUp':
+      case 'ArrowLeft': {
+        let delta = event.key === 'PageUp' || event.shiftKey ? 50 : 10;
+
+        if (position === '100%') {
+          value = outer.size - (this.data.controls.after.min || delta);
+        } else if (Number.parseInt(position) !== 0) {
+          value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) - delta;
+        }
+
+        break;
+      }
+
+      case 'PageDown':
+      case 'ArrowDown':
+      case 'ArrowRight': {
+        let delta = event.key === 'PageDown' || event.shiftKey ? 50 : 10;
+
+        if (Number.parseInt(position) === 0) {
+          value = this.data.controls.before.min || delta;
+        } else if (position !== '100%') {
+          value = (this.data.flex ? outer.size * Number.parseFloat(position) / 100 : Number.parseInt(position)) + delta;
+        }
+
+        break;
+      }
+    }
+
+    if (value !== null) {
+      this.data.position = value;
     }
   }
 
-  if (value !== null) {
-    this.data.position = value;
+  bind (...args) {
+    this.view.$splitter.addEventListener(...args);
   }
-};
+}
 
-FlareTail.widgets.Splitter.prototype.bind = function (...args) {
-  this.view.$splitter.addEventListener(...args);
-};
+/**
+ * Define the Region role.
+ * @extends FlareTail.widgets.Section
+ */
+FlareTail.widgets.Region = class Region extends FlareTail.widgets.Section {}
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Region extends Section
- * ------------------------------------------------------------------------------------------------------------------ */
+/**
+ * Define the Status role.
+ * @extends FlareTail.widgets.Region
+ */
+FlareTail.widgets.Status = class Status extends FlareTail.widgets.Region {}
 
-FlareTail.widgets.Region = function Region () {};
-FlareTail.widgets.Region.prototype = Object.create(FlareTail.widgets.Section.prototype);
-FlareTail.widgets.Region.prototype.constructor = FlareTail.widgets.Region;
+/**
+ * Define the Landmark abstract role.
+ * @extends FlareTail.widgets.Region
+ */
+FlareTail.widgets.Landmark = class Landmark extends FlareTail.widgets.Region {}
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Status extends Region
- * ------------------------------------------------------------------------------------------------------------------ */
+/**
+ * Define the Application role.
+ * @extends FlareTail.widgets.Landmark
+ */
+FlareTail.widgets.Application = class Application extends FlareTail.widgets.Landmark {}
 
-FlareTail.widgets.Status = function Status () {};
-FlareTail.widgets.Status.prototype = Object.create(FlareTail.widgets.Region.prototype);
-FlareTail.widgets.Status.prototype.constructor = FlareTail.widgets.Status;
+/**
+ * Define the Tooltip role.
+ * @extends FlareTail.widgets.Section
+ */
+FlareTail.widgets.Tooltip = class Tooltip extends FlareTail.widgets.Section {}
 
-/* ------------------------------------------------------------------------------------------------------------------
- * Landmark (abstract role) extends Region
- * ------------------------------------------------------------------------------------------------------------------ */
+/**
+ * Define the Group role.
+ * @extends FlareTail.widgets.Section
+ */
+FlareTail.widgets.Group = class Group extends FlareTail.widgets.Section {}
 
-FlareTail.widgets.Landmark = function Landmark () {};
-FlareTail.widgets.Landmark.prototype = Object.create(FlareTail.widgets.Region.prototype);
-FlareTail.widgets.Landmark.prototype.constructor = FlareTail.widgets.Landmark;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Application extends Landmark
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Application = function Application () {};
-FlareTail.widgets.Application.prototype = Object.create(FlareTail.widgets.Landmark.prototype);
-FlareTail.widgets.Application.prototype.constructor = FlareTail.widgets.Application;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Tooltip extends Section
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Tooltip = function Tooltip () {};
-FlareTail.widgets.Tooltip.prototype = Object.create(FlareTail.widgets.Section.prototype);
-FlareTail.widgets.Tooltip.prototype.constructor = FlareTail.widgets.Tooltip;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Group extends Section
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.Group = function Group () {};
-FlareTail.widgets.Group.prototype = Object.create(FlareTail.widgets.Section.prototype);
-FlareTail.widgets.Group.prototype.constructor = FlareTail.widgets.Group;
-
-/* ------------------------------------------------------------------------------------------------------------------
- * Toolbar extends Group
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.widgets.ToolBar = function ToolBar () {};
-FlareTail.widgets.ToolBar.prototype = Object.create(FlareTail.widgets.Group.prototype);
-FlareTail.widgets.ToolBar.prototype.constructor = FlareTail.widgets.ToolBar;
+/**
+ * Define the Toolbar role.
+ * @extends FlareTail.widgets.Group
+ */
+FlareTail.widgets.ToolBar = class ToolBar extends FlareTail.widgets.Group {}
