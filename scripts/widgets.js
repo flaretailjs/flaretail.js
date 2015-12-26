@@ -4,14 +4,21 @@
 
 /**
  * Provide application widgets based on the WAI-ARIA roles.
+ * @see {@link http://www.w3.org/TR/wai-aria/}
  */
 FlareTail.widgets = {};
 
 /**
- * Define the top level abstract role.
+ * Implement the top level abstract role.
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#roletype}
  */
 FlareTail.widgets.RoleType = class RoleType {
-  activate (rebuild) {
+  /**
+   * Activate the widget.
+   * @argument {Boolean} [rebuild=false] - Whether the widget is to be just restructured.
+   * @return {undefined}
+   */
+  activate (rebuild = false) {
     let FTue = FlareTail.helpers.event,
         $container = this.view.$container;
 
@@ -64,6 +71,11 @@ FlareTail.widgets.RoleType = class RoleType {
     return;
   }
 
+  /**
+   * Update the managed, selected and focused elements within the widget.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   update_members () {
     let selector = this.options.item_selector,
         not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
@@ -74,54 +86,85 @@ FlareTail.widgets.RoleType = class RoleType {
     this.view.$focused = null;
   }
 
+  /**
+   * Assign keyboard shortcuts to the widget.
+   * @argument {Object} map - See the helper method for details.
+   * @return {undefined}
+   */
   assign_key_bindings (map) {
     FlareTail.helpers.kbd.assign(this.view.$container, map);
   }
 
-  // Catch-all event handler
+  /**
+   * Handle all events triggered on the widget. Note that this is the standard catch-all event handler, therefore it
+   * does not follow our method naming convention.
+   * @argument {Event} event - Any event.
+   * @return {undefined}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/EventListener}
+   */
   handleEvent (event) {
     this[`on${event.type}`].call(this, event);
   }
 
+  /**
+   * Called whenever a contextmenu event is triggered. Disable the browser's build-in context menu.
+   * @argument {MouseEvent} event - The contextmenu event.
+   * @return {undefined}
+   */
   oncontextmenu (event) {
-    // Disable browser's context menu
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.view.$container.addEventListener(...args);
   }
 }
 
 /**
- * Define the Structure abstract role.
+ * Implement the structure abstract role.
  * @extends FlareTail.widgets.RoleType
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#structure}
  */
 FlareTail.widgets.Structure = class Structure extends FlareTail.widgets.RoleType {}
 
 /**
- * Define the Section abstract role.
+ * Implement the section abstract role.
  * @extends FlareTail.widgets.Structure
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#section}
  */
 FlareTail.widgets.Section = class Section extends FlareTail.widgets.Structure {}
 
 /**
- * Define the Widget abstract role.
+ * Implement the widget abstract role.
  * @extends FlareTail.widgets.RoleType
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#widget}
  */
 FlareTail.widgets.Widget = class Widget extends FlareTail.widgets.RoleType {}
 
 /**
- * Define the Command abstract role.
+ * Implement the command abstract role.
  * @extends FlareTail.widgets.Widget
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#command}
  */
 FlareTail.widgets.Command = class Command extends FlareTail.widgets.Widget {}
 
 /**
- * Define the Button role.
+ * Implement the button role.
  * @extends FlareTail.widgets.Command
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#button}
  */
 FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
+  /**
+   * Get a Button instance.
+   * @constructor
+   * @argument {HTMLElement} $button - <span role="button">
+   * @return {Object} widget
+   */
   constructor ($button) {
     super(); // This does nothing but is required before using `this`
 
@@ -154,6 +197,11 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
     }
   }
 
+  /**
+   * Called whenever a click event is triggered. If this is a toggle button, change the state.
+   * @argument {MouseEvent} event - The click event.
+   * @return {undefined}
+   */
   onclick (event) {
     let pressed = false;
 
@@ -170,6 +218,12 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
     FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
   }
 
+  /**
+   * Called whenever a keydown event is triggered. If the key is Space or Enter, treat the event as a click. If the
+   * button owns a menu, select a menu item or close the menu.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let key = event.key;
 
@@ -197,10 +251,20 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
     }
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.view.$button.addEventListener(...args);
   }
 
+  /**
+   * Activate a popup, usually a menu, owned by the button.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   activate_popup () {
     this.view.$popup = document.getElementById(this.view.$button.getAttribute('aria-owns'));
 
@@ -238,10 +302,16 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
 }
 
 /**
- * Define the Composite abstract role.
+ * Implement the composite abstract role.
  * @extends FlareTail.widgets.Widget
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#composite}
  */
 FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
+  /**
+   * Called whenever a focus event is triggered. Set the aria-activedescendant attribute when necessary.
+   * @argument {FocusEvent} event - The focus event.
+   * @return {undefined}
+   */
   onfocus (event) {
     if (this.view.members.includes(event.target) && event.target.id) {
       this.view.$container.setAttribute('aria-activedescendant', event.target.id);
@@ -250,11 +320,21 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
     }
   }
 
+  /**
+   * Called whenever a blur event is triggered. Remove the aria-activedescendant attribute when necessary.
+   * @argument {FocusEvent} event - The blur event.
+   * @return {undefined}
+   */
   onblur (event) {
     this.view.$container.removeAttribute('aria-activedescendant');
     FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Select one or more members when necessary.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     if (!this.view.members.includes(event.target) || event.buttons > 1) {
       return;
@@ -263,10 +343,20 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
     this.select_with_mouse(event);
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Select one or more members when necessary.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     this.select_with_keyboard(event);
   }
 
+  /**
+   * Seelect one or more members with a mouse operation.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   select_with_mouse (event) {
     let $target = event.target,
         $container = this.view.$container,
@@ -295,6 +385,11 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
     this.view.$focused = selected[selected.length - 1];
   }
 
+  /**
+   * Seelect one or more members with a keyboard operation.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   select_with_keyboard (event) {
     let key = event.key;
 
@@ -533,6 +628,13 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Update the member elements on the page. This is a Proxy handler.
+   * @argument {Object} obj - One of view objects.
+   * @argument {String} prop - One of view properties: members, selected or $focused
+   * @argument {(Array|HTMLElement)} newval - New value.
+   * @return {undefined}
+   */
   update_view (obj, prop, newval) {
     let attr = this.options.selected_attr,
         oldval = obj[prop];
@@ -584,14 +686,15 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
 }
 
 /**
- * Define the Grid role.
+ * Implement the grid role.
  * @extends FlareTail.widgets.Composite
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#grid}
  */
 FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
   /**
    * Get a Grid instance.
    * @constructor
-   * @argument {Element} $container - <table role="grid">
+   * @argument {HTMLElement} $container - <table role="grid">
    * @argument {Object} [data] - Optional data including columns, rows and order.
    * @argument {Object} [options] - These attributes on the grid element are also supported:
    *  - aria-multiselectable: The default is true.
@@ -664,6 +767,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     this.activate();
   }
 
+  /**
+   * Activate the widget.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   activate () {
     this.view = new Proxy(this.view, {
       set: (obj, prop, value) => {
@@ -704,6 +812,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     this.activate_rows();
   }
 
+  /**
+   * Activate the grid columns.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   activate_columns () {
     let columns = this.data.columns = new Proxy(this.data.columns, {
       // Default behavior, or find column by id
@@ -765,6 +878,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Activate the grid rows.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   activate_rows () {
     let handler = {
       set: (obj, prop, value) => {
@@ -808,6 +926,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Handle the event depending on the target.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     let $target = event.target;
 
@@ -838,10 +961,20 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     super.onmousedown(event);
   }
 
+  /**
+   * Called whenever a mousemove event is triggered. Reorder the grid columns when necessary.
+   * @argument {MouseEvent} event - The mousemove event.
+   * @return {undefined}
+   */
   onmousemove (event) {
     !this.data.drag ? this.start_column_reordering(event) : this.continue_column_reordering(event);
   }
 
+  /**
+   * Called whenever a mouseup event is triggered. Handle the event depending on the target.
+   * @argument {MouseEvent} event - The mouseup event.
+   * @return {undefined}
+   */
   onmouseup (event) {
     FlareTail.helpers.event.ignore(event);
     FlareTail.helpers.event.unbind(this, window, ['mousemove', 'mouseup']);
@@ -864,6 +997,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Trigger a keyboard shortcut when necessary.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let key = event.key;
 
@@ -899,6 +1037,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Build the grid header dynamically with the provided data.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   build_header () {
     let $grid = this.view.$container,
         $grid_header = this.view.$header = document.createElement('header'),
@@ -941,9 +1084,13 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     $grid.appendChild($grid_header);
   }
 
+  /**
+   * Build the grid body dynamically with the provided data.
+   * @argument {Object} [row_data] - If passed, the grid body will be refreshed.
+   * @return {undefined}
+   */
   build_body (row_data) {
     if (row_data) {
-      // Refresh the tbody with the passed data
       this.data.rows = row_data;
       this.view.$body.remove();
     }
@@ -1029,6 +1176,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Retrieve the grid data from a static table markup.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   get_data () {
     let $header = this.view.$header,
         $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
@@ -1085,6 +1237,17 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     });
   }
 
+  /**
+   * Sort the table by the provided condition.
+   * @argument {Object} cond - Sorting condition.
+   * @argument {String} [cond.order] - Sorting order, ascending (default) or descending.
+   * @argument {String} cond.key - Sorting key.
+   * @argument {String} prop - Changed condition property name, order or key.
+   * @argument {String} value - Changed condition property value.
+   * @argument {Object} [receiver] - Same as cond, when called by Proxy.
+   * @argument {Boolean} [data_only=false] - Whether the only grid data should be sorted.
+   * @return {Boolean} completed - This should be true to make the Proxy succeed.
+   */
   sort (cond, prop, value, receiver, data_only = false) {
     let $grid = this.view.$container,
         $tbody = this.view.$body.querySelector('tbody'),
@@ -1136,6 +1299,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     return true;
   }
 
+  /**
+   * Initialize the column picker on the grid header.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   init_columnpicker () {
     let $picker = this.view.$columnpicker = document.createElement('ul'),
         $header = this.view.$header;
@@ -1151,6 +1319,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     $$picker.bind('MenuItemSelected', event => this.toggle_column(event.detail.target.dataset.id));
   }
 
+  /**
+   * Build the content of the column picker.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   build_columnpicker () {
     this.data.$$columnpicker.build(this.data.columns.map(col => ({
       id: `${this.view.$container.id}-columnpicker-${col.id}`,
@@ -1162,6 +1335,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     })));
   }
 
+  /**
+   * Show or hide a grid column by ID.
+   * @argument {String} id - Column ID.
+   * @return {undefined}
+   */
   toggle_column (id) {
     // Find column by id, thanks to Proxy
     let col = this.data.columns[id];
@@ -1169,6 +1347,12 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     col.hidden = !col.hidden;
   }
 
+  /**
+   * Show a grid column.
+   * @argument {Object} col - Column data.
+   * @argument {String} col.id - Column ID.
+   * @return {undefined}
+   */
   show_column (col) {
     let $grid = this.view.$container,
         attr = `[data-id="${col.id}"]`;
@@ -1184,6 +1368,12 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Hide a grid column.
+   * @argument {Object} col - Column data.
+   * @argument {String} col.id - Column ID.
+   * @return {undefined}
+   */
   hide_column (col) {
     let $grid = this.view.$container,
         attr = `[data-id="${col.id}"]`;
@@ -1199,6 +1389,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Make a grid row visible by scrolling the grid body when needed.
+   * @argument {HTMLElement} $row - Row element to show.
+   * @return {undefined}
+   */
   ensure_row_visibility ($row) {
     let $outer = this.view.$container.querySelector('.grid-body');
 
@@ -1220,6 +1415,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Start reordering a grid column.
+   * @argument {MouseEvent} event - The mousemove event.
+   * @return {undefined}
+   */
   start_column_reordering (event) {
     let $grid = this.view.$container,
         $container = document.createElement('div'),
@@ -1287,6 +1487,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     $grid.querySelector('[role="scrollbar"]').setAttribute('aria-hidden', 'true')
   }
 
+  /**
+   * Continue reordering a grid column.
+   * @argument {MouseEvent} event - The mousemove event.
+   * @return {undefined}
+   */
   continue_column_reordering (event) {
     let drag = this.data.drag,
         pos = event.clientX - drag.start_left,
@@ -1323,6 +1528,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
   }
 
+  /**
+   * Stop reordering a grid column.
+   * @argument {MouseEvent} event - The mouseup event.
+   * @return {undefined}
+   */
   stop_column_reordering (event) {
     let drag = this.data.drag,
         start_idx = drag.start_index,
@@ -1360,6 +1570,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     delete this.data.drag;
   }
 
+  /**
+   * Filter the grid rows by IDs.
+   * @argument {Array.<(String|Number)>} ids - Row IDs to show.
+   * @return {undefined}
+   */
   filter (ids) {
     let $grid_body = this.view.$body,
         selected = [...this.view.selected];
@@ -1393,19 +1608,27 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 }
 
 /**
- * Define the Select abstract role.
+ * Implement the select abstract role.
  * @extends FlareTail.widgets.Composite
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#select}
  */
 FlareTail.widgets.Select = class Select extends FlareTail.widgets.Composite {}
 
 /**
- * Define the ComboBox role.
+ * Implement the combobox role.
  * TODO: Support aria-autocomplete="inline" and "both"
  * TODO: Add more HTMLSelectElement-compatible attributes
  * TODO: Add test cases
  * @extends FlareTail.widgets.Select
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#combobox}
  */
 FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
+  /**
+   * Get a ComboBox instance.
+   * @constructor
+   * @argument {HTMLElement} $container - <div role="combobox">
+   * @return {Object} widget
+   */
   constructor ($container) {
     super(); // This does nothing but is required before using `this`
 
@@ -1508,10 +1731,20 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   on (...args) {
     this.$container.addEventListener(...args);
   }
 
+  /**
+   * Show the dropdown list.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   show_dropdown () {
     if (!this.$$listbox.view.members.length) {
       return;
@@ -1534,11 +1767,21 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$$scrollbar.set_height();
   }
 
+  /**
+   * Hide the dropdown list.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   hide_dropdown () {
     this.$container.setAttribute('aria-expanded', 'false');
     this.$container.removeAttribute('aria-activedescendant');
   }
 
+  /**
+   * Show or hide the dropdown list.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   toggle_dropdown () {
     if (this.$container.getAttribute('aria-expanded') === 'false') {
       this.show_dropdown();
@@ -1547,9 +1790,16 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Add an option to the dropdown list.
+   * @argument {HTMLElement} $element - Option node.
+   * @argument {Boolean} [addition=true] - Whether the option should be appended to the list. If false, any existing
+   *  options will be removed first.
+   * @return {undefined}
+   */
   fill_dropdown ($element, addition = true) {
     if (!addition) {
-      this.clear_dropdown();
+      this.$listbox.innerHTML = '';
     }
 
     this.$listbox.appendChild($element);
@@ -1563,21 +1813,28 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }
   }
 
-  empty () {
-    this.$listbox.innerHTML = '';
-    this.$$listbox.update_members();
-    this.$$listbox.get_data();
-  }
-
-  build (data) {
-    this.empty();
+  /**
+   * Build the dropdown list with the provided data.
+   * @argument {Object} data - Data to be filled in.
+   * @argument {String} data.value - Item value.
+   * @argument {Boolean} [data.selected] - Whether the item to be selected.
+   * @return {undefined}
+   */
+  build_dropdown (data) {
+    this.clear_dropdown();
 
     for (let { value, selected } of data) {
-      this.add(value, selected);
+      this.add_item(value, selected);
     }
   }
 
-  add (value, selected = false) {
+  /**
+   * Add an item to the dropdown list.
+   * @argument {String} value - Item value.
+   * @argument {Boolean} [selected=false] - Whether the item to be selected.
+   * @return {HTMLElement} $option - Added node.
+   */
+  add_item (value, selected = false) {
     let $option = document.createElement('li');
 
     $option.dataset.value = $option.textContent = value;
@@ -1589,19 +1846,42 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     return $option;
   }
 
+  /**
+   * Empty the dropdown list.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   clear_dropdown () {
     this.$listbox.innerHTML = '';
+    this.$$listbox.update_members();
+    this.$$listbox.get_data();
   }
 
+  /**
+   * Clear the input field.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   clear_input () {
     this.$$input.clear();
   }
 
+  /**
+   * Called whenever the button is pressed. Show or hide the dropdown list.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   button_onmousedown (event) {
     this.toggle_dropdown();
     event.preventDefault();
   }
 
+  /**
+   * Called whenever the user is hitting a key on the text field. Treat some non-character keys as keyboard shortcuts,
+   * including Tab, Escape, Enter, Up Arrow and Down Arrow.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {Boolean} default - True if the event doesn't trigger any action.
+   */
   input_onkeydown (event) {
     if (event.key === 'Tab') {
       return true;
@@ -1651,6 +1931,12 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     return true;
   }
 
+  /**
+   * Called whenever the user is typing on the text field. Empty the dropdown list and notify the event so the consumer
+   * can do something, like incremental search.
+   * @argument {InputEvent} event - The input event.
+   * @return {undefined}
+   */
   input_oninput (event) {
     let value = this.$$input.value.trim();
 
@@ -1667,6 +1953,11 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     event.stopPropagation();
   }
 
+  /**
+   * Called whenever the text field loose a focus. Hide the dropdown list.
+   * @argument {FocusEvent} event - The blur event.
+   * @return {undefined}
+   */
   input_onblur (event) {
     // Use a timer in case of the listbox getting focus for a second
     window.setTimeout(() => {
@@ -1676,7 +1967,12 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }, 50);
   }
 
-  // Based on Menu.prototype.onmouseover
+  /**
+   * Called whenever the dropdown list is hovered. Select and focus an item on the list. This method is based on
+   * Menu.prototype.onmouseover.
+   * @argument {MouseEvent} event - The mouseover event.
+   * @return {undefined}
+   */
   listbox_onmouseover (event) {
     if (this.$$listbox.view.members.includes(event.target)) {
       this.$$listbox.view.selected = this.$$listbox.view.$focused = event.target;
@@ -1686,6 +1982,11 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever the dropdown list is clicked. Change the text field value and trigger an event.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   listbox_onmousedown (event) {
     let $target = this.$$listbox.view.selected[0],
         value = $target.dataset.value || $target.textContent;
@@ -1698,25 +1999,36 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever an dropdown list item is selected. Set the aria-activedescendant attribute for a11y.
+   * @argument {CustomEvent} event - The custom Select event.
+   * @return {undefined}
+   */
   listbox_onselect (event) {
     this.$container.setAttribute('aria-activedescendant', event.detail.ids[0]);
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.$container.addEventListener(...args);
   }
 }
 
 /**
- * Define the ListBox role.
+ * Implement the listbox role.
  * @extends FlareTail.widgets.Select
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#listbox}
  */
 FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
   /**
    * Get a ListBox instance.
    * @constructor
-   * @argument {Element} $container - <menu role="listbox">
-   * @argument {Array} [data]
+   * @argument {HTMLElement} $container - <menu role="listbox">
+   * @argument {Array.<Object>} [data] - Optional data.
    * @argument {Object} [options] - This attribute on the listbox element is also supported:
    *  - aria-multiselectable
    * @return {Object} widget
@@ -1765,6 +2077,11 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Build the listbox dynamically with the provided data.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   build () {
     let map = this.data.map = new Map(),
         $fragment = new DocumentFragment(),
@@ -1794,6 +2111,11 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
     this.view.$container.appendChild($fragment);
   }
 
+  /**
+   * Retrieve the listbox data from a static list markup.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   get_data () {
     let map = this.data.map = new Map();
 
@@ -1815,6 +2137,11 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
     });
   }
 
+  /**
+   * Filter the listbox options by values.
+   * @argument {Array.<String>} list - Values to be displayed.
+   * @return {undefined}
+   */
   filter (list) {
     let $container = this.view.$container;
 
@@ -1839,10 +2166,19 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
 }
 
 /**
- * Define the Menu role.
+ * Implement the menu role.
  * @extends FlareTail.widgets.Select
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#menu}
  */
 FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
+  /**
+   * Get a Menu instance.
+   * @constructor
+   * @argument {HTMLElement} $container - <menu role="menu">
+   * @argument {Array.<Object>} [data] - Optional data.
+   * @argument {Boolean} [subclass=false] - Whether the method is called in a subclass.
+   * @return {Object} widget
+   */
   constructor ($container, data = [], subclass = false) {
     super(); // This does nothing but is required before using `this`
 
@@ -1898,6 +2234,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     });
   }
 
+  /**
+   * Activate the widget.
+   * @argument {Boolean} [rebuild=false] - Whether the widget is to be just restructured.
+   * @return {undefined}
+   */
   activate (rebuild = false) {
     // Redefine items
     let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
@@ -1940,6 +2281,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     });
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Select a menu item when necessary.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     // Open link in a new tab
     if (event.target.href && event.buttons <= 1) {
@@ -1972,6 +2318,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever the menu is hovered. Select and focus a menu item.
+   * @argument {MouseEvent} event - The mouseover event.
+   * @return {undefined}
+   */
   onmouseover (event) {
     if (this.view.members.includes(event.target)) {
       this.view.selected = this.view.$focused = event.target;
@@ -1980,6 +2331,12 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever the menu or its owner node is right-clicked. Show the context menu when the event is triggered on
+   * the owner.
+   * @argument {MouseEvent} event - The contextmenu event.
+   * @return {Boolean} default - Always false to disable the browser's build-in context menu.
+   */
   oncontextmenu (event) {
     let $owner = this.view.$owner,
         $container = this.view.$container;
@@ -2003,6 +2360,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Select a menu item when necessary.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let parent = this.data.parent,
         menus = this.data.menus,
@@ -2107,6 +2469,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Called whenever a blur event is triggered. Close the menu.
+   * @argument {FocusEvent} event - The blur event.
+   * @return {undefined}
+   */
   onblur (event) {
     if (event.currentTarget === window) {
       this.close(true);
@@ -2116,6 +2483,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     super.onblur(event);
   }
 
+  /**
+   * Build the menu dynamically with the provided data.
+   * @argument {Array.<Object>} [data] - Optional data.
+   * @return {undefined}
+   */
   build (data) {
     let $container = this.view.$container,
         $fragment = new DocumentFragment(),
@@ -2166,6 +2538,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Open the menu.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   open () {
     let $container = this.view.$container;
 
@@ -2184,6 +2561,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     FlareTail.helpers.event.bind(this, window, ['mousedown', 'blur']);
   }
 
+  /**
+   * Fire an event whenever an item is selected.
+   * @argument {(MouseEvent|KeyboardEvent)} event - The mousedown or keydown event.
+   * @return {undefined}
+   */
   select (event) {
     FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
       bubbles: true,
@@ -2195,6 +2577,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     });
   }
 
+  /**
+   * Close the menu.
+   * @argument {Boolean} propagation - Whether the parent menu, if exists, should be closed.
+   * @return {undefined}
+   */
   close (propagation) {
     FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
 
@@ -2226,10 +2613,18 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 }
 
 /**
- * Define the MenuBar role.
+ * Implement the menubar role.
  * @extends FlareTail.widgets.Menu
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#menubar}
  */
 FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
+  /**
+   * Get a MenuBar instance.
+   * @constructor
+   * @argument {HTMLElement} $container - <menu role="menubar">
+   * @argument {Array.<Object>} [data] - Optional data.
+   * @return {Object} widget
+   */
   constructor ($container, data) {
     super($container, [], true); // This does nothing but is required before using `this`
 
@@ -2245,6 +2640,11 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     super.activate();
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Open or close a menu when necessary.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     if (event.buttons > 1) {
       FlareTail.helpers.event.ignore(event);
@@ -2261,6 +2661,11 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     }
   }
 
+  /**
+   * Called whenever the menubar is hovered. Select and focus a menu item.
+   * @argument {MouseEvent} event - The mouseover event.
+   * @return {undefined}
+   */
   onmouseover (event) {
     if (this.view.selected.length && this.view.members.includes(event.target)) {
       this.view.selected = this.view.$focused = event.target;
@@ -2269,6 +2674,11 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Select a menu item when necessary.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let menu = this.data.menus.get(event.target).view,
         menuitems = menu.members;
@@ -2322,10 +2732,20 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     return FlareTail.helpers.event.ignore(event);
   }
 
+  /**
+   * Open a menu.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   open (event) {
     this.select_with_mouse(event);
   }
 
+  /**
+   * Close a menu.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   close () {
     FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
 
@@ -2334,8 +2754,9 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
 }
 
 /**
- * Define the RadioGroup role.
+ * Implement the radiogroup role.
  * @extends FlareTail.widgets.Select
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#radiogroup}
  */
 FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select {
   constructor ($container, data) {
@@ -2355,15 +2776,16 @@ FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select
 }
 
 /**
- * Define the Tree role.
+ * Implement the tree role.
  * @extends FlareTail.widgets.Select
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#tree}
  */
 FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
   /**
    * Get a Tree instance.
    * @constructor
-   * @argument {Element} $container - <menu role="tree">
-   * @argument {Array} data - Optional data
+   * @argument {HTMLElement} $container - <menu role="tree">
+   * @argument {Array.<Object>} data - Optional data.
    * @return {Object} widget
    */
   constructor ($container, data) {
@@ -2521,6 +2943,11 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     $tree.appendChild($fragment);
   }
 
+  /**
+   * Retrieve the tree data from a static list markup.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   get_data () {
     let map = this.data.map = new WeakMap(),
         structure = this.data.structure = [];
@@ -2550,6 +2977,11 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     };
   }
 
+  /**
+   * Expand a tree item.
+   * @argument {HTMLElement} $item - Node to be expanded.
+   * @return {undefined}
+   */
   expand ($item) {
     let expanded = $item.matches('[aria-expanded="true"]'),
         items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
@@ -2583,20 +3015,22 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
 }
 
 /**
- * Define the TreeGrid role.
+ * Implement the treegrid role.
  * @extends FlareTail.widgets.Grid
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#treegrid}
  */
 FlareTail.widgets.TreeGrid = class TreeGrid extends FlareTail.widgets.Grid {}
 
 /**
- * Define the TabList role.
+ * Implement the tablist role.
  * @extends FlareTail.widgets.Composite
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#tablist}
  */
 FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
   /**
    * Get a TabList instance.
    * @constructor
-   * @argument {Element} $container - <ul role="tablist">. Those attributes are supported as options:
+   * @argument {HTMLElement} $container - <ul role="tablist">. Those attributes are supported as options:
    *  - data-removable: If true, tabs can be opened and/or closed (default: false)
    *  - data-reorderable: If true, tabs can be reordered by drag (default: false)
    *  Those attributes on the tab elements are also supported:
@@ -2657,12 +3091,23 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     });
   }
 
+  /**
+   * Called whenever a tab is clicked. If the target is the close button, close the tab.
+   * @argument {MouseEvent} event - The click event.
+   * @return {undefined}
+   */
   onclick (event) {
     if (event.currentTarget === this.view.$container && event.target.matches('.close')) {
       this.close_tab(document.getElementById(event.target.getAttribute('aria-controls')));
     }
   }
 
+  /**
+   * Change the active tab.
+   * @argument {HTMLElement} $current_tab - The current active tab node.
+   * @argument {HTMLElement} $new_tab - The new active tab node.
+   * @return {undefined}
+   */
   switch_tabpanel ($current_tab, $new_tab) {
     let $panel;
 
@@ -2677,6 +3122,11 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     $panel.setAttribute('aria-hidden', 'false');
   }
 
+  /**
+   * Add the close button to a tab.
+   * @argument {HTMLElement} $tab - Tab that the button will be added.
+   * @return {undefined}
+   */
   set_close_button ($tab) {
     let $button = document.createElement('span');
 
@@ -2687,6 +3137,16 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     $tab.appendChild($button);
   }
 
+  /**
+   * Add a new tab to the tablist.
+   * @argument {String} name - Identifier of the tab.
+   * @argument {String} title - Label displayed on the tab.
+   * @argument {String} label - Tooltip of the tab.
+   * @argument {HTMLElement} $panel - Relevant tabpanel node.
+   * @argument {String} [position='last'] - Where the new tab will be added, 'next' of the current tab or 'last'.
+   * @argument {Object} [dataset] - Map of the tab's data attributes.
+   * @return {HTMLElement} $tab - The new tab node.
+   */
   add_tab (name, title, label, $panel, position = 'last', dataset = {}) {
     let items = this.view.members,
         $tab = items[0].cloneNode(true),
@@ -2730,6 +3190,11 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     return $tab;
   }
 
+  /**
+   * Close a tab.
+   * @argument {HTMLElement} $tab - Tab to be removed.
+   * @return {undefined}
+   */
   close_tab ($tab) {
     let items = this.view.members,
         index = items.indexOf($tab);
@@ -2751,16 +3216,25 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
 }
 
 /**
- * Define the Input abstract role.
+ * Implement the input abstract role.
  * @extends FlareTail.widgets.Widget
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#input}
  */
 FlareTail.widgets.Input = class Input extends FlareTail.widgets.Widget {}
 
 /**
- * Define the TextBox role.
+ * Implement the textbox role.
  * @extends FlareTail.widgets.Input
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#textbox}
  */
 FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
+  /**
+   * Get a TextBox instance.
+   * @constructor
+   * @argument {HTMLElement} $textbox - <span role="textbox">
+   * @argument {Boolean} [richtext=false] - Whether the richtext editing to be enabled.
+   * @return {Object} widget
+   */
   constructor ($textbox, richtext = false) {
     super(); // This does nothing but is required before using `this`
 
@@ -2783,11 +3257,15 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
     FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
   }
 
+  /**
+   * Called whenever a cut event is triggered. If this is a plaintext editor, mimic the native editor's behaviour.
+   * @argument {ClipboardEvent} event - The cut event.
+   * @return {undefined}
+   */
   oncut (event) {
     let selection = window.getSelection();
 
     if (!this.richtext) {
-      // Mimic the plaintext editor's behaviour
       event.clipboardData.setData('text/plain', selection.toString());
       event.preventDefault();
       selection.deleteFromDocument();
@@ -2796,22 +3274,30 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
     this.onedit();
   }
 
+  /**
+   * Called whenever a copy event is triggered. If this is a plaintext editor, mimic the native editor's behaviour.
+   * @argument {ClipboardEvent} event - The copy event.
+   * @return {undefined}
+   */
   oncopy (event) {
     let selection = window.getSelection();
 
     if (!this.richtext) {
-      // Mimic the plaintext editor's behaviour
       event.clipboardData.setData('text/plain', selection.toString());
       event.preventDefault();
     }
   }
 
+  /**
+   * Called whenever a paste event is triggered. If this is a plaintext editor, mimic the native editor's behaviour.
+   * @argument {ClipboardEvent} event - The paste event.
+   * @return {undefined}
+   */
   onpaste (event) {
     let selection = window.getSelection(),
         range = selection.getRangeAt(0);
 
     if (!this.richtext) {
-      // Mimic the plaintext editor's behaviour
       event.preventDefault();
       range.deleteContents();
       range.insertNode(document.createTextNode(event.clipboardData.getData('text/plain')));
@@ -2821,6 +3307,11 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
     this.onedit();
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Handle the readonly and nobreak options.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {Boolean} default - False if the editor is readonly. True otherwise.
+   */
   onkeydown (event) {
     event.stopPropagation();
 
@@ -2837,29 +3328,56 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
     return true;
   }
 
+  /**
+   * Called whenever an input event is triggered.
+   * @argument {InputEvent} event - The input event.
+   * @return {undefined}
+   */
   oninput (event) {
     this.onedit();
   }
 
+  /**
+   * Called whenever the text value is changed. Fire a custom event.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   onedit () {
     FlareTail.helpers.event.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
   }
 
+  /**
+   * Clear the textbox.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   clear () {
     this.$textbox.textContent = '';
     this.onedit();
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.$textbox.addEventListener(...args);
   }
 }
 
 /**
- * Define the CheckBox role.
+ * Implement the checkbox role.
  * @extends FlareTail.widgets.Input
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#checkbox}
  */
 FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
+  /**
+   * Get a CheckBox instance.
+   * @constructor
+   * @argument {HTMLElement} $checkbox - <span role="checkbox">
+   * @return {Object} widget
+   */
   constructor ($checkbox) {
     super(); // This does nothing but is required before using `this`
 
@@ -2886,12 +3404,22 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
     FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
   }
 
+  /**
+   * Called whenever a key is pressed while the checkbox gets focused. Treat the Space key as a click.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     if (event.key === ' ') { // Space
       this.view.$checkbox.click();
     }
   }
 
+  /**
+   * Called whenever the checkbox is clicked. Change the checked state.
+   * @argument {MouseEvent} event - The click event.
+   * @return {Boolean} default - Always false.
+   */
   onclick (event) {
     this.checked = !this.checked;
     this.view.$checkbox.focus();
@@ -2899,20 +3427,26 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
     return false;
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.view.$checkbox.addEventListener(...args);
   }
 }
 
 /**
- * Define the ScrollBar role.
+ * Implement the scrollbar role.
  * @extends FlareTail.widgets.Input
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#scrollbar}
  */
 FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   /**
    * Get a ScrollBar instance.
    * @constructor
-   * @argument {Element} $owner - Element to be scrolled.
+   * @argument {HTMLElement} $owner - Element to be scrolled.
    * @argument {Boolean} [adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
    * @argument {Boolean} [arrow_keys_enabled=false] - Enable scrolling with the up/down arrow keys. Should be false on
    *  Grid, Tree and ListBox.
@@ -3183,20 +3717,27 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     return $iframe;
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.view.$controller.addEventListener(...args);
   }
 }
 
 /**
- * Define the Window abstract role.
+ * Implement the window abstract role.
  * @extends FlareTail.widgets.RoleType
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#window}
  */
 FlareTail.widgets.Window = class Window extends FlareTail.widgets.RoleType {}
 
 /**
- * Define the Dialog role.
+ * Implement the dialog role.
  * @extends FlareTail.widgets.Window
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#dialog}
  */
 FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
   /**
@@ -3289,6 +3830,11 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
     $wrapper.appendChild($dialog)
   }
 
+  /**
+   * Activate the widget.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   activate () {
     // Add event listeners
     FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
@@ -3340,26 +3886,28 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
 }
 
 /**
- * Define the AlertDialog role.
+ * Implement the alertdialog role.
  * @extends FlareTail.widgets.Dialog
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#alertdialog}
  */
 FlareTail.widgets.AlertDialog = class AlertDialog extends FlareTail.widgets.Dialog {}
 
 /**
- * Define the Separator role.
+ * Implement the separator role.
  * @extends FlareTail.widgets.Structure
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#separator}
  */
 FlareTail.widgets.Separator = class Separator extends FlareTail.widgets.Structure {}
 
 /**
- * Define the Splitter custom role.
+ * Implement the splitter custom widget.
  * @extends FlareTail.widgets.Separator
  */
 FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator {
   /**
    * Get a Splitter instance.
    * @constructor
-   * @argument {Element} $splitter - <div class="splitter" role="separator">
+   * @argument {HTMLElement} $splitter - <div class="splitter" role="separator">
    * @return {Object} widget
    */
   constructor ($splitter) {
@@ -3618,49 +4166,61 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     }
   }
 
+  /**
+   * Set an event listener on the widget.
+   * @argument {*} args - The event type and handler.
+   * @return {undefined}
+   */
   bind (...args) {
     this.view.$splitter.addEventListener(...args);
   }
 }
 
 /**
- * Define the Region role.
+ * Implement the region role.
  * @extends FlareTail.widgets.Section
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#region}
  */
 FlareTail.widgets.Region = class Region extends FlareTail.widgets.Section {}
 
 /**
- * Define the Status role.
+ * Implement the status role.
  * @extends FlareTail.widgets.Region
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#status}
  */
 FlareTail.widgets.Status = class Status extends FlareTail.widgets.Region {}
 
 /**
- * Define the Landmark abstract role.
+ * Implement the landmark abstract role.
  * @extends FlareTail.widgets.Region
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#landmark}
  */
 FlareTail.widgets.Landmark = class Landmark extends FlareTail.widgets.Region {}
 
 /**
- * Define the Application role.
+ * Implement the application role.
  * @extends FlareTail.widgets.Landmark
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#application}
  */
 FlareTail.widgets.Application = class Application extends FlareTail.widgets.Landmark {}
 
 /**
- * Define the Tooltip role.
+ * Implement the tooltip role.
  * @extends FlareTail.widgets.Section
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#tooltip}
  */
 FlareTail.widgets.Tooltip = class Tooltip extends FlareTail.widgets.Section {}
 
 /**
- * Define the Group role.
+ * Implement the group role.
  * @extends FlareTail.widgets.Section
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#group}
  */
 FlareTail.widgets.Group = class Group extends FlareTail.widgets.Section {}
 
 /**
- * Define the Toolbar role.
+ * Implement the toolbar role.
  * @extends FlareTail.widgets.Group
+ * @see {@link http://www.w3.org/TR/wai-aria/complete#toolbar}
  */
 FlareTail.widgets.ToolBar = class ToolBar extends FlareTail.widgets.Group {}
