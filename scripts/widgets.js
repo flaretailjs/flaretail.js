@@ -2759,6 +2759,13 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
  * @see {@link http://www.w3.org/TR/wai-aria/complete#radiogroup}
  */
 FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select {
+  /**
+   * Get a RadioGroup instance.
+   * @constructor
+   * @argument {HTMLElement} $container - <menu role="radiogroup">
+   * @argument {Array.<Object>} data - Optional data.
+   * @return {Object} widget
+   */
   constructor ($container, data) {
     super(); // This does nothing but is required before using `this`
 
@@ -2813,6 +2820,11 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Expand the tree if the expander is clicked.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     if (event.target.matches('.expander')) {
       this.expand(event.target.parentElement.querySelector('[role="treeitem"]'));
@@ -2822,6 +2834,11 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Select a menu item or expand/collapse the tree when necessary.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let $item = event.target,
         items = this.view.members;
@@ -2869,12 +2886,22 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     }
   }
 
+  /**
+   * Called whenever a dblclick event is triggered. Expand the tree if the expander is clicked.
+   * @argument {MouseEvent} event - The dblclick event.
+   * @return {undefined}
+   */
   ondblclick (event) {
     if (event.target.hasAttribute('aria-expanded')) {
       this.expand(event.target);
     }
   }
 
+  /**
+   * Build the menu dynamically with the provided data.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   build () {
     let $tree = this.view.$container,
         $fragment = new DocumentFragment(),
