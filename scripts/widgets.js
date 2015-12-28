@@ -3527,18 +3527,38 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     this.set_height();
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Handle the scroll.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     this.scroll_with_mouse(event);
   }
 
+  /**
+   * Called whenever a mousemove event is triggered. Handle the scroll.
+   * @argument {MouseEvent} event - The mousemove event.
+   * @return {undefined}
+   */
   onmousemove (event) {
     this.scroll_with_mouse(event);
   }
 
+  /**
+   * Called whenever a mouseup event is triggered. Handle the scroll.
+   * @argument {MouseEvent} event - The mouseup event.
+   * @return {undefined}
+   */
   onmouseup (event) {
     this.scroll_with_mouse(event);
   }
 
+  /**
+   * Called whenever a wheel event is triggered. Handle the scroll.
+   * @argument {WheelEvent} event - The wheel event.
+   * @return {undefined}
+   */
   onwheel (event) {
     event.preventDefault();
 
@@ -3558,6 +3578,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
   }
 
+  /**
+   * Called whenever a scroll event is triggered. Handle the scroll.
+   * @argument {UIEvent} event - The scroll event.
+   * @return {undefined}
+   */
   onscroll (event) {
     let $owner = this.view.$owner,
         $controller = this.view.$controller;
@@ -3601,10 +3626,20 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     $controller.style.top = `${st + 2 + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Handle the scroll.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     this.scroll_with_keyboard(event);
   }
 
+  /**
+   * Called whenever an overflow event is triggered. Enable the scrollbar.
+   * @argument {UIEvent} event - The overflow event.
+   * @return {undefined}
+   */
   onoverflow (event) {
     if (event.target === event.currentTarget) {
       this.set_height();
@@ -3613,6 +3648,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
   }
 
+  /**
+   * Called whenever an underflow event is triggered. Disable the scrollbar.
+   * @argument {UIEvent} event - The underflow event.
+   * @return {undefined}
+   */
   onunderflow (event) {
     if (event.target === event.currentTarget) {
       this.view.$controller.setAttribute('aria-disabled', 'true');
@@ -3620,6 +3660,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
   }
 
+  /**
+   * Scroll the target element with a mouse operation.
+   * @argument {MouseEvent} event - The mousedown, mousemove or mouseup event.
+   * @return {undefined}
+   */
   scroll_with_mouse (event) {
     let $owner = this.view.$owner,
         FTue = FlareTail.helpers.event;
@@ -3660,6 +3705,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
   }
 
+  /**
+   * Scroll the target element with a keyboard operation.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   scroll_with_keyboard (event) {
     let $owner = this.view.$owner,
         $controller = this.view.$controller,
@@ -3707,6 +3757,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     return true;
   }
 
+  /**
+   * Set the height of the scrollbar.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   set_height () {
     let $owner = this.view.$owner,
         $controller = this.view.$controller,
@@ -3721,6 +3776,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     this.onscroll();
   }
 
+  /**
+   * Provide an iframe that observes any scroll area changes.
+   * @argument {undefined}
+   * @return {HTMLElement} $iframe - Empty iframe with an observer.
+   */
   get_observer () {
     let $iframe = document.createElement('iframe');
 
@@ -3803,6 +3863,11 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
     this.activate();
   }
 
+  /**
+   * Create a dialog.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   build () {
     let options = this.options,
         $wrapper = this.view.$wrapper = document.createElement('div'),
@@ -3867,6 +3932,11 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
     FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
   }
 
+  /**
+   * Called whenever a keypress event is triggered. Handle the keyboard shortcuts.
+   * @argument {KeyboardEvent} event - The keypress event.
+   * @return {undefined}
+   */
   onkeypress (event) {
     if (event.key === 'Enter') {
       this.hide('accept');
@@ -3879,6 +3949,11 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
     event.stopPropagation();
   }
 
+  /**
+   * Show the dialog.
+   * @argument {undefined}
+   * @return {undefined}
+   */
   show () {
     this.focus_map = new Map();
     this.focus_origial = document.activeElement;
@@ -3893,6 +3968,11 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
     this.view.$dialog.focus();
   }
 
+  /**
+   * Hide the dialog.
+   * @argument {String} action - User-selected action: accept or cancel.
+   * @return {undefined}
+   */
   hide (action) {
     for (let [$element, tabindex] of this.focus_map) {
       tabindex ? $element.tabIndex = tabindex : $element.removeAttribute('tabindex');
@@ -4100,6 +4180,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     };
   }
 
+  /**
+   * Called whenever a mousedown event is triggered. Grab the splitter.
+   * @argument {MouseEvent} event - The mousedown event.
+   * @return {undefined}
+   */
   onmousedown (event) {
     if (event.buttons > 1) {
       event.preventDefault();
@@ -4116,6 +4201,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
   }
 
+  /**
+   * Called whenever a mousemove event is triggered. Move the splitter.
+   * @argument {MouseEvent} event - The mousemove event.
+   * @return {undefined}
+   */
   onmousemove (event) {
     if (!this.data.grabbed) {
       return;
@@ -4125,6 +4215,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
                        ? event.clientY - this.data.outer.top : event.clientX - this.data.outer.left;
   }
 
+  /**
+   * Called whenever a mouseup event is triggered. Release the splitter.
+   * @argument {MouseEvent} event - The mouseup event.
+   * @return {undefined}
+   */
   onmouseup (event) {
     if (!this.data.grabbed) {
       return;
@@ -4139,6 +4234,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     delete this.view.$outer.dataset.splitter;
   }
 
+  /**
+   * Called whenever a keydown event is triggered. Move the splitter if possible.
+   * @argument {KeyboardEvent} event - The keydown event.
+   * @return {undefined}
+   */
   onkeydown (event) {
     let value = null,
         position = this.data.position,
