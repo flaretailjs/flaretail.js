@@ -362,7 +362,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   get_some (keys) {
-    return Promise.resolve(new Map([...keys].map(key => [key, this.get(key)])));
+    return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
   }
 
   /**
