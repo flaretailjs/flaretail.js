@@ -27,9 +27,9 @@ FlareTail.app.Router = class Router {
     this.routes = new Map();
 
     // Retrieve the routes from app controllers
-    for (let [prop, controller] of Object.entries(app.controllers)) {
-      if ('route' in controller) {
-        this.routes.set(new RegExp(`^${this.root}${controller.route}$`), controller);
+    for (let [name, component] of Object.entries(app)) {
+      if (name.match(/.+Controller$/) && 'route' in component.prototype) {
+        this.routes.set(new RegExp(`^${this.root}${component.prototype.route}$`), component);
       }
     }
 
