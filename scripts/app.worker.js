@@ -3,162 +3,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * Declare the FlareTail.js namespace.
+ * @namespace
+ */
+var FlareTail = FlareTail || {};
+
+/**
  * Provide a lightweight application framework.
  */
 FlareTail.app = {};
-
-/*
- * Provide app router functionalities. The routes can be defined on the app's controllers using regular expressions,
- * e.g. BzDeck.controllers.DetailsPage.route = '/bug/(\\d+)';
- */
-FlareTail.app.Router = class Router {
-  /**
-   * Get a Router instance.
-   * @constructor
-   * @argument {Object} app - App namespace containing configurations and controllers.
-   * @return {Object} router
-   */
-  constructor (app) {
-    // Specify the base URL of the app, without a trailing slash
-    this.root = app.config.app.root.match(/(.*)\/$/)[1] || '';
-    // Specify the launch path
-    this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
-    // Specify the routes
-    this.routes = new Map();
-
-    // Retrieve the routes from app controllers
-    for (let [name, component] of Object.entries(app)) {
-      if (name.match(/.+Controller$/) && 'route' in component.prototype) {
-        this.routes.set(new RegExp(`^${this.root}${component.prototype.route}$`), component);
-      }
-    }
-
-    window.addEventListener('popstate', event => this.locate());
-  }
-
-  /**
-   * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
-   * specified pathname is invalid, so nativate to the app's launch path instead.
-   * @argument {String} [path=location.pathname] - URL pathname used to find a route.
-   * @return {Boolean} result - Whether a route is found.
-   */
-  locate (path = location.pathname) {
-    for (let [re, constructor] of this.routes) {
-      let match = path.match(re);
-
-      if (match) {
-        // Call the constructor when a route is found
-        // Pass arguments based on the RegExp pattern, taking numeric arguments into account
-        new constructor(...match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg)));
-
-        return true;
-      }
-    }
-
-    // Couldn't find a route; go to the launch path
-    this.navigate(this.launch_path);
-
-    return false;
-  }
-
-  /**
-   * Navigate to the specified URL pathname by manipulating the browser history.
-   * @argument {String} path - URL pathname to go.
-   * @argument {Object} [state={}] - History state object.
-   * @argument {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
-   * @return {undefined}
-   */
-  navigate (path, state = {}, replace = false) {
-    state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
-
-    let args = [state, 'Loading...', this.root + path]; // l10n
-
-    replace ? history.replaceState(...args) : history.pushState(...args);
-    window.dispatchEvent(new PopStateEvent('popstate'));
-
-    if (FlareTail.debug) {
-      console.info(replace ? 'History replaced:' : 'History added:', path, state);
-    }
-  }
-}
-
-/**
- * Provide app event functionalities. 
- */
-FlareTail.app.Events = class Events {
-  /**
-   * Publish an event asynchronously on a separate thread.
-   * @argument {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
-   *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
-   * @argument {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will
-   *  be automatically appended to the data.
-   * @return {undefined}
-   */
-  trigger (topic, data = {}) {
-    if (topic.match(/^:/)) {
-      topic = this.constructor.name + topic;
-    }
-
-    let id = this.id;
-
-    if (FlareTail.debug) {
-      console.info('Event triggered:', topic, id || '(global)', data);
-    }
-
-    this.helpers.event.trigger(window, topic, { detail: { id, data }});
-  }
-
-  /**
-   * Subscribe an event.
-   * @argument {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
-   *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
-   * @argument {Function} callback - Function called whenever the specified event is fired.
-   * @argument {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
-   *  and the instance have different id properties. Otherwise, the identity will be respected.
-   * @return {undefined}
-   */
-  on (topic, callback, global = false) {
-    topic = topic.replace(/^([MVC]):/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
-    });
-
-    window.addEventListener(topic, event => {
-      if (!global && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
-        return false;
-      }
-
-      callback(event.detail.data);
-
-      return true;
-    });
-  }
-
-  /**
-   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
-   * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
-   * @argument {String} topic - See the 'on' function above for details.
-   * @argument {Boolean} [global=false] - See the 'on' function above for details.
-   * @return {undefined}
-   */
-  subscribe (topic, global = false) {
-    this.on(topic, data => this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
-  }
-}
-
-FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
 
 /**
  * Provide app datasource functionalities. 
  * @extends FlareTail.app.Events
  */
-FlareTail.app.DataSource = class DataSource extends FlareTail.app.Events {}
+FlareTail.app.DataSource = class DataSource {}
 
 /**
  * Provide IndexedDB datasource functionalities. 
  * @extends FlareTail.app.DataSource
  */
-FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.DataSource {
+FlareTail.app.IDBDataSource = class IDBDataSource extends FlareTail.app.DataSource {
   /**
    * Open a local IndexedDB database by name, and return it.
    * @argument {String} name - Name of the database.
@@ -217,7 +82,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
  * Provide app model functionalities. 
  * @extends FlareTail.app.Events
  */
-FlareTail.app.Model = class Model extends FlareTail.app.Events {
+FlareTail.app.Model = class Model {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
    * @argument {undefined}
@@ -277,7 +142,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
  * Provide app collection functionalities. 
  * @extends FlareTail.app.Events
  */
-FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
+FlareTail.app.Collection = class Collection {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
@@ -394,26 +259,3 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
     return this.datasource.get_store(this.store_name).delete(key);
   }
 }
-
-/**
- * Provide app view functionalities. 
- * @extends FlareTail.app.Events
- */
-FlareTail.app.View = class View extends FlareTail.app.Events {}
-
-FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
-FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
-FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
-FlareTail.app.View.prototype.widgets = FlareTail.widgets;
-
-/**
- * Provide app helper functionalities. 
- * @extends FlareTail.app.View
- */
-FlareTail.app.Helper = class Helper extends FlareTail.app.View {}
-
-/**
- * Provide app controller functionalities. 
- * @extends FlareTail.app.Events
- */
-FlareTail.app.Controller = class Controller extends FlareTail.app.Events {}

@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
-
-let FlareTail = {};
+/**
+ * Declare the FlareTail.js namespace.
+ * @namespace
+ */
+var FlareTail = FlareTail || {};
 
 FlareTail.debug = 'URLSearchParams' in window &&
                     (new URLSearchParams(location.search.substr(1))).get('debug') === 'true';

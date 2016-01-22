@@ -3,6 +3,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
+ * Declare the FlareTail.js namespace.
+ * @namespace
+ */
+var FlareTail = FlareTail || {};
+
+/**
  * Provide application widgets based on the WAI-ARIA roles.
  * @see {@link http://www.w3.org/TR/wai-aria/}
  */
