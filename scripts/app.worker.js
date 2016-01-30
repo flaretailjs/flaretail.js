@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Declare the FlareTail.js namespace.
+ * Declare the FlareTail.js namespace. Use `var` to avoid redeclaration.
  * @namespace
  */
 var FlareTail = FlareTail || {};
@@ -11,13 +11,45 @@ var FlareTail = FlareTail || {};
 /**
  * Provide a lightweight application framework.
  */
-FlareTail.app = {};
+FlareTail.app = FlareTail.app || {};
+
+/**
+ * Provide an app bare-bones object.
+ */
+FlareTail.app.Worker = class Worker {
+  /**
+   * Get a Worker instance.
+   * @constructor
+   * @argument {String} name - App name.
+   * @argument {(Number|String)} [version=1] - App version mainly used for the offline cache.
+   * @return {Object} app
+   */
+  constructor (name, version = 1) {
+    this.name = name;
+    this.version = version;
+
+    return ({
+      datasources: {},
+      collections: {},
+      models: {},
+      services: {},
+    });
+  }
+}
+
+/**
+ * Provide app base functionalities. 
+ * @extends FlareTail.app.Events
+ */
+FlareTail.app.Base = class View extends FlareTail.app.Events {}
+
+FlareTail.app.Base.prototype.helpers = FlareTail.helpers;
 
 /**
  * Provide app datasource functionalities. 
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.DataSource = class DataSource {}
+FlareTail.app.DataSource = class DataSource extends FlareTail.app.Base {}
 
 /**
  * Provide IndexedDB datasource functionalities. 
@@ -80,9 +112,9 @@ FlareTail.app.IDBDataSource = class IDBDataSource extends FlareTail.app.DataSour
 
 /**
  * Provide app model functionalities. 
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.Model = class Model {
+FlareTail.app.Model = class Model extends FlareTail.app.Base {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
    * @argument {undefined}
@@ -140,9 +172,9 @@ FlareTail.app.Model = class Model {
 
 /**
  * Provide app collection functionalities. 
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.Collection = class Collection {
+FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
@@ -259,3 +291,8 @@ FlareTail.app.Collection = class Collection {
     return this.datasource.get_store(this.store_name).delete(key);
   }
 }
+
+/**
+ * Provide app service functionalities. 
+ */
+FlareTail.app.Service = class Service {}

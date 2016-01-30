@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Declare the FlareTail.js namespace.
+ * Declare the FlareTail.js namespace. Use `var` to avoid redeclaration.
  * @namespace
  */
 var FlareTail = FlareTail || {};
@@ -11,9 +11,33 @@ var FlareTail = FlareTail || {};
 /**
  * Provide a lightweight application framework.
  */
-FlareTail.app = {};
+FlareTail.app = FlareTail.app || {};
 
-/*
+/**
+ * Provide an app bare-bones object.
+ */
+FlareTail.app.Main = class Main {
+  /**
+   * Get a Main instance.
+   * @constructor
+   * @argument {String} name - App name.
+   * @return {Object} app
+   */
+  constructor (name) {
+    this.name = name;
+
+    return ({
+      controllers: {},
+      views: { pages: {} },
+      // Those components are actually in the service worker; use WorkerProxy to get access
+      datasources: {},
+      collections: {},
+      services: {},
+    });
+  }
+}
+
+/**
  * Provide app router functionalities. The routes can be defined on the app's controllers using regular expressions,
  * e.g. BzDeck.controllers.DetailsPage.route = '/bug/(\\d+)';
  */
@@ -89,76 +113,18 @@ FlareTail.app.Router = class Router {
 }
 
 /**
- * Provide app event functionalities. 
+ * Provide app base functionalities. 
+ * @extends FlareTail.app.Events
  */
-FlareTail.app.Events = class Events {
-  /**
-   * Publish an event asynchronously on a separate thread.
-   * @argument {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
-   *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
-   * @argument {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will
-   *  be automatically appended to the data.
-   * @return {undefined}
-   */
-  trigger (topic, data = {}) {
-    if (topic.match(/^:/)) {
-      topic = this.constructor.name + topic;
-    }
+FlareTail.app.Base = class View extends FlareTail.app.Events {}
 
-    let id = this.id;
-
-    if (FlareTail.debug) {
-      console.info('Event triggered:', topic, id || '(global)', data);
-    }
-
-    this.helpers.event.trigger(window, topic, { detail: { id, data }});
-  }
-
-  /**
-   * Subscribe an event.
-   * @argument {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
-   *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
-   * @argument {Function} callback - Function called whenever the specified event is fired.
-   * @argument {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
-   *  and the instance have different id properties. Otherwise, the identity will be respected.
-   * @return {undefined}
-   */
-  on (topic, callback, global = false) {
-    topic = topic.replace(/^([MVC]):/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
-    });
-
-    window.addEventListener(topic, event => {
-      if (!global && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
-        return false;
-      }
-
-      callback(event.detail.data);
-
-      return true;
-    });
-  }
-
-  /**
-   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
-   * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
-   * @argument {String} topic - See the 'on' function above for details.
-   * @argument {Boolean} [global=false] - See the 'on' function above for details.
-   * @return {undefined}
-   */
-  subscribe (topic, global = false) {
-    this.on(topic, data => this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
-  }
-}
-
-FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
+FlareTail.app.Base.prototype.helpers = FlareTail.helpers;
 
 /**
  * Provide app view functionalities. 
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.View = class View extends FlareTail.app.Events {}
+FlareTail.app.View = class View extends FlareTail.app.Base {}
 
 FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
 FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
@@ -173,9 +139,9 @@ FlareTail.app.Helper = class Helper extends FlareTail.app.View {}
 
 /**
  * Provide app controller functionalities. 
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.Controller = class Controller extends FlareTail.app.Events {}
+FlareTail.app.Controller = class Controller extends FlareTail.app.Base {}
 
 /**
  * Provide worker proxy functionalities. This typically offers the frontend catch-all mechanism for backend Collections,
