@@ -3,12 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Declare the FlareTail.js namespace. Use `var` to avoid redeclaration.
- * @namespace
- */
-var FlareTail = FlareTail || {};
-
-/**
  * Provide a lightweight application framework.
  */
 FlareTail.app = FlareTail.app || {};
