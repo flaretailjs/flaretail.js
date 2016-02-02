@@ -16,23 +16,21 @@ FlareTail.app = FlareTail.app || {};
 /**
  * Provide an app bare-bones object.
  */
-FlareTail.app.Worker = class Worker {
+FlareTail.app.AbstractWorker = class AbstractWorker {
   /**
    * Get a Worker instance.
    * @constructor
    * @argument {String} name - App name.
-   * @argument {(Number|String)} [version=1] - App version mainly used for the offline cache.
    * @return {Object} app
    */
-  constructor (name, version = 1) {
+  constructor (name) {
     this.name = name;
-    this.version = version;
 
     return ({
       datasources: {},
       collections: {},
       models: {},
-      services: {},
+      handlers: {},
     });
   }
 }
@@ -41,7 +39,7 @@ FlareTail.app.Worker = class Worker {
  * Provide app base functionalities. 
  * @extends FlareTail.app.Events
  */
-FlareTail.app.Base = class View extends FlareTail.app.Events {}
+FlareTail.app.Base = class Base extends FlareTail.app.Events {}
 
 FlareTail.app.Base.prototype.helpers = FlareTail.helpers;
 
@@ -293,6 +291,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
 }
 
 /**
- * Provide app service functionalities. 
+ * Provide app handler functionalities. 
+ * @extends FlareTail.app.Base
  */
-FlareTail.app.Service = class Service {}
+FlareTail.app.Handler = class Handler extends FlareTail.app.Base {}

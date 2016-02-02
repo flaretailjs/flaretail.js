@@ -51,14 +51,12 @@ FlareTail.app.Events = class Events {
    * @return {undefined}
    */
   on (topic, callback, global = false) {
-    let bc = new BroadcastChannel(topic);
-
-    topic = topic.replace(/^([MVCS]):/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Controller|Service)$/)[1]
-              + { M: 'Model', V: 'View', C: 'Controller', S: 'Service' }[prefix] + ':';
+    topic = topic.replace(/^([MVCH]):/, (match, prefix) => {
+      return this.constructor.name.match(/(.*)(Model|View|Controller|Handler)$/)[1]
+              + { M: 'Model', V: 'View', C: 'Controller', H: 'Handler' }[prefix] + ':';
     });
 
-    bc.addEventListener('message', event => {
+    (new BroadcastChannel(topic)).addEventListener('message', event => {
       if (!global && event.data && event.data.id && this.id && event.data.id !== this.id) {
         return false;
       }

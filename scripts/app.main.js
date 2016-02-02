@@ -16,7 +16,7 @@ FlareTail.app = FlareTail.app || {};
 /**
  * Provide an app bare-bones object.
  */
-FlareTail.app.Main = class Main {
+FlareTail.app.AbstractMain = class AbstractMain {
   /**
    * Get a Main instance.
    * @constructor
@@ -32,7 +32,9 @@ FlareTail.app.Main = class Main {
       // Those components are actually in the service worker; use WorkerProxy to get access
       datasources: {},
       collections: {},
-      services: {},
+      handlers: {},
+      // Shared workers
+      workers: {},
     });
   }
 }
@@ -153,9 +155,10 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
    * Get a WorkerProxy instance.
    * @constructor
    * @argument {String} class_name - Name of the target class on the worker.
+   * @argument {SharedWorker} [worker=undefined] If specified, use the shared worker instead of the service worker.
    * @return {Proxy} proxy - The catch-all magic mechanism. Functions on this proxy will return a Promise.
    */
-  constructor (class_name) {
+  constructor (class_name, worker = undefined) {
     return new Proxy({}, {
       get: (obj, func_name) => new Proxy(() => {}, {
         apply: (_obj, _this, args) => new Promise(resolve => {
@@ -167,7 +170,12 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
                 console.info('[WorkerProxy] received message:', class_name, func_name, detail);
               }
 
-              navigator.serviceWorker.removeEventListener('message', listener);
+              if (worker) {
+                worker.port.removeEventListener('message', listener);
+              } else {
+                navigator.serviceWorker.removeEventListener('message', listener);
+              }
+
               resolve(detail);
             }
           };
@@ -176,8 +184,13 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
             console.info('[WorkerProxy] sent message:', class_name, func_name, args);
           }
 
-          navigator.serviceWorker.addEventListener('message', listener);
-          navigator.serviceWorker.ready.then(reg => reg.active.postMessage([class_name, func_name, args]));
+          if (worker) {
+            worker.port.addEventListener('message', listener);
+            worker.port.postMessage([class_name, func_name, args]);
+          } else {
+            navigator.serviceWorker.addEventListener('message', listener);
+            navigator.serviceWorker.ready.then(reg => reg.active.postMessage([class_name, func_name, args]));
+          }
         }),
       }),
     });
