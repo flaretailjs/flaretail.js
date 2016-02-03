@@ -485,18 +485,6 @@ FlareTail.helpers.app.toggle_fullscreen = function ($element = document.body) {
   document.mozFullScreenElement ? document.mozCancelFullScreen() : $element.mozRequestFullScreen();
 };
 
-FlareTail.helpers.app.auth_notification = function () {
-  if (Notification.permission !== 'granted') {
-    Notification.requestPermission(permission => {});
-  }
-};
-
-FlareTail.helpers.app.show_notification = function (title, options) {
-  let notification = new Notification(title, options);
-
-  return new Promise(resolve => notification.addEventListener('click', event => resolve(event)));
-};
-
 /* ------------------------------------------------------------------------------------------------------------------
  * Theme
  * ------------------------------------------------------------------------------------------------------------------ */
