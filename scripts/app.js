@@ -3,97 +3,162 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /**
- * Provide an app bare-bones object.
+ * Provide a lightweight application framework.
  */
-FlareTail.app.AbstractWorker = class AbstractWorker {
+FlareTail.app = {};
+
+/*
+ * Provide app router functionalities. The routes can be defined on the app's controllers using regular expressions,
+ * e.g. BzDeck.controllers.DetailsPage.route = '/bug/(\\d+)';
+ */
+FlareTail.app.Router = class Router {
   /**
-   * Get a Worker instance.
+   * Get a Router instance.
    * @constructor
-   * @argument {String} name - App name.
-   * @return {Object} app
+   * @argument {Object} app - App namespace containing configurations and controllers.
+   * @return {Object} router
    */
-  constructor (name) {
-    this.name = name;
+  constructor (app) {
+    // Specify the base URL of the app, without a trailing slash
+    this.root = app.config.app.root.match(/(.*)\/$/)[1] || '';
+    // Specify the launch path
+    this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
+    // Specify the routes
+    this.routes = new Map();
 
-    self.addEventListener('connect', event => this.onconnect(event));
+    // Retrieve the routes from app controllers
+    for (let [prop, controller] of Object.entries(app.controllers)) {
+      if ('route' in controller) {
+        this.routes.set(new RegExp(`^${this.root}${controller.route}$`), controller);
+      }
+    }
 
-    return ({
-      datasources: {},
-      collections: {},
-      models: {},
-      handlers: {},
-    });
+    window.addEventListener('popstate', event => this.locate());
   }
 
   /**
-   * Called whenever a MessagePort connection is opened. Add support for WorkerProxy.
-   * @argument {MessageEvent} event - A connect event.
+   * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
+   * specified pathname is invalid, so nativate to the app's launch path instead.
+   * @argument {String} [path=location.pathname] - URL pathname used to find a route.
+   * @return {Boolean} result - Whether a route is found.
+   */
+  locate (path = location.pathname) {
+    for (let [re, constructor] of this.routes) {
+      let match = path.match(re);
+
+      if (match) {
+        // Call the constructor when a route is found
+        // Pass arguments based on the RegExp pattern, taking numeric arguments into account
+        new constructor(...match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg)));
+
+        return true;
+      }
+    }
+
+    // Couldn't find a route; go to the launch path
+    this.navigate(this.launch_path);
+
+    return false;
+  }
+
+  /**
+   * Navigate to the specified URL pathname by manipulating the browser history.
+   * @argument {String} path - URL pathname to go.
+   * @argument {Object} [state={}] - History state object.
+   * @argument {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
    * @return {undefined}
    */
-  onconnect (event) {
-    let port = event.ports[0];
+  navigate (path, state = {}, replace = false) {
+    state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
 
-    port.addEventListener('message', event => {
-      let { type, id, func_path, args } = event.data;
+    let args = [state, 'Loading...', this.root + path]; // l10n
 
-      if (type === 'WorkerProxyRequest') {
-        let obj = self, // WorkerGlobalScope
-            func,
-            clone = obj => JSON.parse(JSON.stringify(obj)),
-            path = func_path.split('.');
+    replace ? history.replaceState(...args) : history.pushState(...args);
+    window.dispatchEvent(new PopStateEvent('popstate'));
 
-        // Extract the target object from func_path like 'BzDeck.collections.bugs.get'
-        for (let name of path) {
-          if (typeof obj[name] === 'object') {
-            obj = obj[name];
-          } else if (typeof obj[name] === 'function') {
-            func = obj[name];
-          } else {
-            break; // Object/Function not found
-          }
-        }
-
-        // Return the results or error
-        if (func) {
-          func.apply(obj, args).then(result => {
-            // Provide transferable object(s) when models are retrieved
-            if (result instanceof Map) {
-              result.forEach((value, key) => result.set(key, value.clone || clone(value)));
-            } else if (typeof result === 'object') {
-              result = result.clone || clone(result);
-            }
-
-            port.postMessage({ type: 'WorkerProxyResponse', id, result })
-          });
-        } else {
-          port.postMessage({ type: 'WorkerProxyResponse', id, error: 'Function Not Found' });
-        }
-      }
-    });
-
-    port.start();
+    if (FlareTail.debug) {
+      console.info(replace ? 'History replaced:' : 'History added:', path, state);
+    }
   }
 }
 
 /**
- * Provide app base functionalities. 
- * @extends FlareTail.app.Events
+ * Provide app event functionalities. 
  */
-FlareTail.app.Base = class Base extends FlareTail.app.Events {}
+FlareTail.app.Events = class Events {
+  /**
+   * Publish an event asynchronously on a separate thread.
+   * @argument {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
+   *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
+   * @argument {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will
+   *  be automatically appended to the data.
+   * @return {undefined}
+   */
+  trigger (topic, data = {}) {
+    if (topic.match(/^:/)) {
+      topic = this.constructor.name + topic;
+    }
 
-FlareTail.app.Base.prototype.helpers = FlareTail.helpers;
+    let id = this.id;
+
+    if (FlareTail.debug) {
+      console.info('Event triggered:', topic, id || '(global)', data);
+    }
+
+    this.helpers.event.trigger(window, topic, { detail: { id, data }});
+  }
+
+  /**
+   * Subscribe an event.
+   * @argument {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
+   *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
+   * @argument {Function} callback - Function called whenever the specified event is fired.
+   * @argument {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
+   *  and the instance have different id properties. Otherwise, the identity will be respected.
+   * @return {undefined}
+   */
+  on (topic, callback, global = false) {
+    topic = topic.replace(/^([MVC]):/, (match, prefix) => {
+      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
+              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
+    });
+
+    window.addEventListener(topic, event => {
+      if (!global && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
+        return false;
+      }
+
+      callback(event.detail.data);
+
+      return true;
+    });
+  }
+
+  /**
+   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
+   * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
+   * @argument {String} topic - See the 'on' function above for details.
+   * @argument {Boolean} [global=false] - See the 'on' function above for details.
+   * @return {undefined}
+   */
+  subscribe (topic, global = false) {
+    this.on(topic, data => this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
+  }
+}
+
+FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
 
 /**
  * Provide app datasource functionalities. 
- * @extends FlareTail.app.Base
+ * @extends FlareTail.app.Events
  */
-FlareTail.app.DataSource = class DataSource extends FlareTail.app.Base {}
+FlareTail.app.DataSource = class DataSource extends FlareTail.app.Events {}
 
 /**
  * Provide IndexedDB datasource functionalities. 
  * @extends FlareTail.app.DataSource
  */
-FlareTail.app.IDBDataSource = class IDBDataSource extends FlareTail.app.DataSource {
+FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.DataSource {
   /**
    * Open a local IndexedDB database by name, and return it.
    * @argument {String} name - Name of the database.
@@ -150,15 +215,15 @@ FlareTail.app.IDBDataSource = class IDBDataSource extends FlareTail.app.DataSour
 
 /**
  * Provide app model functionalities. 
- * @extends FlareTail.app.Base
+ * @extends FlareTail.app.Events
  */
-FlareTail.app.Model = class Model extends FlareTail.app.Base {
+FlareTail.app.Model = class Model extends FlareTail.app.Events {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
    * @argument {undefined}
    * @return {Proxy} this - Proxified `this` object.
    */
-  get proxy () {
+  proxy () {
     return new Proxy(this, {
       get: (obj, prop) => prop in this ? this[prop] : this.data[prop],
       set: (obj, prop, value) => {
@@ -167,18 +232,6 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
         return true; // The set trap must return true (Bug 1132522)
       },
     });
-  }
-
-  /**
-   * Get a transferable, clone-safe data object that contains the original data and custom attributes.
-   * @argument {undefined}
-   * @argument {Object} data
-   */
-  get clone () {
-    let obj = JSON.parse(JSON.stringify(this)); // Remove functions
-    delete obj.datasource;
-    delete obj.store_name;
-    return Object.assign(obj, this.data);
   }
 
   /**
@@ -215,16 +268,16 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
         console.info('Data saved:', this.constructor.name, this.data);
       }
 
-      return Promise.resolve(this.proxy);
+      return Promise.resolve(this.proxy());
     });
   }
 }
 
 /**
  * Provide app collection functionalities. 
- * @extends FlareTail.app.Base
+ * @extends FlareTail.app.Events
  */
-FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
+FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
@@ -287,7 +340,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
    * Get an item by a specific key.
    * @argument {(Number|String)} key - Key of the item.
    * @argument {Object} [fallback_value] - If an item is not found, create a new model object with this value.
-   * @return {Promise.<Proxy>} item - Promise to be resolved in a model instance.
+   * @return {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
    */
   get (key, fallback_value = undefined) {
     return this.has(key).then(has => {
@@ -305,8 +358,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
 
   /**
    * Get items by specific keys.
-   * @argument {(Array|Set|Iterator).<(String|Number)>} keys - Key list.
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in a Map of model instances.
+   * @argument {(Array|Set).<(String|Number)>} keys - Key list.
+   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   get_some (keys) {
     return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
@@ -315,7 +368,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
   /**
    * Get all items locally-stored in IndexedDB.
    * @argument {undefined}
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in a Map of model instances.
+   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   get_all () {
     return Promise.resolve(this.map);
@@ -343,7 +396,24 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
 }
 
 /**
- * Provide app handler functionalities. 
- * @extends FlareTail.app.Base
+ * Provide app view functionalities. 
+ * @extends FlareTail.app.Events
  */
-FlareTail.app.Handler = class Handler extends FlareTail.app.Base {}
+FlareTail.app.View = class View extends FlareTail.app.Events {}
+
+FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
+FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
+FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
+FlareTail.app.View.prototype.widgets = FlareTail.widgets;
+
+/**
+ * Provide app helper functionalities. 
+ * @extends FlareTail.app.View
+ */
+FlareTail.app.Helper = class Helper extends FlareTail.app.View {}
+
+/**
+ * Provide app controller functionalities. 
+ * @extends FlareTail.app.Events
+ */
+FlareTail.app.Controller = class Controller extends FlareTail.app.Events {}
