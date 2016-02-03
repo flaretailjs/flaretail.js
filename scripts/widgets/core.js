@@ -566,6 +566,13 @@ FlareTail.widgets.Range = class Range extends FlareTail.widgets.Widget {}
 FlareTail.widgets.Window = class Window extends FlareTail.widgets.RoleType {}
 
 /**
+ * Implement the region role.
+ * @extends FlareTail.widgets.Section
+ * @see {@link https://www.w3.org/TR/wai-aria/complete#region}
+ */
+FlareTail.widgets.Region = class Region extends FlareTail.widgets.Section {}
+
+/**
  * Implement the landmark abstract role.
  * @extends FlareTail.widgets.Region
  * @see {@link https://www.w3.org/TR/wai-aria/complete#landmark}
