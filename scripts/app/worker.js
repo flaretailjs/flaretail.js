@@ -37,20 +37,34 @@ FlareTail.app.AbstractWorker = class AbstractWorker {
       let { type, id, func_path, args } = event.data;
 
       if (type === 'WorkerProxyRequest') {
-        let obj = self; // WorkerGlobalScope
+        let obj = self, // WorkerGlobalScope
+            func,
+            clone = obj => JSON.parse(JSON.stringify(obj)),
+            path = func_path.split('.');
 
         // Extract the target object from func_path like 'BzDeck.collections.bugs.get'
-        for (let name of func_path.split('.')) {
-          obj = obj[name];
-
-          if (!obj) {
+        for (let name of path) {
+          if (typeof obj[name] === 'object') {
+            obj = obj[name];
+          } else if (typeof obj[name] === 'function') {
+            func = obj[name];
+          } else {
             break; // Object/Function not found
           }
         }
 
         // Return the results or error
-        if (typeof obj === 'function') {
-          obj(...args).then(result => port.postMessage({ type: 'WorkerProxyResponse', id, result }));
+        if (func) {
+          func.apply(obj, args).then(result => {
+            // Provide transferable object(s) when models are retrieved
+            if (result instanceof Map) {
+              result.forEach((value, key) => result.set(key, value.clone || clone(value)));
+            } else if (typeof result === 'object') {
+              result = result.clone || clone(result);
+            }
+
+            port.postMessage({ type: 'WorkerProxyResponse', id, result })
+          });
         } else {
           port.postMessage({ type: 'WorkerProxyResponse', id, error: 'Function Not Found' });
         }
@@ -160,10 +174,11 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
    * @argument {undefined}
    * @argument {Object} data
    */
-  get copy () {
+  get clone () {
     let obj = JSON.parse(JSON.stringify(this)); // Remove functions
-    delete obj.data; // Remove data
-    return Object.assign(obj, this.data); // Add data again
+    delete obj.datasource;
+    delete obj.store_name;
+    return Object.assign(obj, this.data);
   }
 
   /**
@@ -272,12 +287,12 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
    * Get an item by a specific key.
    * @argument {(Number|String)} key - Key of the item.
    * @argument {Object} [fallback_value] - If an item is not found, create a new model object with this value.
-   * @return {Promise.<Object>} item - Promise to be resolved in a model instance's transferable copy.
+   * @return {Promise.<Proxy>} item - Promise to be resolved in a model instance.
    */
   get (key, fallback_value = undefined) {
     return this.has(key).then(has => {
       if (has) {
-        return this.map.get(key).copy;
+        return this.map.get(key);
       }
 
       if (fallback_value) {
@@ -291,21 +306,19 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
   /**
    * Get items by specific keys.
    * @argument {(Array|Set|Iterator).<(String|Number)>} keys - Key list.
-   * @return {Promise.<Map.<(String|Number), Object>>} items - Promise to be resolved in a Map of model instances'
-   *  transferable copies.
+   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in a Map of model instances.
    */
   get_some (keys) {
-    return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key).copy])));
+    return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
   }
 
   /**
    * Get all items locally-stored in IndexedDB.
    * @argument {undefined}
-   * @return {Promise.<Map.<(String|Number), Object>>} items - Promise to be resolved in a Map of model instances'
-   *  transferable copies.
+   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in a Map of model instances.
    */
   get_all () {
-    return this.get_some(this.map.keys());
+    return Promise.resolve(this.map);
   }
 
   /**

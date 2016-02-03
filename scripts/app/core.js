@@ -31,6 +31,11 @@ FlareTail.app.Events = class Events {
       console.info('Event triggered:', topic, id || '(global)', data);
     }
 
+    // Remove Error object that cannot be cloned
+    if (data.error) {
+      data.error = true;
+    }
+
     bc.postMessage({ id, data });
     bc.close(); // Can be disconnected immediately
   }

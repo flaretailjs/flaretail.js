@@ -120,7 +120,6 @@ FlareTail.app.View = class View extends FlareTail.app.Base {}
 FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
 FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
 FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
-FlareTail.app.View.prototype.widgets = FlareTail.widgets;
 
 /**
  * Provide app helper functionalities. 
@@ -167,7 +166,7 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
             }
 
             if (FlareTail.debug) {
-              console.info('[WorkerProxyResponse]', func_path, event.data.result);
+              console.info('[WorkerProxyResponse]', event.data);
             }
 
             if (event.data.error) {
@@ -178,12 +177,13 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
           };
 
           if (FlareTail.debug) {
-            console.info('[WorkerProxyRequest]', func_path, args);
+            console.info('[WorkerProxyRequest]', message);
           }
 
           if (worker) {
             worker.port.addEventListener('message', listener);
             worker.port.postMessage(message);
+            worker.port.start();
           } else {
             navigator.serviceWorker.addEventListener('message', listener);
             navigator.serviceWorker.ready.then(reg => reg.active.postMessage(message));
