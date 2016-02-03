@@ -1,6 +1,6 @@
 # FlareTail.js
 
-A JavaScript library for Firefox OS application development, consisting of WAI-ARIA-driven accessible widgets, a lightweight app framework, and convenient utility functions.
+A JavaScript library for Firefox application development, consisting of WAI-ARIA-driven accessible widgets, a lightweight app framework, and convenient utility functions.
 
 This is the core of [BzDeck](https://github.com/bzdeck/bzdeck) and not intended for general use at this time.
 
