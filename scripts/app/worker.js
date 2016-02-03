@@ -15,12 +15,49 @@ FlareTail.app.AbstractWorker = class AbstractWorker {
   constructor (name) {
     this.name = name;
 
+    self.addEventListener('connect', event => this.onconnect(event));
+
     return ({
       datasources: {},
       collections: {},
       models: {},
       handlers: {},
     });
+  }
+
+  /**
+   * Called whenever a MessagePort connection is opened. Add support for WorkerProxy.
+   * @argument {MessageEvent} event - A connect event.
+   * @return {undefined}
+   */
+  onconnect (event) {
+    let port = event.ports[0];
+
+    port.addEventListener('message', event => {
+      let { type, id, func_path, args } = event.data;
+
+      if (type === 'WorkerProxyRequest') {
+        let obj = self; // WorkerGlobalScope
+
+        // Extract the target object from func_path like 'BzDeck.collections.bugs.get'
+        for (let name of func_path.split('.')) {
+          obj = obj[name];
+
+          if (!obj) {
+            break; // Object/Function not found
+          }
+        }
+
+        // Return the results or error
+        if (typeof obj === 'function') {
+          obj(...args).then(result => port.postMessage({ type: 'WorkerProxyResponse', id, result }));
+        } else {
+          port.postMessage({ type: 'WorkerProxyResponse', id, error: 'Function Not Found' });
+        }
+      }
+    });
+
+    port.start();
   }
 }
 
@@ -107,7 +144,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
    * @argument {undefined}
    * @return {Proxy} this - Proxified `this` object.
    */
-  proxy () {
+  get proxy () {
     return new Proxy(this, {
       get: (obj, prop) => prop in this ? this[prop] : this.data[prop],
       set: (obj, prop, value) => {
@@ -116,6 +153,17 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
         return true; // The set trap must return true (Bug 1132522)
       },
     });
+  }
+
+  /**
+   * Get a transferable, clone-safe data object that contains the original data and custom attributes.
+   * @argument {undefined}
+   * @argument {Object} data
+   */
+  get copy () {
+    let obj = JSON.parse(JSON.stringify(this)); // Remove functions
+    delete obj.data; // Remove data
+    return Object.assign(obj, this.data); // Add data again
   }
 
   /**
@@ -152,7 +200,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Base {
         console.info('Data saved:', this.constructor.name, this.data);
       }
 
-      return Promise.resolve(this.proxy());
+      return Promise.resolve(this.proxy);
     });
   }
 }
@@ -224,12 +272,12 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
    * Get an item by a specific key.
    * @argument {(Number|String)} key - Key of the item.
    * @argument {Object} [fallback_value] - If an item is not found, create a new model object with this value.
-   * @return {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
+   * @return {Promise.<Object>} item - Promise to be resolved in a model instance's transferable copy.
    */
   get (key, fallback_value = undefined) {
     return this.has(key).then(has => {
       if (has) {
-        return this.map.get(key);
+        return this.map.get(key).copy;
       }
 
       if (fallback_value) {
@@ -242,20 +290,22 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Base {
 
   /**
    * Get items by specific keys.
-   * @argument {(Array|Set).<(String|Number)>} keys - Key list.
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @argument {(Array|Set|Iterator).<(String|Number)>} keys - Key list.
+   * @return {Promise.<Map.<(String|Number), Object>>} items - Promise to be resolved in a Map of model instances'
+   *  transferable copies.
    */
   get_some (keys) {
-    return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
+    return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key).copy])));
   }
 
   /**
    * Get all items locally-stored in IndexedDB.
    * @argument {undefined}
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @return {Promise.<Map.<(String|Number), Object>>} items - Promise to be resolved in a Map of model instances'
+   *  transferable copies.
    */
   get_all () {
-    return Promise.resolve(this.map);
+    return this.get_some(this.map.keys());
   }
 
   /**

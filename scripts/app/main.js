@@ -143,42 +143,50 @@ FlareTail.app.WorkerProxy = class WorkerProxy {
   /**
    * Get a WorkerProxy instance.
    * @constructor
-   * @argument {String} class_name - Name of the target class on the worker.
+   * @argument {String} object_path - Path to the target object on the worker, like 'BzDeck.collections.bugs'.
    * @argument {SharedWorker} [worker=undefined] If specified, use the shared worker instead of the service worker.
    * @return {Proxy} proxy - The catch-all magic mechanism. Functions on this proxy will return a Promise.
    */
-  constructor (class_name, worker = undefined) {
+  constructor (object_path, worker = undefined) {
     return new Proxy({}, {
       get: (obj, func_name) => new Proxy(() => {}, {
-        apply: (_obj, _this, args) => new Promise(resolve => {
+        apply: (_obj, _this, args) => new Promise((resolve, reject) => {
+          let id = FlareTail.helpers.misc.uuidgen(),
+              func_path = [object_path, func_name].join('.'),
+              message = { type: 'WorkerProxyRequest', id, func_path, args };
+
           let listener = event => {
-            let [ service, type, detail ] = event.data;
+            if (event.data.type !== 'WorkerProxyResponse' || event.data.id !== id) {
+              return;
+            }
 
-            if (service === class_name && type === func_name) {
-              if (FlareTail.debug) {
-                console.info('[WorkerProxy] received message:', class_name, func_name, detail);
-              }
+            if (worker) {
+              worker.port.removeEventListener('message', listener);
+            } else {
+              navigator.serviceWorker.removeEventListener('message', listener);
+            }
 
-              if (worker) {
-                worker.port.removeEventListener('message', listener);
-              } else {
-                navigator.serviceWorker.removeEventListener('message', listener);
-              }
+            if (FlareTail.debug) {
+              console.info('[WorkerProxyResponse]', func_path, event.data.result);
+            }
 
-              resolve(detail);
+            if (event.data.error) {
+              reject(new Error(event.data.error));
+            } else {
+              resolve(event.data.result);
             }
           };
 
           if (FlareTail.debug) {
-            console.info('[WorkerProxy] sent message:', class_name, func_name, args);
+            console.info('[WorkerProxyRequest]', func_path, args);
           }
 
           if (worker) {
             worker.port.addEventListener('message', listener);
-            worker.port.postMessage([class_name, func_name, args]);
+            worker.port.postMessage(message);
           } else {
             navigator.serviceWorker.addEventListener('message', listener);
-            navigator.serviceWorker.ready.then(reg => reg.active.postMessage([class_name, func_name, args]));
+            navigator.serviceWorker.ready.then(reg => reg.active.postMessage(message));
           }
         }),
       }),
