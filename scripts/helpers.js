@@ -380,19 +380,6 @@ FlareTail.helpers.kbd.dispatch = function ($target, key) {
 FlareTail.helpers.prefs = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
- * Storage
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.helpers.Storage = function () {
-  let req = this.request = indexedDB.open('MyTestDatabase', 1),
-      db = this.db = null;
-
-  req.addEventListener('error', event => {});
-  req.addEventListener('success', event => db = request.result);
-  db.addEventListener('error', event => {});
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
  * User Agent
  *
  * This utility only considers Gecko-based products for now
