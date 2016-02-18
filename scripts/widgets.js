@@ -3503,7 +3503,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       $owner.appendChild($content);
       $owner.style.removeProperty('display');
 
-      return false;
+      return;
     }
 
     $content.appendChild(this.get_observer());
