@@ -320,8 +320,9 @@ FlareTail.helpers.kbd = {};
  * Assign keyboard shortcuts on a specific element
  *
  * @argument {Element} $target
- * @argument {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Control+O, etc. Multiple pattern
- *  should be separated with `|`) and function. Possible key values can be found at MDN.
+ * @argument {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Accel+O, etc. Multiple pattern should
+ *  be separated with `|`) and function. Possible key values can be found at MDN. The supported modifiers here include
+ *  Alt, Shift and Accel; Control and Meta are not supported.
  * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key}
  * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState}
  */
@@ -346,7 +347,7 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
       }
 
       // Check modifier keys
-      for (let mod of ['Alt', 'Shift', 'Control', 'Meta', 'Accel']) {
+      for (let mod of ['Alt', 'Shift', 'Accel']) {
         if (modifiers.has(mod) && !event.getModifierState(mod) ||
             !modifiers.has(mod) && event.getModifierState(mod)) {
           continue outer;
