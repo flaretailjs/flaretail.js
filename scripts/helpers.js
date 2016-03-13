@@ -480,11 +480,11 @@ FlareTail.helpers.app.install = function (manifest = location.origin + '/manifes
 };
 
 FlareTail.helpers.app.fullscreen_enabled = function () {
-  return document.mozFullScreenEnabled;
+  return document.fullscreenEnabled;
 };
 
 FlareTail.helpers.app.toggle_fullscreen = function ($element = document.body) {
-  document.mozFullScreenElement ? document.mozCancelFullScreen() : $element.mozRequestFullScreen();
+  document.fullscreenElement ? document.exitFullscreen() : $element.requestFullscreen();
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
