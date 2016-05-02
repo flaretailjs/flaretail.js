@@ -3625,13 +3625,13 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    */
   onresize (event) {
     let $controller = this.view.$controller,
-        { sh, oh, stm } = event.detail,
-        ch = Math.floor(oh * oh / sh) - 4;
+        { s_height, c_height, s_top_max } = event.detail,
+        ctrl_height = Math.floor(c_height * c_height / s_height) - 4;
 
-    $controller.tabIndex = sh === oh ? -1 : 0;
-    $controller.style.setProperty('height', ch < 0 ? 0 : `${ch}px`);
-    $controller.setAttribute('aria-disabled', sh === oh);
-    $controller.setAttribute('aria-valuemax', stm);
+    $controller.tabIndex = s_height === c_height ? -1 : 0;
+    $controller.style.setProperty('height', ctrl_height <= 0 ? 0 : `${ctrl_height}px`);
+    $controller.setAttribute('aria-disabled', s_height === c_height);
+    $controller.setAttribute('aria-valuemax', s_top_max);
 
     // Reposition the scrollbar
     this.onscroll();
@@ -3644,14 +3644,14 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    */
   detect_resizing () {
     let $owner = this.view.$owner,
-        sh = $owner.scrollHeight,
-        oh = $owner.offsetHeight,
-        stm = $owner.scrollTopMax;
+        s_height = $owner.scrollHeight,
+        c_height = $owner.clientHeight,
+        s_top_max = $owner.scrollTopMax;
 
-    if (this.data.sh !== sh || this.data.oh !== oh) {
-      this.data.sh = sh;
-      this.data.oh = oh;
-      FlareTail.helpers.event.trigger($owner, 'resize', { detail: { sh, oh, stm }});
+    if (this.data.s_height !== s_height || this.data.c_height !== c_height) {
+      this.data.s_height = s_height;
+      this.data.c_height = c_height;
+      FlareTail.helpers.event.trigger($owner, 'resize', { detail: { s_height, c_height, s_top_max }});
     }
 
     window.requestAnimationFrame(timestamp => this.detect_resizing());
