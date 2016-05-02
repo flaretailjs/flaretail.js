@@ -920,7 +920,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     });
 
     // Custom scrollbar
-    let $$scrollbar = this.view.$$scrollbar = new FlareTail.widgets.ScrollBar($grid_body, true, false),
+    let $$scrollbar = this.view.$$scrollbar
+                    = new FlareTail.widgets.ScrollBar($grid_body, { adjusted: true, arrow_keys_enabled: false }),
         option = this.options.adjust_scrollbar;
 
     $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
@@ -1722,7 +1723,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$listbox_outer.className = 'listbox-outer';
     this.$listbox_outer.appendChild(this.$listbox);
     this.$listbox_outer.addEventListener('wheel', event => event.stopPropagation());
-    this.$$scrollbar = new FlareTail.widgets.ScrollBar(this.$listbox_outer);
+    this.$$scrollbar = new FlareTail.widgets.ScrollBar(this.$listbox_outer, { resize_detection_enabled: false });
 
     let $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
 
@@ -1804,6 +1805,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$listbox.appendChild($element);
     this.$$listbox.update_members();
     this.$$listbox.get_data();
+    this.$$scrollbar.detect_resizing();
 
     let $selected = this.$$listbox.view.selected[0];
 
@@ -1854,6 +1856,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$listbox.innerHTML = '';
     this.$$listbox.update_members();
     this.$$listbox.get_data();
+    this.$$scrollbar.detect_resizing();
   }
 
   /**
@@ -3473,12 +3476,15 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * Get a ScrollBar instance.
    * @constructor
    * @argument {HTMLElement} $owner - Element to be scrolled.
-   * @argument {Boolean} [adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
-   * @argument {Boolean} [arrow_keys_enabled=false] - Enable scrolling with the up/down arrow keys. Should be false on
-   *  Grid, Tree and ListBox.
+   * @argument {Object} options
+   * @argument {Boolean} [options.adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
+   * @argument {Boolean} [options.arrow_keys_enabled=true] - Enable scrolling with the up/down arrow keys. Should be
+   *  false on Grid, Tree and ListBox.
+   * @argument {Boolean} [options.resize_detection_enabled=true] - Disable the owner's resize detection for a better
+   *  performance. Instead, the consumer can manually update the scrollbar by calling detect_resizing().
    * @return {Object} widget
    */
-  constructor ($owner, adjusted = false, arrow_keys_enabled = true) {
+  constructor ($owner, { adjusted = false, arrow_keys_enabled = true, resize_detection_enabled = true } = {}) {
     super(); // This does nothing but is required before using `this`
 
     let $controller = document.createElement('div'),
@@ -3486,7 +3492,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
 
     this.view = { $owner, $controller };
     this.data = {};
-    this.options = { adjusted, arrow_keys_enabled };
+    this.options = { adjusted, arrow_keys_enabled, resize_detection_enabled };
 
     $owner.classList.add('scrollable');
 
@@ -3507,7 +3513,9 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'resize']);
     FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
-    window.requestAnimationFrame(timestamp => this.detect_resizing());
+    if (this.options.resize_detection_enabled) {
+      window.requestAnimationFrame(timestamp => this.detect_resizing());
+    }
   }
 
   /**
@@ -3654,7 +3662,9 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       FlareTail.helpers.event.trigger($owner, 'resize', { detail: { s_height, c_height, s_top_max }});
     }
 
-    window.requestAnimationFrame(timestamp => this.detect_resizing());
+    if (this.options.resize_detection_enabled) {
+      window.requestAnimationFrame(timestamp => this.detect_resizing());
+    }
   }
 
   /**
