@@ -30,10 +30,6 @@ body {
   -moz-user-select: none;
 }
 
-[role="region"] {
-  position: relative;
-}
-
 /* ----------------------------------------------------------------------------------------------
  * Tab View
  * ---------------------------------------------------------------------------------------------- */
@@ -622,6 +618,12 @@ a[role="menuitem"] {
  * ScrollBar
  * ---------------------------------------------------------------------------------------------- */
 
+.scrollable {
+  position: relative;
+  overflow: hidden;
+  pointer-events: auto;
+}
+
 [role="scrollbar"] {
   position: absolute;
   right: .2rem;
@@ -642,25 +644,6 @@ a[role="menuitem"] {
 [role="scrollbar"]:-moz-window-inactive,
 [role="scrollbar"][aria-disabled="true"] {
   opacity: 0;
-}
-
-[role="region"] {
-  pointer-events: auto;
-}
-
-.scrollable-area-content {
-  position: relative;
-}
-
-.scrollable-area-observer {
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  border: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
 }
 
 /* ----------------------------------------------------------------------------------------------
@@ -754,7 +737,7 @@ a[role="menuitem"] {
   display: none;
 }
 
-[data-device|="mobile"]:root .scrollable-area-content {
+[data-device|="mobile"]:root .scrollable {
   overflow: auto !important; /* use native scrollbar */
   width: 100%;
   height: 100%;

@@ -1764,7 +1764,6 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$$listbox.view.$focused = $selected;
     this.$input.focus(); // Keep focus on <input>
     this.$listbox_outer.dataset.position = adjusted ? 'above' : 'below';
-    this.$$scrollbar.set_height();
   }
 
   /**
@@ -3483,30 +3482,18 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     super(); // This does nothing but is required before using `this`
 
     let $controller = document.createElement('div'),
-        $content = document.createElement('div'),
         FTue = FlareTail.helpers.event;
 
-    this.view = { $owner, $content, $controller };
+    this.view = { $owner, $controller };
     this.data = {};
     this.options = { adjusted, arrow_keys_enabled };
 
-    $owner.style.setProperty('display', 'none', 'important'); // Prevent reflows
-
-    for (let $child of [...$owner.children]) {
-      $content.appendChild($child);
-    }
-
-    $content.className = 'scrollable-area-content';
+    $owner.classList.add('scrollable');
 
     // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
     if (FlareTail.helpers.env.device.mobile) {
-      $owner.appendChild($content);
-      $owner.style.removeProperty('display');
-
       return;
     }
-
-    $content.appendChild(this.get_observer());
 
     $controller.tabIndex = -1;
     $controller.style.top = '2px';
@@ -3515,16 +3502,12 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     $controller.setAttribute('aria-disabled', 'true');
     $controller.setAttribute('aria-valuemin', '0');
     $controller.setAttribute('aria-valuenow', '0');
-
-    $owner.appendChild($content);
     $owner.appendChild($controller);
-    $owner.appendChild(this.get_observer());
-    $owner.style.removeProperty('display');
 
-    FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'overflow', 'underflow']);
+    FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'resize']);
     FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
 
-    this.set_height();
+    window.requestAnimationFrame(timestamp => this.detect_resizing());
   }
 
   /**
@@ -3636,28 +3619,42 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   }
 
   /**
-   * Called whenever an overflow event is triggered. Enable the scrollbar.
-   * @argument {UIEvent} event - The overflow event.
+   * Called whenever a resize event is triggered on the owner element. Update the scrollbar's height and position.
+   * @argument {CustomEvent} event - The resize event.
    * @return {undefined}
    */
-  onoverflow (event) {
-    if (event.target === event.currentTarget) {
-      this.set_height();
-      this.view.$controller.setAttribute('aria-disabled', 'false');
-      this.view.$controller.tabIndex = 0;
-    }
+  onresize (event) {
+    let $controller = this.view.$controller,
+        { sh, oh, stm } = event.detail,
+        ch = Math.floor(oh * oh / sh) - 4;
+
+    $controller.tabIndex = sh === oh ? -1 : 0;
+    $controller.style.setProperty('height', ch < 0 ? 0 : `${ch}px`);
+    $controller.setAttribute('aria-disabled', sh === oh);
+    $controller.setAttribute('aria-valuemax', stm);
+
+    // Reposition the scrollbar
+    this.onscroll();
   }
 
   /**
-   * Called whenever an underflow event is triggered. Disable the scrollbar.
-   * @argument {UIEvent} event - The underflow event.
+   * Detect a resizing of the owner element and fire an event if resized.
+   * @argument {undefined}
    * @return {undefined}
    */
-  onunderflow (event) {
-    if (event.target === event.currentTarget) {
-      this.view.$controller.setAttribute('aria-disabled', 'true');
-      this.view.$controller.tabIndex = -1;
+  detect_resizing () {
+    let $owner = this.view.$owner,
+        sh = $owner.scrollHeight,
+        oh = $owner.offsetHeight,
+        stm = $owner.scrollTopMax;
+
+    if (this.data.sh !== sh || this.data.oh !== oh) {
+      this.data.sh = sh;
+      this.data.oh = oh;
+      FlareTail.helpers.event.trigger($owner, 'resize', { detail: { sh, oh, stm }});
     }
+
+    window.requestAnimationFrame(timestamp => this.detect_resizing());
   }
 
   /**
@@ -3755,53 +3752,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
 
     return true;
-  }
-
-  /**
-   * Set the height of the scrollbar.
-   * @argument {undefined}
-   * @return {undefined}
-   */
-  set_height () {
-    let $owner = this.view.$owner,
-        $controller = this.view.$controller,
-        sh = $owner.scrollHeight,
-        ch = $owner.clientHeight,
-        ctrl_height = Math.floor(ch * ch / sh) - 4;
-
-    $controller.style.height = `${ctrl_height < 0 ? 0 : ctrl_height}px`;
-    $controller.setAttribute('aria-valuemax', $owner.scrollTopMax);
-
-    // Reposition the scrollbar
-    this.onscroll();
-  }
-
-  /**
-   * Provide an iframe that observes any scroll area changes.
-   * @argument {undefined}
-   * @return {HTMLElement} $iframe - Empty iframe with an observer.
-   */
-  get_observer () {
-    let $iframe = document.createElement('iframe');
-
-    $iframe.addEventListener('load', event => {
-      let $doc = $iframe.contentDocument;
-
-      $doc.body.style.margin = 0;
-      $doc.addEventListener('MozScrolledAreaChanged', event => {
-        if (event.height === 0) {
-          this.view.$controller.setAttribute('aria-disabled', 'true');
-          this.view.$controller.tabIndex = -1;
-        }
-
-        this.set_height();
-      });
-    });
-    $iframe.className = 'scrollable-area-observer';
-    $iframe.tabIndex = -1;
-    $iframe.src = 'about:blank';
-
-    return $iframe;
   }
 
   /**
