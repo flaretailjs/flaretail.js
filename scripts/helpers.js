@@ -847,6 +847,41 @@ FlareTail.helpers.string.strip_tags = str => {
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
+ * Number
+ * ------------------------------------------------------------------------------------------------------------------ */
+
+FlareTail.helpers.number = {};
+
+/**
+ * Format a number for a file size with a unit like KB.
+ *
+ * @argument {Number} number - Number to format.
+ * @argument {Number} fixed - Number of digits to appear after the decimal point.
+ * @return {String} size - Formatted file size.
+ * @todo Support languages other than English.
+ */
+FlareTail.helpers.number.format_file_size = (number, fixed = 1) => {
+  let rounder = 1,
+      unit = number === 1 ? 'byte' : 'bytes';
+
+  let units = {
+    1000: 'KB',
+    1000000: 'MB',
+    1000000000: 'GB',
+    1000000000000: 'TB',
+  };
+
+  for (let [_rounder, _unit] of Object.entries(units)) {
+    if (number >= _rounder) {
+      rounder = _rounder;
+      unit = _unit;
+    }
+  }
+
+  return `${Number((number / rounder).toFixed(fixed)).toLocaleString('en-US')} ${unit}`;
+};
+
+/* ------------------------------------------------------------------------------------------------------------------
  * RegExp
  * ------------------------------------------------------------------------------------------------------------------ */
 
