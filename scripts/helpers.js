@@ -818,6 +818,25 @@ FlareTail.helpers.array.sort = (array, cond) => {
   return array;
 };
 
+
+/**
+ * Split an array into chunks, like the array_chunk PHP function.
+ *
+ * @argument {Array.<*>} array - Array to split.
+ * @argument {Number} size - Number of items in each chunk.
+ * @return {Array.<Array.<*>>} chunks - Multidimensional array.
+ * @see {@link http://php.net/manual/en/function.array-chunk.php}
+ */
+FlareTail.helpers.array.chunk = (array, size) => {
+  let chunks = [];
+
+  for (let i = 0; i < array.length; i = i + size) {
+    chunks.push(array.slice(i, i + size));
+  }
+
+  return chunks;
+}
+
 /* ------------------------------------------------------------------------------------------------------------------
  * String
  * ------------------------------------------------------------------------------------------------------------------ */
