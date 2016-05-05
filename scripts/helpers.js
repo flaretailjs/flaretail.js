@@ -18,8 +18,6 @@ FlareTail.helpers = {};
 {
   let features = [
     'toLocaleFormat' in Date.prototype, // Gecko specific
-    'Worker' in window, // Firefox 3.5
-    'FileReader' in window, // Firefox 3.6
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
     'createObjectURL' in URL, // Firefox 4
@@ -31,37 +29,26 @@ FlareTail.helpers = {};
     'buttons' in MouseEvent.prototype, // Firefox 15
     'isNaN' in Number, // Firefox 15
     'scrollTopMax' in Element.prototype, // Firefox 16
-    'isInteger' in Number, // Firefox 16
     'indexedDB' in window, // unprefixed with Firefox 16
     'onwheel' in window, // Firefox 17
     'origin' in location, // Firefox 21
     'HTMLTemplateElement' in window, // Firefox 22
-    'Notification' in window, // Firefox 22
-    'CSS' in window && 'supports' in CSS, // Firefox 23
     'remove' in Element.prototype, // Firefox 23
     'parseInt' in Number, // Firefox 25
     'createTBody' in HTMLTableElement.prototype, // Firefox 25
     'find' in Array.prototype, // Firefox 25
     'entries' in Array.prototype, // Firefox 28
     'Promise' in window, // Firefox 29
-    'SharedWorker' in window, // Firefox 29
-    'URLSearchParams' in window, // Firefox 29
     'CSS' in window && 'escape' in CSS, // Firefox 31
-    'getBoxQuads' in Element.prototype, // Firefox 31
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in StyleSheetList.prototype, // Firefox 31, 36
     'Symbol' in window && 'iterator' in Symbol && Symbol.iterator in CSSRuleList.prototype, // Firefox 32, 36
-    'ServiceWorker' in window, // Firefox 33
     'assign' in Object, // Firefox 34
     'matches' in Element.prototype, // Firefox 34
-    'mediaDevices' in navigator, // Firefox 36
-    'BroadcastChannel' in window, // Firefox 38
     'fetch' in window, // Firefox 39
     'includes' in String.prototype, // Firefox 40
-    'CacheStorage' in window, // Firefox 41
     'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
     'entries' in Object || 'Iterator' in window, // Firefox 45; use the Iterator polyfill below for older versions
-    'Permissions' in window, // Firefox 45
   ];
 
   let compatible = true;
