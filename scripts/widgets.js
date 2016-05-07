@@ -3216,6 +3216,9 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     // Add tabpanel
     document.getElementById($selected.getAttribute('aria-controls')).parentElement.appendChild($panel);
 
+    // Notify
+    FlareTail.helpers.event.trigger(this.view.$container, 'Opened', { detail: { id: $tab.id }});
+
     return $tab;
   }
 
@@ -3227,6 +3230,9 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
   close_tab ($tab) {
     let items = this.view.members,
         index = items.indexOf($tab);
+
+    // Notify
+    FlareTail.helpers.event.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
 
     // Switch tab
     if (this.view.selected[0] === $tab) {
