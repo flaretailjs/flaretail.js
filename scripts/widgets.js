@@ -3501,6 +3501,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     this.options = { adjusted, arrow_keys_enabled, resize_detection_enabled };
 
     $owner.classList.add('scrollable');
+    $owner.setAttribute('data-resize-detection-enabled', resize_detection_enabled);
 
     // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
     if (FlareTail.helpers.env.device.mobile) {
@@ -3518,10 +3519,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
 
     FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'resize']);
     FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
-
-    if (this.options.resize_detection_enabled) {
-      window.requestAnimationFrame(timestamp => this.detect_resizing());
-    }
   }
 
   /**
@@ -3657,20 +3654,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   detect_resizing () {
-    let $owner = this.view.$owner,
-        s_height = $owner.scrollHeight,
-        c_height = $owner.clientHeight,
-        s_top_max = $owner.scrollTopMax;
-
-    if (this.data.s_height !== s_height || this.data.c_height !== c_height) {
-      this.data.s_height = s_height;
-      this.data.c_height = c_height;
-      FlareTail.helpers.event.trigger($owner, 'resize', { detail: { s_height, c_height, s_top_max }});
-    }
-
-    if (this.options.resize_detection_enabled) {
-      window.requestAnimationFrame(timestamp => this.detect_resizing());
-    }
+    FlareTail.widgets.ScrollBar.helper.detect(this.view.$owner);
   }
 
   /**
@@ -3779,6 +3763,56 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     this.view.$controller.addEventListener(...args);
   }
 }
+
+/**
+ * Implement the ScrollBar helper that supports ScrollBar instances if any. This uses requestAnimationFrame as a timer
+ * to detect if the owner element of each scrollbar is resized, and to fire a resize event whenever needed, so that the
+ * custom scrollbar can be resized and repositioned accordingly.
+ */
+FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
+  /**
+   * Get a ScrollBarHelper instance.
+   * @constructor
+   * @argument {undefined}
+   * @return {Object} instance
+   */
+  constructor () {
+    this.data = new WeakMap();
+    window.requestAnimationFrame(timestamp => this.iterate());
+  }
+
+  /**
+   * Check for the all scrollbars.
+   * @argument {undefined}
+   * @return {undefined}
+   */
+  iterate () {
+    for (let $owner of document.querySelectorAll('.scrollable[data-resize-detection-enabled="true"]')) {
+      this.detect($owner);
+    }
+
+    window.requestAnimationFrame(timestamp => this.iterate());
+  }
+
+  /**
+   * Detect a resizing of the owner element of scrollbars and fire an event if resized.
+   * @argument {HTMLElement} $owner - The owner element to detect.
+   * @return {undefined}
+   */
+  detect ($owner) {
+    let { scrollHeight: s_height, clientHeight: c_height, scrollTopMax: s_top_max } = $owner,
+        detail = this.data.get($owner);
+
+    if (!detail || detail.s_height !== s_height || detail.c_height !== c_height) {
+      detail = { s_height, c_height, s_top_max };
+      this.data.set($owner, detail);
+      FlareTail.helpers.event.trigger($owner, 'resize', { detail });
+    }
+  }
+}
+
+// Start the Helper immediately
+FlareTail.widgets.ScrollBar.helper = new FlareTail.widgets.ScrollBar.Helper();
 
 /**
  * Implement the window abstract role.
