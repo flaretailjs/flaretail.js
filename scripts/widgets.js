@@ -2292,6 +2292,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     // Open link in a new tab
     if (event.target.href && event.buttons <= 1) {
       event.stopPropagation();
+      event.target.rel = 'noopener';
       event.target.target = '_blank';
 
       return;
@@ -2377,6 +2378,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     // Open link in a new tab
     if (event.target.href && event.key === 'Enter') {
       event.stopPropagation();
+      event.target.rel = 'noopener';
       event.target.target = '_blank';
 
       return;
