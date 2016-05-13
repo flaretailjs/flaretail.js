@@ -289,8 +289,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
     return store.get_all().then(items => {
       this.map = new Map(items.map(item => {
-        let key = item[store.obj.keyPath],
-            value;
+        let key = item[store.obj.keyPath];
+        let value;
 
         if (this.model) {
           // Get a new instance

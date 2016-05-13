@@ -19,8 +19,8 @@ FlareTail.widgets.RoleType = class RoleType {
    * @return {undefined}
    */
   activate (rebuild = false) {
-    let FTue = FlareTail.helpers.event,
-        $container = this.view.$container;
+    let FTue = FlareTail.helpers.event;
+    let $container = this.view.$container;
 
     if (!$container) {
       throw new Error('The container element is not defined');
@@ -77,9 +77,9 @@ FlareTail.widgets.RoleType = class RoleType {
    * @return {undefined}
    */
   update_members () {
-    let selector = this.options.item_selector,
-        not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
-        get_items = selector => [...this.view.$container.querySelectorAll(selector)];
+    let selector = this.options.item_selector;
+    let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
+    let get_items = selector => [...this.view.$container.querySelectorAll(selector)];
 
     this.view.members = get_items(`${selector}${not_selector}`),
     this.view.selected = get_items(`${selector}[${this.options.selected_attr}="true"]`);
@@ -225,9 +225,7 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
    * @return {undefined}
    */
   onkeydown (event) {
-    let key = event.key;
-
-    if (key === ' ' || key === 'Enter') { // Space or Enter
+    if (event.key === ' ' || event.key === 'Enter') { // Space or Enter
       this.onclick(event);
     }
 
@@ -235,15 +233,15 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
     if (this.view.$$menu) {
       let menuitems = this.view.$$menu.view.members;
 
-      if (key === 'ArrowDown') {
+      if (event.key === 'ArrowDown') {
         this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[0];
       }
 
-      if (key === 'ArrowUp') {
+      if (event.key === 'ArrowUp') {
         this.view.$$menu.view.selected = this.view.$$menu.view.$focused = menuitems[menuitems.length -1];
       }
 
-      if (key === 'Escape') {
+      if (event.key === 'Escape') {
         this.view.$$menu.close();
         this.view.$button.focus();
         this.data.pressed = false;
@@ -358,15 +356,14 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    * @return {undefined}
    */
   select_with_mouse (event) {
-    let $target = event.target,
-        $container = this.view.$container,
-        items = this.view.members,
-        selected = [...this.view.selected],
-        multi = this.options.multiselectable;
+    let $target = event.target;
+    let items = this.view.members;
+    let selected = [...this.view.selected];
+    let multi = this.options.multiselectable;
 
     if (event.shiftKey && multi) {
-      let start = items.indexOf(selected[0]),
-          end = items.indexOf($target);
+      let start = items.indexOf(selected[0]);
+      let end = items.indexOf($target);
 
       selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
     } else if (event.ctrlKey || event.metaKey) {
@@ -391,10 +388,8 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    * @return {undefined}
    */
   select_with_keyboard (event) {
-    let key = event.key;
-
     // Focus shift with tab key
-    if (key === 'Tab') {
+    if (event.key === 'Tab') {
       return true;
     }
 
@@ -403,18 +398,17 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
       return FlareTail.helpers.event.ignore(event);
     }
 
-    let items = this.view.members,
-        selected = [...this.view.selected], // Clone the array
-        selected_idx = items.indexOf(selected[0]),
-        $focused = this.view.$focused,
-        focused_idx = items.indexOf($focused),
-        options = this.options,
-        ctrl = event.ctrlKey || event.metaKey,
-        cycle = options.focus_cycling,
-        multi = options.multiselectable,
-        expanding = multi && event.shiftKey;
+    let items = this.view.members;
+    let selected = [...this.view.selected]; // Clone the array
+    let selected_idx = items.indexOf(selected[0]);
+    let $focused = this.view.$focused;
+    let focused_idx = items.indexOf($focused);
+    let ctrl = event.ctrlKey || event.metaKey;
+    let cycle = this.options.focus_cycling;
+    let multi = this.options.multiselectable;
+    let expanding = multi && event.shiftKey;
 
-    switch (key) {
+    switch (event.key) {
       case ' ': { // Space
         if (ctrl) {
           break; // Move focus only
@@ -549,20 +543,20 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
 
       default: {
         // Select All
-        if (multi && ctrl && key.toUpperCase() === 'A') {
+        if (multi && ctrl && event.key.toUpperCase() === 'A') {
           this.view.selected = items;
           this.view.$focused = items[0];
 
           break;
         }
 
-        if (ctrl || !options.search_enabled || !key.match(/^\S$/)) {
+        if (ctrl || !this.options.search_enabled || !event.key.match(/^\S$/)) {
           break;
         }
 
         // Find As You Type: Incremental Search for simple list like ListBox or Tree
-        let input = key,
-            char = this.data.search_key || '';
+        let input = event.key;
+        let char = this.data.search_key || '';
 
         char = char === input ? input : char + input;
 
@@ -611,8 +605,8 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
             break;
           }
 
-          let start = focused_idx,
-              end = i;
+          let start = focused_idx;
+          let end = i;
 
           this.view.selected = start < end ? items.slice(start, end + 1) : items.slice(end, start + 1).reverse();
         }
@@ -636,8 +630,8 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    * @return {undefined}
    */
   update_view (obj, prop, newval) {
-    let attr = this.options.selected_attr,
-        oldval = obj[prop];
+    let attr = this.options.selected_attr;
+    let oldval = obj[prop];
 
     if (prop === 'selected') {
       if (oldval) {
@@ -713,8 +707,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     super(); // This does nothing but is required before using `this`
 
     // What can be selected on the grid
-    let dataset = $container.dataset,
-        role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
+    let dataset = $container.dataset;
+    let role = data ? 'row' : $container.querySelector('.grid-body [role="row"]')
                                         .hasAttribute('aria-selected') ? 'row' : 'gridcell';
 
     // If the role is gridcell, the navigation management should be different
@@ -887,8 +881,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     let handler = {
       set: (obj, prop, value) => {
         // Reflect Data change into View
-        let row = this.data.rows.find(row => row.data.id === obj.id),
-            $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
+        let row = this.data.rows.find(row => row.data.id === obj.id);
+        let $elm = row.$element.querySelector(`[data-id="${CSS.escape(prop)}"] > *`);
 
         this.data.columns[prop].type === 'boolean' ? $elm.setAttribute('aria-checked', value)
                                                    : $elm.textContent = value;
@@ -898,9 +892,9 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       }
     };
 
-    let rows = this.data.rows,
-        $grid_body = this.view.$body,
-        $tbody = $grid_body.querySelector('tbody');
+    let rows = this.data.rows;
+    let $grid_body = this.view.$body;
+    let $tbody = $grid_body.querySelector('tbody');
 
     for (let row of rows) {
       row.data = new Proxy(row.data, handler);
@@ -921,8 +915,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     // Custom scrollbar
     let $$scrollbar = this.view.$$scrollbar
-                    = new FlareTail.widgets.ScrollBar($grid_body, { adjusted: true, arrow_keys_enabled: false }),
-        option = this.options.adjust_scrollbar;
+                    = new FlareTail.widgets.ScrollBar($grid_body, { adjusted: true, arrow_keys_enabled: false });
+    let option = this.options.adjust_scrollbar;
 
     $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
   }
@@ -949,11 +943,10 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     // Editable checkbox in cells
     if ($target.matches('[role="checkbox"]')) {
-      let index = $target.parentElement.parentElement.sectionRowIndex,
-          id = $target.parentElement.dataset.id,
-          value = !$target.matches('[aria-checked="true"]');
+      let index = $target.parentElement.parentElement.sectionRowIndex;
+      let id = $target.parentElement.dataset.id;
 
-      this.data.rows[index].data[id] = value;
+      this.data.rows[index].data[id] = !$target.matches('[aria-checked="true"]');
 
       return FlareTail.helpers.event.ignore(event);
     }
@@ -990,8 +983,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       return;
     }
 
-    let $target = event.target,
-        options = this.options;
+    let $target = event.target;
+    let options = this.options;
 
     if ($target.matches('[role="columnheader"]') && options.sortable) {
       options.sort_conditions.key = $target.dataset.id;
@@ -1004,18 +997,15 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   onkeydown (event) {
-    let key = event.key;
-
     // Focus shift with tab key
-    if (key === 'Tab') {
+    if (event.key === 'Tab') {
       return true;
     }
 
-    let items = this.view.members,
-        focused_idx = items.indexOf(this.view.$focused),
-        modifiers = event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
+    let focused_idx = this.view.members.indexOf(this.view.$focused);
+    let modifiers = event.shiftKey || event.ctrlKey || event.metaKey || event.altKey;
 
-    switch (key) {
+    switch (event.key) {
       case 'ArrowLeft':
       case 'ArrowRight': {
         // Do nothing
@@ -1044,22 +1034,22 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   build_header () {
-    let $grid = this.view.$container,
-        $grid_header = this.view.$header = document.createElement('header'),
-        $table = $grid_header.appendChild(document.createElement('table')),
-        $colgroup = $table.appendChild(document.createElement('colgroup')),
-        $row = $table.createTBody().insertRow(-1),
-        $_col = document.createElement('col'),
-        $_cell = document.createElement('th'),
-        cond = this.options.sort_conditions;
+    let $grid = this.view.$container;
+    let $grid_header = this.view.$header = document.createElement('header');
+    let $table = $grid_header.appendChild(document.createElement('table'));
+    let $colgroup = $table.appendChild(document.createElement('colgroup'));
+    let $row = $table.createTBody().insertRow(-1);
+    let $_col = document.createElement('col');
+    let $_cell = document.createElement('th');
+    let cond = this.options.sort_conditions;
 
     $_cell.scope = 'col';
     $_cell.setAttribute('role', 'columnheader');
     $_cell.appendChild(document.createElement('label'));
 
     for (let column of this.data.columns) {
-      let $col = $colgroup.appendChild($_col.cloneNode(true)),
-          $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
+      let $col = $colgroup.appendChild($_col.cloneNode(true));
+      let $cell = column.$element = $row.appendChild($_cell.cloneNode(true));
 
       $col.dataset.id = column.id || '';
       $col.dataset.hidden = column.hidden === true;
@@ -1096,14 +1086,14 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       this.view.$body.remove();
     }
 
-    let $grid = this.view.$container,
-        $grid_body = this.view.$body = document.createElement('div'),
-        $table = $grid_body.appendChild(document.createElement('table')),
-        $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true)),
-        $tbody = $table.createTBody(),
-        $_row = document.createElement('tr'),
-        cond = this.options.sort_conditions,
-        row_prefix = `${$grid.id}-row-`;
+    let $grid = this.view.$container;
+    let $grid_body = this.view.$body = document.createElement('div');
+    let $table = $grid_body.appendChild(document.createElement('table'));
+    let $colgroup = $table.appendChild($grid.querySelector('.grid-header colgroup').cloneNode(true));
+    let $tbody = $table.createTBody();
+    let $_row = document.createElement('tr');
+    let cond = this.options.sort_conditions;
+    let row_prefix = `${$grid.id}-row-`;
 
     // Sort the data first
     this.sort(cond, 'key', cond.key, null, true);
@@ -1152,8 +1142,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       }
 
       for (let [i, column] of this.data.columns.entries()) {
-        let $child = $row.cells[i].firstElementChild,
-            value = row.data[column.id];
+        let $child = $row.cells[i].firstElementChild;
+        let value = row.data[column.id];
 
         if (column.type === 'boolean') {
           $child.setAttribute('aria-checked', value === true);
@@ -1183,8 +1173,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   get_data () {
-    let $header = this.view.$header,
-        $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
+    let $header = this.view.$header;
+    let $sorter = $header.querySelector('[role="columnheader"][aria-sort]');
 
     // Sort conditions
     if (this.options.sortable && $sorter) {
@@ -1209,9 +1199,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       let row = { id: $row.id, $element: $row, data: {} };
 
       for (let [index, $cell] of [...$row.cells].entries()) {
-        let column = this.data.columns[index],
-            value,
-            normalized_value;
+        let column = this.data.columns[index];
+        let value;
 
         switch (column.type) {
           case 'integer': {
@@ -1250,10 +1239,10 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {Boolean} completed - This should be true to make the Proxy succeed.
    */
   sort (cond, prop, value, receiver, data_only = false) {
-    let $grid = this.view.$container,
-        $tbody = this.view.$body.querySelector('tbody'),
-        $header = this.view.$header,
-        $sorter;
+    let $grid = this.view.$container;
+    let $tbody = this.view.$body.querySelector('tbody');
+    let $header = this.view.$header;
+    let $sorter;
 
     if (data_only) {
       cond.order = cond.order || 'ascending';
@@ -1306,8 +1295,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   init_columnpicker () {
-    let $picker = this.view.$columnpicker = document.createElement('ul'),
-        $header = this.view.$header;
+    let $picker = this.view.$columnpicker = document.createElement('ul');
+    let $header = this.view.$header;
 
     $picker.id = `${this.view.$container.id}-columnpicker`;
     $picker.setAttribute('role', 'menu');
@@ -1355,8 +1344,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   show_column (col) {
-    let $grid = this.view.$container,
-        attr = `[data-id="${col.id}"]`;
+    let $grid = this.view.$container;
+    let attr = `[data-id="${col.id}"]`;
 
     $grid.querySelector(`[role="columnheader"]${attr}`).removeAttribute('aria-hidden');
 
@@ -1376,8 +1365,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   hide_column (col) {
-    let $grid = this.view.$container,
-        attr = `[data-id="${col.id}"]`;
+    let $grid = this.view.$container;
+    let attr = `[data-id="${col.id}"]`;
 
     for (let $col of $grid.querySelectorAll(`col${attr}`)) {
       $col.dataset.hidden = 'true';
@@ -1402,10 +1391,10 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       return;
     }
 
-    let ost = $outer.scrollTop,
-        ooh = $outer.offsetHeight,
-        rot = $row.offsetTop,
-        roh = $row.offsetHeight;
+    let ost = $outer.scrollTop;
+    let ooh = $outer.offsetHeight;
+    let rot = $row.offsetTop;
+    let roh = $row.offsetHeight;
 
     if (ost > rot) {
       $row.scrollIntoView({ block: 'start', behavior: 'smooth' });
@@ -1422,13 +1411,13 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   start_column_reordering (event) {
-    let $grid = this.view.$container,
-        $container = document.createElement('div'),
-        $_image = document.createElement('canvas'),
-        $follower,
-        headers = [],
-        rect = $grid.getBoundingClientRect(),
-        style = $container.style;
+    let $grid = this.view.$container;
+    let $container = document.createElement('div');
+    let $_image = document.createElement('canvas');
+    let $follower;
+    let headers = [];
+    let rect = $grid.getBoundingClientRect();
+    let style = $container.style;
 
     event.target.dataset.grabbed = 'true';
     $container.id = 'column-drag-image-container';
@@ -1438,11 +1427,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     style.height = `${$grid.offsetHeight}px`;
 
     for (let $chead of this.view.$header.querySelectorAll('[role="columnheader"]')) {
-      let $image = $container.appendChild($_image.cloneNode(true)),
-          left = $chead.offsetLeft,
-          width = $chead.offsetWidth,
-          index = $chead.cellIndex,
-          style = $image.style;
+      let $image = $container.appendChild($_image.cloneNode(true));
+      let left = $chead.offsetLeft;
+      let width = $chead.offsetWidth;
+      let index = $chead.cellIndex;
+      let style = $image.style;
 
       $image.id = `column-drag-image-${index}`;
       style.left = `${left}px`;
@@ -1494,13 +1483,13 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   continue_column_reordering (event) {
-    let drag = this.data.drag,
-        pos = event.clientX - drag.start_left,
-        index = drag.current_index,
-        headers = drag.headers,
-        current = headers[index],
-        prev = headers[index - 1],
-        next = headers[index + 1];
+    let drag = this.data.drag;
+    let pos = event.clientX - drag.start_left;
+    let index = drag.current_index;
+    let headers = drag.headers;
+    let current = headers[index];
+    let prev = headers[index - 1];
+    let next = headers[index + 1];
 
     // Moving left
     if (prev && pos < prev.left + prev.width / 2) {
@@ -1535,11 +1524,11 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   stop_column_reordering (event) {
-    let drag = this.data.drag,
-        start_idx = drag.start_index,
-        current_idx = drag.current_index,
-        $grid = this.view.$container,
-        columns = this.data.columns;
+    let drag = this.data.drag;
+    let start_idx = drag.start_index;
+    let current_idx = drag.current_index;
+    let $grid = this.view.$container;
+    let columns = this.data.columns;
 
     // Actually change the position of rows
     if (start_idx !== current_idx) {
@@ -1577,8 +1566,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   filter (ids) {
-    let $grid_body = this.view.$body,
-        selected = [...this.view.selected];
+    let $grid_body = this.view.$body;
+    let selected = [...this.view.selected];
 
     $grid_body.setAttribute('aria-busy', 'true');
 
@@ -1751,10 +1740,10 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
       return;
     }
 
-    let input = this.$input.getBoundingClientRect(),
-        listbox = this.$listbox_outer.getBoundingClientRect(),
-        adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height,
-        $selected = this.$$listbox.view.selected[0];
+    let input = this.$input.getBoundingClientRect();
+    let listbox = this.$listbox_outer.getBoundingClientRect();
+    let adjusted = window.innerHeight - input.bottom < listbox.height && input.top > listbox.height;
+    let $selected = this.$$listbox.view.selected[0];
 
     if (!$selected) {
       $selected = this.$$listbox.view.selected = this.$$listbox.view.members[0];
@@ -1911,8 +1900,8 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
             this.show_dropdown();
           }
 
-          let $target = this.$$listbox.view.selected[0],
-              value = $target.dataset.value || $target.textContent;
+          let $target = this.$$listbox.view.selected[0];
+          let value = $target.dataset.value || $target.textContent;
 
           if (this.autocomplete === 'list') {
             this.$$input.value = value;
@@ -1990,8 +1979,8 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   listbox_onmousedown (event) {
-    let $target = this.$$listbox.view.selected[0],
-        value = $target.dataset.value || $target.textContent;
+    let $target = this.$$listbox.view.selected[0];
+    let value = $target.dataset.value || $target.textContent;
 
     this.hide_dropdown();
     this.$$input.value = value;
@@ -2085,9 +2074,9 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   build () {
-    let map = this.data.map = new Map(),
-        $fragment = new DocumentFragment(),
-        $_item = document.createElement('li');
+    let map = this.data.map = new Map();
+    let $fragment = new DocumentFragment();
+    let $_item = document.createElement('li');
 
     $_item.tabIndex = -1;
     $_item.setAttribute('role', 'option');
@@ -2243,15 +2232,15 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    */
   activate (rebuild = false) {
     // Redefine items
-    let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])',
-        selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`,
-        items = this.view.members = [...document.querySelectorAll(selector)],
-        menus = this.data.menus = new WeakMap();
+    let not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
+    let selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`;
+    let items = this.view.members = [...document.querySelectorAll(selector)];
+    let menus = this.data.menus = new WeakMap();
 
     for (let $item of items) {
       if ($item.hasAttribute('aria-owns')) {
-        let $menu = document.getElementById($item.getAttribute('aria-owns')),
-            $$menu = new FlareTail.widgets.Menu($menu);
+        let $menu = document.getElementById($item.getAttribute('aria-owns'));
+        let $$menu = new FlareTail.widgets.Menu($menu);
 
         $$menu.data.parent = this;
         menus.set($item, $$menu);
@@ -2341,8 +2330,8 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @return {Boolean} default - Always false to disable the browser's build-in context menu.
    */
   oncontextmenu (event) {
-    let $owner = this.view.$owner,
-        $container = this.view.$container;
+    let $owner = this.view.$owner;
+    let $container = this.view.$container;
 
     if ($owner) {
       let style = $container.style;
@@ -2369,11 +2358,10 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   onkeydown (event) {
-    let parent = this.data.parent,
-        menus = this.data.menus,
-        has_submenu = menus.has(event.target),
-        $owner = this.view.$owner,
-        key = event.key;
+    let parent = this.data.parent;
+    let menus = this.data.menus;
+    let has_submenu = menus.has(event.target);
+    let $owner = this.view.$owner;
 
     // Open link in a new tab
     if (event.target.href && event.key === 'Enter') {
@@ -2386,13 +2374,12 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 
     // The owner of the context menu
     if ($owner && event.currentTarget === $owner) {
-      let view = this.view,
-          items = view.members;
+      let items = this.view.members;
 
-      switch (key) {
+      switch (event.key) {
         case 'ArrowUp':
         case 'End': {
-          view.selected = view.$focused = items[items.length - 1];
+          this.view.selected = this.view.$focused = items[items.length - 1];
 
           break;
         }
@@ -2400,7 +2387,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
         case 'ArrowDown':
         case 'ArrowRight':
         case 'Home': {
-          view.selected = view.$focused = items[0];
+          this.view.selected = this.view.$focused = items[0];
 
           break;
         }
@@ -2418,7 +2405,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 
     FlareTail.helpers.event.ignore(event);
 
-    switch (key) {
+    switch (event.key) {
       case 'ArrowRight': {
         if (has_submenu) {
           // Select the first item in the submenu
@@ -2427,9 +2414,9 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
           view.selected = view.$focused = view.members[0];
         } else if (parent) {
           // Select the next (or first) item in the parent menu
-          let view = parent.view,
-              items = view.members,
-              $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
+          let view = parent.view;
+          let items = view.members;
+          let $target = items[items.indexOf(view.selected[0]) + 1] || items[0];
 
           view.selected = view.$focused = $target;
         }
@@ -2439,9 +2426,9 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 
       case 'ArrowLeft': {
         if (parent) {
-          let view = parent.view,
-              items = view.members,
-              $target = view.$container.matches('[role="menubar"]')
+          let view = parent.view;
+          let items = view.members;
+          let $target = view.$container.matches('[role="menubar"]')
                       ? items[items.indexOf(view.selected[0]) - 1] || items[items.length - 1] : view.selected[0];
 
           view.selected = view.$focused = $target;
@@ -2493,11 +2480,11 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   build (data) {
-    let $container = this.view.$container,
-        $fragment = new DocumentFragment(),
-        $_separator = document.createElement('li'),
-        $_outer = document.createElement('li'),
-        rebuild = false;
+    let $container = this.view.$container;
+    let $fragment = new DocumentFragment();
+    let $_separator = document.createElement('li');
+    let $_outer = document.createElement('li');
+    let rebuild = false;
 
     if (data) {
       // Empty & rebuild menu
@@ -2589,8 +2576,8 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   close (propagation) {
     FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
 
-    let $container = this.view.$container,
-        parent = this.data.parent;
+    let $container = this.view.$container;
+    let parent = this.data.parent;
 
     $container.setAttribute('aria-expanded', 'false');
     $container.removeAttribute('aria-activedescendant');
@@ -2684,8 +2671,8 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
    * @return {undefined}
    */
   onkeydown (event) {
-    let menu = this.data.menus.get(event.target).view,
-        menuitems = menu.members;
+    let menu = this.data.menus.get(event.target).view;
+    let menuitems = menu.members;
 
     switch (event.key) {
       case 'Tab': {
@@ -2844,8 +2831,8 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   onkeydown (event) {
-    let $item = event.target,
-        items = this.view.members;
+    let $item = event.target;
+    let items = this.view.members;
 
     switch (event.key) {
       case 'ArrowLeft': {
@@ -2853,8 +2840,8 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
           this.expand($item); // Collapse the subgroup
         } else {
           // Select the parent item
-          let level = Number($item.getAttribute('aria-level')),
-              $selected = items[0];
+          let level = Number($item.getAttribute('aria-level'));
+          let $selected = items[0];
 
           for (let i = items.indexOf($item) - 1; i >= 0; i--) {
             if (Number(items[i].getAttribute('aria-level')) === level - 1) {
@@ -2875,9 +2862,7 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
           this.expand($item); // Expand the subgroup
         } else if ($item.hasAttribute('aria-expanded')) {
           // Select the item just below
-          let $selected = items[items.indexOf($item) + 1];
-
-          this.view.selected = this.view.$focused = $selected;
+          this.view.selected = this.view.$focused = items[items.indexOf($item) + 1];
         }
 
         break;
@@ -2907,15 +2892,15 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   build () {
-    let $tree = this.view.$container,
-        $fragment = new DocumentFragment(),
-        $outer = document.createElement('li'),
-        $treeitem = document.createElement('span'),
-        $expander = document.createElement('span'),
-        $group = document.createElement('ul'),
-        structure = this.data.structure,
-        map = this.data.map = new WeakMap(),
-        level = 1;
+    let $tree = this.view.$container;
+    let $fragment = new DocumentFragment();
+    let $outer = document.createElement('li');
+    let $treeitem = document.createElement('span');
+    let $expander = document.createElement('span');
+    let $group = document.createElement('ul');
+    let structure = this.data.structure;
+    let map = this.data.map = new WeakMap();
+    let level = 1;
 
     $outer.setAttribute('role', 'none');
     $treeitem.setAttribute('role', 'treeitem');
@@ -2925,9 +2910,9 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
     $group.setAttribute('role', 'group');
 
     let get_item = obj => {
-      let $item = $treeitem.cloneNode(true),
-          $_outer = $outer.cloneNode(false),
-          item_id = `${$tree.id}-${obj.id}`;
+      let $item = $treeitem.cloneNode(true);
+      let $_outer = $outer.cloneNode(false);
+      let item_id = `${$tree.id}-${obj.id}`;
 
       $item.firstChild.textContent = obj.label;
       $item.id = item_id;
@@ -2980,20 +2965,14 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   get_data () {
-    let map = this.data.map = new WeakMap(),
-        structure = this.data.structure = [];
+    let map = this.data.map = new WeakMap();
+    let structure = this.data.structure = [];
 
     // TODO: generate structure data
 
     for (let $item of this.view.members) {
-      let level = Number($item.getAttribute('aria-level')),
-          item = {
-            $element: $item,
-            id: $item.id,
-            label: $item.textContent,
-            level,
-            sub: []
-          };
+      let level = Number($item.getAttribute('aria-level'));
+      let item = { $element: $item, id: $item.id, label: $item.textContent, level, sub: [] };
 
       if (Object.keys($item.dataset).length) {
         item.data = {};
@@ -3014,10 +2993,10 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
    * @return {undefined}
    */
   expand ($item) {
-    let expanded = $item.matches('[aria-expanded="true"]'),
-        items = [...this.view.$container.querySelectorAll('[role="treeitem"]')],
-        selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`,
-        children = [...document.querySelectorAll(selector)];
+    let expanded = $item.matches('[aria-expanded="true"]');
+    let items = [...this.view.$container.querySelectorAll('[role="treeitem"]')];
+    let selector = `#${$item.getAttribute('aria-owns')} [aria-selected="true"]`;
+    let children = [...document.querySelectorAll(selector)];
 
     $item.setAttribute('aria-expanded', !expanded);
 
@@ -3179,11 +3158,11 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
    * @return {HTMLElement} $tab - The new tab node.
    */
   add_tab (name, title, label, $panel, position = 'last', dataset = {}) {
-    let items = this.view.members,
-        $tab = items[0].cloneNode(true),
-        $selected = this.view.selected[0],
-        index = items.indexOf($selected),
-        $next_tab = items[index + 1];
+    let items = this.view.members;
+    let $tab = items[0].cloneNode(true);
+    let $selected = this.view.selected[0];
+    let index = items.indexOf($selected);
+    let $next_tab = items[index + 1];
 
     $tab.id = `tab-${name}`;
     $tab.title = label || title;
@@ -3230,8 +3209,8 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
    * @return {undefined}
    */
   close_tab ($tab) {
-    let items = this.view.members,
-        index = items.indexOf($tab);
+    let items = this.view.members;
+    let index = items.indexOf($tab);
 
     // Notify
     FlareTail.helpers.event.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
@@ -3331,8 +3310,8 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   onpaste (event) {
-    let selection = window.getSelection(),
-        range = selection.getRangeAt(0);
+    let selection = window.getSelection();
+    let range = selection.getRangeAt(0);
 
     if (!this.richtext) {
       event.preventDefault();
@@ -3495,8 +3474,8 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   constructor ($owner, { adjusted = false, arrow_keys_enabled = true, resize_detection_enabled = true } = {}) {
     super(); // This does nothing but is required before using `this`
 
-    let $controller = document.createElement('div'),
-        FTue = FlareTail.helpers.event;
+    let $controller = document.createElement('div');
+    let FTue = FlareTail.helpers.event;
 
     this.view = { $owner, $controller };
     this.data = {};
@@ -3558,8 +3537,8 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   onwheel (event) {
     event.preventDefault();
 
-    let $owner = this.view.$owner,
-        top = $owner.scrollTop + event.deltaY * (event.deltaMode === event.DOM_DELTA_LINE ? 12 : 1);
+    let $owner = this.view.$owner;
+    let top = $owner.scrollTop + event.deltaY * (event.deltaMode === event.DOM_DELTA_LINE ? 12 : 1);
 
     if (top < 0) {
       top = 0;
@@ -3580,14 +3559,14 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   onscroll (event) {
-    let $owner = this.view.$owner,
-        $controller = this.view.$controller;
+    let $owner = this.view.$owner;
+    let $controller = this.view.$controller;
 
     // Scroll by row
     if (this.options.adjusted) {
-      let rect = $owner.getBoundingClientRect(),
-          $elm = document.elementFromPoint(rect.left, rect.top),
-          top = 0;
+      let rect = $owner.getBoundingClientRect();
+      let $elm = document.elementFromPoint(rect.left, rect.top);
+      let top = 0;
 
       while ($elm) {
         if ($elm.matches('[role="row"], [role="option"], [role="treeitem"]')) {
@@ -3607,11 +3586,11 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       $owner.scrollTop = top;
     }
 
-    let st = $owner.scrollTop,
-        ch = $owner.clientHeight,
-        sh = $owner.scrollHeight,
-        ctrl_height = Number.parseInt($controller.style.height),
-        ctrl_adj = 0;
+    let st = $owner.scrollTop;
+    let ch = $owner.clientHeight;
+    let sh = $owner.scrollHeight;
+    let ctrl_height = Number.parseInt($controller.style.height);
+    let ctrl_adj = 0;
 
     // Consider scrollbar's min-height
     if (ctrl_height < 16) {
@@ -3637,9 +3616,9 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   onresize (event) {
-    let $controller = this.view.$controller,
-        { s_height, c_height, s_top_max } = event.detail,
-        ctrl_height = Math.floor(c_height * c_height / s_height) - 4;
+    let $controller = this.view.$controller;
+    let { s_height, c_height, s_top_max } = event.detail;
+    let ctrl_height = Math.floor(c_height * c_height / s_height) - 4;
 
     $controller.tabIndex = s_height === c_height ? -1 : 0;
     $controller.style.setProperty('height', ctrl_height <= 0 ? 0 : `${ctrl_height}px`);
@@ -3665,8 +3644,8 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   scroll_with_mouse (event) {
-    let $owner = this.view.$owner,
-        FTue = FlareTail.helpers.event;
+    let $owner = this.view.$owner;
+    let FTue = FlareTail.helpers.event;
 
     if (event.type === 'mousedown') {
       this.data.rect = {
@@ -3680,9 +3659,9 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
 
     if (event.type === 'mousemove') {
-      let rect = this.data.rect,
-          delta = rect.st + event.clientY - rect.cy,
-          top = Math.floor(delta * rect.sh / rect.ch);
+      let rect = this.data.rect;
+      let delta = rect.st + event.clientY - rect.cy;
+      let top = Math.floor(delta * rect.sh / rect.ch);
 
       if (top < 0) {
         top = 0;
@@ -3710,14 +3689,13 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    * @return {undefined}
    */
   scroll_with_keyboard (event) {
-    let $owner = this.view.$owner,
-        $controller = this.view.$controller,
-        adjusted = this.options.adjusted,
-        arrow = this.options.arrow_keys_enabled,
-        key = event.key,
-        ch = $owner.clientHeight;
+    let $owner = this.view.$owner;
+    let $controller = this.view.$controller;
+    let adjusted = this.options.adjusted;
+    let arrow = this.options.arrow_keys_enabled;
+    let ch = $owner.clientHeight;
 
-    switch (key) {
+    switch (event.key) {
       case 'Tab': {
         return true; // Focus management
       }
@@ -3725,7 +3703,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       case 'Home':
       case 'End': {
         if (!adjusted) {
-          $owner.scrollTop = key === 'Home' ? 0 : $owner.scrollTopMax;
+          $owner.scrollTop = event.key === 'Home' ? 0 : $owner.scrollTopMax;
         }
 
         break;
@@ -3734,7 +3712,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       case ' ': // Space
       case 'PageUp':
       case 'PageDown': {
-        $owner.scrollTop += key === 'PageUp' || key === ' ' && event.shiftKey ? -ch : ch;
+        $owner.scrollTop += event.key === 'PageUp' || event.key === ' ' && event.shiftKey ? -ch : ch;
 
         break;
       }
@@ -3742,7 +3720,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
       case 'ArrowUp':
       case 'ArrowDown': {
         if (!adjusted && (event.target === $controller || event.currentTarget === $owner && arrow)) {
-          $owner.scrollTop += key === 'ArrowUp' ? -40 : 40;
+          $owner.scrollTop += event.key === 'ArrowUp' ? -40 : 40;
         }
 
         break;
@@ -3802,8 +3780,8 @@ FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
    * @return {undefined}
    */
   detect ($owner) {
-    let { scrollHeight: s_height, clientHeight: c_height, scrollTopMax: s_top_max } = $owner,
-        detail = this.data.get($owner);
+    let { scrollHeight: s_height, clientHeight: c_height, scrollTopMax: s_top_max } = $owner;
+    let detail = this.data.get($owner);
 
     if (!detail || detail.s_height !== s_height || detail.c_height !== c_height) {
       detail = { s_height, c_height, s_top_max };
@@ -3871,17 +3849,17 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
    * @return {undefined}
    */
   build () {
-    let options = this.options,
-        $wrapper = this.view.$wrapper = document.createElement('div'),
-        $dialog = this.view.$dialog = document.createElement('aside'),
-        $header = $dialog.appendChild(document.createElement('header')),
-        $title,
-        $message = $dialog.appendChild(document.createElement('p')),
-        $input,
-        $footer = $dialog.appendChild(document.createElement('footer')),
-        $button = document.createElement('span'),
-        $button_accept,
-        $button_cancel;
+    let options = this.options;
+    let $wrapper = this.view.$wrapper = document.createElement('div');
+    let $dialog = this.view.$dialog = document.createElement('aside');
+    let $header = $dialog.appendChild(document.createElement('header'));
+    let $title;
+    let $message = $dialog.appendChild(document.createElement('p'));
+    let $input;
+    let $footer = $dialog.appendChild(document.createElement('footer'));
+    let $button = document.createElement('span');
+    let $button_accept;
+    let $button_cancel;
 
     $dialog.id = `dialog-${options.id}`;
     $dialog.tabIndex = 0;
@@ -4028,13 +4006,13 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
       controls: {}
     };
 
-    let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop)),
-        $outer = this.view.$outer,
-        orientation = $splitter.getAttribute('aria-orientation') || 'horizontal',
-        outer_bounds = $outer.getBoundingClientRect(),
-        outer_size = orientation === 'horizontal' ? outer_bounds.height : outer_bounds.width,
-        flex = $splitter.dataset.flex !== 'false',
-        position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
+    let style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop));
+    let $outer = this.view.$outer;
+    let orientation = $splitter.getAttribute('aria-orientation') || 'horizontal';
+    let outer_bounds = $outer.getBoundingClientRect();
+    let outer_size = orientation === 'horizontal' ? outer_bounds.height : outer_bounds.width;
+    let flex = $splitter.dataset.flex !== 'false';
+    let position = style($splitter, orientation === 'horizontal' ? 'top' : 'left');
 
     this.data = new Proxy({
       outer: new Proxy({
@@ -4067,11 +4045,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
         }
 
         if (prop === 'position') {
-          let outer = this.data.outer,
-              before = this.data.controls.before,
-              after = this.data.controls.after,
-              $before = this.view.controls.$before,
-              $after = this.view.controls.$after;
+          let outer = this.data.outer;
+          let before = this.data.controls.before;
+          let after = this.data.controls.after;
+          let $before = this.view.controls.$before;
+          let $after = this.view.controls.$after;
 
           if (Number.isNaN(value) && value.match(/^(\d+)px$/)) {
             value = Number.parseInt(value);
@@ -4149,8 +4127,8 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     FlareTail.helpers.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
     for (let [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
-      let $target = document.getElementById(id),
-          position = i === 0 ? 'before' : 'after';
+      let $target = document.getElementById(id);
+      let position = i === 0 ? 'before' : 'after';
 
       this.data.controls[position] = new Proxy({
         id,
@@ -4242,11 +4220,11 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
    * @return {undefined}
    */
   onkeydown (event) {
-    let value = null,
-        position = this.data.position,
-        outer = this.data.outer,
-        before = this.data.controls.before,
-        after = this.data.controls.after;
+    let value = null;
+    let position = this.data.position;
+    let outer = this.data.outer;
+    let before = this.data.controls.before;
+    let after = this.data.controls.after;
 
     switch (event.key) {
       case 'Home': {

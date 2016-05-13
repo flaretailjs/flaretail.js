@@ -4,7 +4,7 @@
 
 'use strict';
 
-let FlareTail = {};
+const FlareTail = {};
 
 FlareTail.debug = 'URLSearchParams' in window &&
                     (new URLSearchParams(location.search.substr(1))).get('debug') === 'true';
@@ -134,8 +134,8 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
 
         // Multiple items
         if (Array.isArray(value)) {
-          let $parent = $prop.parentElement,
-              $_item = $parent.removeChild($prop);
+          let $parent = $prop.parentElement;
+          let $_item = $parent.removeChild($prop);
 
           $parent.innerHTML = ''; // Empty the loop before adding items
 
@@ -208,8 +208,8 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   // Support simple if-else switches
   for (let $if of $scope.querySelectorAll('[data-if]')) {
     // Hide the element if the data is undefined
-    let hidden = $if.hidden = !data[$if.getAttribute('data-if')],
-        $next = $if.nextElementSibling;
+    let hidden = $if.hidden = !data[$if.getAttribute('data-if')];
+    let $next = $if.nextElementSibling;
 
     if ($next && $next.hasAttribute('data-else')) {
       $next.hidden = !hidden;
@@ -317,9 +317,9 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
   let bindings = new Set();
 
   for (let [_combos, command] of Object.entries(map)) for (let _combo of _combos.split('|')) {
-    let combo = _combo.split('+'),
-        key = combo.pop().toLowerCase().replace('Space', ' '), // Space is an exception
-        modifiers = new Set(combo);
+    let combo = _combo.split('+');
+    let key = combo.pop().toLowerCase().replace('Space', ' '); // Space is an exception
+    let modifiers = new Set(combo);
 
     bindings.add([key, modifiers, command]);
   }
@@ -398,9 +398,9 @@ FlareTail.helpers.env = {
 };
 
 {
-  let env = FlareTail.helpers.env,
-      ua_str = navigator.userAgent,
-      pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
+  let env = FlareTail.helpers.env;
+  let ua_str = navigator.userAgent;
+  let pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
   // Platform
   if (pf_match) {
@@ -497,8 +497,8 @@ Object.defineProperties(FlareTail.helpers.theme, {
 });
 
 FlareTail.helpers.theme.preload_images = function () {
-  let pattern = 'url\\("(.+?)"\\)',
-      images = new Set(); // Use a Set to avoid duplicates
+  let pattern = 'url\\("(.+?)"\\)';
+  let images = new Set(); // Use a Set to avoid duplicates
 
   for (let sheet of document.styleSheets) {
     for (let rule of sheet.cssRules) {
@@ -563,10 +563,10 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
   options.simple = options.simple || false;
   options.timezone = options.timezone || this.options.timezone;
 
-  let now = new Date(),
-      date = new Date(str),
-      delta = now - date,
-      shifted_date;
+  let now = new Date();
+  let date = new Date(str);
+  let delta = now - date;
+  let shifted_date;
 
   if (options.relative) {
     let patterns = [
@@ -615,8 +615,8 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
 FlareTail.helpers.datetime.get_shifted_date = function (date, offset) {
   let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
                      (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
-                      > date.getTimezoneOffset(),
-      utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000;
+                      > date.getTimezoneOffset();
+  let utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000;
 
   return new Date(utc + offset * 3600000);
 };
@@ -646,11 +646,12 @@ FlareTail.helpers.datetime.fill_element = function ($time, value, options = null
 
 FlareTail.helpers.datetime.update_elements = function () {
   for (let $time of document.querySelectorAll('time')) {
-    let data = $time.dataset,
-        time = this.format($time.dateTime, {
-          relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
-          simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
-        });
+    let data = $time.dataset;
+
+    let time = this.format($time.dateTime, {
+      relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
+      simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
+    });
 
     if ($time.textContent !== time) {
       $time.textContent = time;
@@ -694,9 +695,9 @@ FlareTail.helpers.network.json = (url, body = undefined) => {
 };
 
 FlareTail.helpers.network.jsonp = url => {
-  let $script = document.body.appendChild(document.createElement('script')),
-      callback_id = 'jsonp_' + Date.now(),
-      cleanup = () => { $script.remove(); delete window[callback_id]; };
+  let $script = document.body.appendChild(document.createElement('script'));
+  let callback_id = 'jsonp_' + Date.now();
+  let cleanup = () => { $script.remove(); delete window[callback_id]; };
 
   return new Promise((resolve, reject) => {
     window[callback_id] = data => resolve(data);
@@ -749,35 +750,36 @@ FlareTail.helpers.array = {};
 FlareTail.helpers.array.clone = array => [...array];
 
 FlareTail.helpers.array.join = (set, tag = undefined) => {
-  let open_tag = tag ? `<${tag}>` : '',
-      close_tag = tag ? `</${tag}>` : '',
-      array = [...set].map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag),
-      last = array.pop();
+  let open_tag = tag ? `<${tag}>` : '';
+  let close_tag = tag ? `</${tag}>` : '';
+  let array = [...set].map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag);
+  let last = array.pop();
 
   return array.length ? array.join(', ') + ' and ' + last : last; // l10n
 };
 
 FlareTail.helpers.array.sort = (array, cond) => {
   // Normalization: ignore brackets for comparison
-  let nomalized_values = new Map(),
-      nomalize = str => {
-        let value = nomalized_values.get(str);
+  let nomalized_values = new Map();
 
-        if (!value) {
-          value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
-          nomalized_values.set(str, value);
-        }
+  let nomalize = str => {
+    let value = nomalized_values.get(str);
 
-        return value;
-      };
+    if (!value) {
+      value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
+      nomalized_values.set(str, value);
+    }
+
+    return value;
+  };
 
   array.sort((a, b) => {
     if (cond.order === 'descending') {
       [a, b] = [b, a]; // reverse()
     }
 
-    let a_val = a.data ? a.data[cond.key] : a[cond.key],
-        b_val = b.data ? b.data[cond.key] : b[cond.key];
+    let a_val = a.data ? a.data[cond.key] : a[cond.key];
+    let b_val = b.data ? b.data[cond.key] : b[cond.key];
 
     if (!a_val || !b_val) {
       return true;
@@ -861,8 +863,8 @@ FlareTail.helpers.number = {};
  * @todo Support languages other than English.
  */
 FlareTail.helpers.number.format_file_size = (number, fixed = 1) => {
-  let rounder = 1,
-      unit = number === 1 ? 'byte' : 'bytes';
+  let rounder = 1;
+  let unit = number === 1 ? 'byte' : 'bytes';
 
   let units = {
     1000: 'KB',
