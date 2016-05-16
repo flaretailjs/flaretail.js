@@ -15,8 +15,8 @@ FlareTail.app.Router = class Router {
   /**
    * Get a Router instance.
    * @constructor
-   * @argument {Object} app - App namespace containing configurations and controllers.
-   * @return {Object} router
+   * @param {Object} app - App namespace containing configurations and controllers.
+   * @returns {Object} router
    */
   constructor (app) {
     // Specify the base URL of the app, without a trailing slash
@@ -39,8 +39,8 @@ FlareTail.app.Router = class Router {
   /**
    * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
    * specified pathname is invalid, so nativate to the app's launch path instead.
-   * @argument {String} [path=location.pathname] - URL pathname used to find a route.
-   * @return {Boolean} result - Whether a route is found.
+   * @param {String} [path=location.pathname] - URL pathname used to find a route.
+   * @returns {Boolean} result - Whether a route is found.
    */
   locate (path = location.pathname) {
     for (let [re, constructor] of this.routes) {
@@ -63,10 +63,10 @@ FlareTail.app.Router = class Router {
 
   /**
    * Navigate to the specified URL pathname by manipulating the browser history.
-   * @argument {String} path - URL pathname to go.
-   * @argument {Object} [state={}] - History state object.
-   * @argument {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
-   * @return {undefined}
+   * @param {String} path - URL pathname to go.
+   * @param {Object} [state={}] - History state object.
+   * @param {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
+   * @returns {undefined}
    */
   navigate (path, state = {}, replace = false) {
     state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
@@ -88,11 +88,11 @@ FlareTail.app.Router = class Router {
 FlareTail.app.Events = class Events {
   /**
    * Publish an event asynchronously on a separate thread.
-   * @argument {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
+   * @param {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
    *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
-   * @argument {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will
-   *  be automatically appended to the data.
-   * @return {undefined}
+   * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
+   *  automatically appended to the data.
+   * @returns {undefined}
    */
   trigger (topic, data = {}) {
     if (topic.match(/^:/)) {
@@ -110,12 +110,12 @@ FlareTail.app.Events = class Events {
 
   /**
    * Subscribe an event.
-   * @argument {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
+   * @param {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
    *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
-   * @argument {Function} callback - Function called whenever the specified event is fired.
-   * @argument {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
+   * @param {Function} callback - Function called whenever the specified event is fired.
+   * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
    *  and the instance have different id properties. Otherwise, the identity will be respected.
-   * @return {undefined}
+   * @returns {undefined}
    */
   on (topic, callback, global = false) {
     topic = topic.replace(/^([MVC]):/, (match, prefix) => {
@@ -137,9 +137,9 @@ FlareTail.app.Events = class Events {
   /**
    * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
    * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
-   * @argument {String} topic - See the 'on' function above for details.
-   * @argument {Boolean} [global=false] - See the 'on' function above for details.
-   * @return {undefined}
+   * @param {String} topic - See the 'on' function above for details.
+   * @param {Boolean} [global=false] - See the 'on' function above for details.
+   * @returns {undefined}
    */
   subscribe (topic, global = false) {
     this.on(topic, data => this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
@@ -161,9 +161,9 @@ FlareTail.app.DataSource = class DataSource extends FlareTail.app.Events {}
 FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.DataSource {
   /**
    * Open a local IndexedDB database by name, and return it.
-   * @argument {String} name - Name of the database.
-   * @argument {Integer} version - Database version.
-   * @return {Promise.<(IDBDatabase|Error)>} database - The target database.
+   * @param {String} name - Name of the database.
+   * @param {Integer} version - Database version.
+   * @returns {Promise.<(IDBDatabase|Error)>} database - The target database.
    */
   open_database (name, version = 1) {
     let request = indexedDB.open(name, version);
@@ -190,9 +190,9 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 
   /**
    * Get a IndexedDB store in a convenient way.
-   * @argument {String} name - Name of the object store.
-   * @argument {Boolean} [return_request=false] - If true, operation methods return IDBRequest instead of result Array.
-   * @return {Object} store - Set of operation methods that return a Promise.
+   * @param {String} name - Name of the object store.
+   * @param {Boolean} [return_request=false] - If true, operation methods return IDBRequest instead of result Array.
+   * @returns {Object} store - Set of operation methods that return a Promise.
    */
   get_store (name, return_request = false) {
     let store = this.database.transaction(name, 'readwrite').objectStore(name);
@@ -220,8 +220,8 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 FlareTail.app.Model = class Model extends FlareTail.app.Events {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
-   * @argument {undefined}
-   * @return {Proxy} this - Proxified `this` object.
+   * @param {undefined}
+   * @returns {Proxy} this - Proxified `this` object.
    */
   proxy () {
     return new Proxy(this, {
@@ -236,8 +236,8 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
 
   /**
    * Cache data as a new Proxy, so the object is automatically saved when a property is modifled.
-   * @argument {Object} data - Raw data object.
-   * @return {Proxy} data - Proxified data object.
+   * @param {Object} data - Raw data object.
+   * @returns {Proxy} data - Proxified data object.
    */
   cache (data) {
     // Deproxify the object just in case
@@ -255,8 +255,8 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
 
   /**
    * Save data in the local IndexedDB storage.
-   * @argument {Object} [data] - Raw data object.
-   * @return {Promise.<Proxy>} item - Proxified instance of the model object.
+   * @param {Object} [data] - Raw data object.
+   * @returns {Promise.<Proxy>} item - Proxified instance of the model object.
    */
   save (data = undefined) {
     if (data) {
@@ -281,8 +281,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
-   * @argument {undefined}
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @param {undefined}
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   load () {
     let store = this.datasource.get_store(this.store_name);
@@ -312,9 +312,9 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Set or add an item data to the database.
-   * @argument {(Number|String)} key - Key of the item.
-   * @argument {*} value - Raw data object or any value.
-   * @return {Promise.<Proxy>} item - Promise to be resolved in a model instance.
+   * @param {(Number|String)} key - Key of the item.
+   * @param {*} value - Raw data object or any value.
+   * @returns {Promise.<Proxy>} item - Promise to be resolved in a model instance.
    */
   set (key, value) {
     if (this.model) {
@@ -338,9 +338,9 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Get an item by a specific key.
-   * @argument {(Number|String)} key - Key of the item.
-   * @argument {Object} [fallback_value] - If an item is not found, create a new model object with this value.
-   * @return {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
+   * @param {(Number|String)} key - Key of the item.
+   * @param {Object} [fallback_value] - If an item is not found, create a new model object with this value.
+   * @returns {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
    */
   get (key, fallback_value = undefined) {
     return this.has(key).then(has => {
@@ -358,8 +358,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Get items by specific keys.
-   * @argument {(Array|Set).<(String|Number)>} keys - Key list.
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @param {(Array|Set).<(String|Number)>} keys - Key list.
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   get_some (keys) {
     return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
@@ -367,8 +367,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Get all items locally-stored in IndexedDB.
-   * @argument {undefined}
-   * @return {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @param {undefined}
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   get_all () {
     return Promise.resolve(this.map);
@@ -376,8 +376,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Check if an item with a specific key is in the database.
-   * @argument {(Number|String)} key - Key of the item.
-   * @return {Promise.<Boolean>} result - Promise to be resolved in whether the item exists.
+   * @param {(Number|String)} key - Key of the item.
+   * @returns {Promise.<Boolean>} result - Promise to be resolved in whether the item exists.
    */
   has (key) {
     return Promise.resolve(this.map.has(key));
@@ -385,8 +385,8 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
   /**
    * Delete an item by a specific key.
-   * @argument {(Number|String)} key - Key of the item.
-   * @return {Promise.<undefined>} result
+   * @param {(Number|String)} key - Key of the item.
+   * @returns {Promise.<undefined>} result
    */
   delete (key) {
     this.map.delete(key);

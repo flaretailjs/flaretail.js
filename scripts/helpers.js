@@ -117,10 +117,10 @@ FlareTail.helpers.content = {};
  *    // Attributes
  *    title: 'Kohei Yoshino\nkohei.yoshino@gmail.com', 'data-id': 232883
  *  });
- * @argument {Element} $scope - DOM element with the itemscope attribute.
- * @argument {Object} data - Keys are the itemprop attribute.
- * @argument {Object} [attrs={}] - Attributes to be set according to the data-attrs attribute.
- * @return {Element} $scope
+ * @param {Element} $scope - DOM element with the itemscope attribute.
+ * @param {Object} data - Keys are the itemprop attribute.
+ * @param {Object} [attrs={}] - Attributes to be set according to the data-attrs attribute.
+ * @returns {Element} $scope
  */
 FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   let iterate = ($scope, data) => {
@@ -306,8 +306,8 @@ FlareTail.helpers.kbd = {};
 /**
  * Assign keyboard shortcuts on a specific element
  *
- * @argument {Element} $target
- * @argument {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Accel+O, etc. Multiple pattern should
+ * @param {Element} $target
+ * @param {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Accel+O, etc. Multiple pattern should
  *  be separated with `|`) and function. Possible key values can be found at MDN. The supported modifiers here include
  *  Alt, Shift and Accel; Control and Meta are not supported.
  * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key}
@@ -355,8 +355,8 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
 /**
  * Fire a keydown event on a specific element.
  *
- * @argument {Element} $target
- * @argument {Integer} key
+ * @param {Element} $target
+ * @param {Integer} key
  */
 FlareTail.helpers.kbd.dispatch = function ($target, key) {
   $target.dispatchEvent(new KeyboardEvent('keydown', { key }));
@@ -811,9 +811,9 @@ FlareTail.helpers.array.sort = (array, cond) => {
 /**
  * Split an array into chunks, like the array_chunk PHP function.
  *
- * @argument {Array.<*>} array - Array to split.
- * @argument {Number} size - Number of items in each chunk.
- * @return {Array.<Array.<*>>} chunks - Multidimensional array.
+ * @param {Array.<*>} array - Array to split.
+ * @param {Number} size - Number of items in each chunk.
+ * @returns {Array.<Array.<*>>} chunks - Multidimensional array.
  * @see {@link http://php.net/manual/en/function.array-chunk.php}
  */
 FlareTail.helpers.array.chunk = (array, size) => {
@@ -857,9 +857,9 @@ FlareTail.helpers.number = {};
 /**
  * Format a number for a file size with a unit like KB.
  *
- * @argument {Number} number - Number to format.
- * @argument {Number} fixed - Number of digits to appear after the decimal point.
- * @return {String} size - Formatted file size.
+ * @param {Number} number - Number to format.
+ * @param {Number} fixed - Number of digits to appear after the decimal point.
+ * @returns {String} size - Formatted file size.
  * @todo Support languages other than English.
  */
 FlareTail.helpers.number.format_file_size = (number, fixed = 1) => {
@@ -901,7 +901,7 @@ FlareTail.helpers.misc = {};
 /**
  * Create a GUID.
  *
- * @argument {undefined}
- * @argument {String} guid - Such as 80B2A9ED-9103-4847-B69B-0BC37F7F7CF6
+ * @param {undefined}
+ * @param {String} guid - Such as 80B2A9ED-9103-4847-B69B-0BC37F7F7CF6
  */
 FlareTail.helpers.misc.uuidgen = () => URL.createObjectURL(new Blob()).match(/[0-9a-f\-]+$/)[0].toUpperCase();
