@@ -15,23 +15,20 @@ FlareTail.app.Router = class Router {
   /**
    * Get a Router instance.
    * @constructor
-   * @param {Object} app - App namespace containing configurations and controllers.
+   * @param {Object} config - Basic configurations of the eapp.
+   * @param {String} config.root - The app's root path. Usually '/'.
+   * @param {String} config.launch_path - The app's launch path.
+   * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains controller (Object) and
+   *  catch_all (Boolean).
    * @returns {Object} router
    */
-  constructor (app) {
+  constructor (config, routes) {
     // Specify the base URL of the app, without a trailing slash
-    this.root = app.config.app.root.match(/(.*)\/$/)[1] || '';
+    this.root = config.root.match(/(.*)\/$/)[1] || '';
     // Specify the launch path
-    this.launch_path = app.config.app.launch_path || app.config.app.root || '/';
+    this.launch_path = config.launch_path || config.root || '/';
     // Specify the routes
-    this.routes = new Map();
-
-    // Retrieve the routes from app controllers
-    for (let [name, component] of Object.entries(app)) {
-      if (name.match(/.+Controller$/) && 'route' in component.prototype) {
-        this.routes.set(new RegExp(`^${this.root}${component.prototype.route}$`), component);
-      }
-    }
+    this.routes = routes;
 
     window.addEventListener('popstate', event => this.locate());
   }
@@ -40,25 +37,54 @@ FlareTail.app.Router = class Router {
    * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
    * specified pathname is invalid, so nativate to the app's launch path instead.
    * @param {String} [path=location.pathname] - URL pathname used to find a route.
-   * @returns {Boolean} result - Whether a route is found.
+   * @returns {Object} instance - A controller instance if found.
    */
   locate (path = location.pathname) {
-    for (let [re, constructor] of this.routes) {
-      let match = path.match(re);
+    for (let [pattern, { controller, catch_all, map }] of Object.entries(this.routes)) {
+      let instance;
+      let match = path.match(new RegExp(`^${this.root}${pattern}$`));
 
       if (match) {
-        // Call the constructor when a route is found
-        // Pass arguments based on the RegExp pattern, taking numeric arguments into account
-        new constructor(...match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg)));
+        let args = match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg));
 
-        return true;
+        if (map) {
+          // Find an existing instance from the map
+          instance = catch_all ? [...map.values()][0] : map.get(path);
+        } else {
+          map = this.routes[pattern].map = new Map();
+        }
+
+        if (instance) {
+          if (FlareTail.debug) {
+            console.info(`[Router] Reconnecting to an existing ${controller.name} instance for ${path}`);
+          }
+
+          if (instance.reconnect) {
+            instance.reconnect(...args);
+          }
+        } else {
+          if (FlareTail.debug) {
+            console.info(`[Router] Creating a new ${controller.name} instance for ${path}`);
+          }
+
+          // Call the constructor when a route is found
+          // Pass arguments based on the RegExp pattern, taking numeric arguments into account
+          instance = new controller(...args);
+          map.set(path, instance);
+        }
+
+        return instance;
       }
+    }
+
+    if (FlareTail.debug) {
+      console.info(`[Router] A route for ${path} cound not be found`);
     }
 
     // Couldn't find a route; go to the launch path
     this.navigate(this.launch_path);
 
-    return false;
+    return undefined;
   }
 
   /**
