@@ -114,13 +114,15 @@ FlareTail.app.Router = class Router {
 FlareTail.app.Events = class Events {
   /**
    * Publish an event asynchronously on a separate thread.
+   * @deprecated This method fires a DOM event and passes the given data as a reference. For a better performance, use
+   *  trigger() wherever possible.
    * @param {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
    *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
    *  automatically appended to the data.
    * @returns {undefined}
    */
-  trigger (topic, data = {}) {
+  trigger_safe (topic, data = {}) {
     if (topic.match(/^:/)) {
       topic = this.constructor.name + topic;
     }
@@ -128,7 +130,7 @@ FlareTail.app.Events = class Events {
     let id = this.id;
 
     if (FlareTail.debug) {
-      console.info('Event triggered:', topic, id || '(global)', data);
+      console.info('[Event]', topic, id || '(global)', data);
     }
 
     this.helpers.event.trigger(window, topic, { detail: { id, data }});
@@ -136,6 +138,8 @@ FlareTail.app.Events = class Events {
 
   /**
    * Subscribe an event.
+   * @deprecated This method listens DOM events and receives the given data as a reference. For a better performance,
+   *  use on() wherever possible.
    * @param {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
    *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
    * @param {Function} callback - Function called whenever the specified event is fired.
@@ -143,7 +147,7 @@ FlareTail.app.Events = class Events {
    *  and the instance have different id properties. Otherwise, the identity will be respected.
    * @returns {undefined}
    */
-  on (topic, callback, global = false) {
+  on_safe (topic, callback, global = false) {
     topic = topic.replace(/^([MVC]):/, (match, prefix) => {
       return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
               + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
@@ -163,6 +167,73 @@ FlareTail.app.Events = class Events {
   /**
    * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
    * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
+   * @deprecated This method listens DOM events and receives the given data as a reference. For a better performance,
+   *  use subscribe() wherever possible.
+   * @param {String} topic - See the 'on' function above for details.
+   * @param {Boolean} [global=false] - See the 'on' function above for details.
+   * @returns {undefined}
+   */
+  subscribe_safe (topic, global = false) {
+    this.on_safe(topic, data => {
+      this[topic.replace(/^.+?\:/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data);
+    }, global);
+  }
+
+  /**
+   * Publish an event asynchronously on a separate thread.
+   * @param {String} topic - An event name. Shorthand syntax is supported: :Updated in BugModel means
+   *  BugModel:Updated, :Error in SessionController means SessionController:Error, and so on.
+   * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
+   *  automatically appended to the data. Note that the data will be cloned. Proxy will be automatically deproxified
+   *  before being posted but complex objects like Error or URLSearchParams cannot be transferred and throw. See the
+   *  following MDN document for details.
+   * @returns {undefined}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
+   */
+  trigger (topic, data = {}) {
+    let id = this.id || '(global)';
+    let port = FlareTail.app.Events.channel.port1;
+
+    topic = topic.match(/^:/) ? this.constructor.name + topic : topic;
+    data = Object.assign({}, data);
+
+    port.start();
+    port.postMessage({ topic, id, data });
+
+    if (FlareTail.debug) {
+      console.info('[Event]', topic, id, data);
+    }
+  }
+
+  /**
+   * Subscribe an event.
+   * @param {String} topic - Event name. Shorthand syntax is supported: M:Updated in BugView means BugModel:Updated,
+   *  V:AppMenuItemSelected in ToolbarController means ToolbarView:AppMenuItemSelected, and so on.
+   * @param {Function} callback - Function called whenever the specified event is fired.
+   * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
+   *  and the instance have different id properties. Otherwise, the identity will be respected.
+   * @returns {undefined}
+   */
+  on (topic, callback, global = false) {
+    let id = this.id;
+    let port = FlareTail.app.Events.channel.port2;
+
+    topic = topic.replace(/^([MVC]):/, (match, prefix) => {
+      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
+              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + ':';
+    });
+
+    port.start();
+    port.addEventListener('message', event => {
+      if (event.data.topic === topic && (event.data.id === id || global)) {
+        callback(event.data.data);
+      }
+    });
+  }
+
+  /**
+   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
+   * example, if the topic is 'V:NavigationRequested', on_navigation_requested will be set as the callback function.
    * @param {String} topic - See the 'on' function above for details.
    * @param {Boolean} [global=false] - See the 'on' function above for details.
    * @returns {undefined}
@@ -173,6 +244,8 @@ FlareTail.app.Events = class Events {
 }
 
 FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
+
+FlareTail.app.Events.channel = new MessageChannel();
 
 /**
  * Provide app datasource functionalities. 
