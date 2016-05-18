@@ -191,7 +191,7 @@ FlareTail.app.Events = class Events {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
    */
   trigger (topic, data = {}) {
-    let id = this.id || '(global)';
+    let id = this.id;
     let port = FlareTail.app.Events.channel.port1;
 
     topic = topic.match(/^:/) ? this.constructor.name + topic : topic;
@@ -201,7 +201,7 @@ FlareTail.app.Events = class Events {
     port.postMessage({ topic, id, data });
 
     if (FlareTail.debug) {
-      console.info('[Event]', topic, id, data);
+      console.info('[Event]', topic, id || '(global)', data);
     }
   }
 
@@ -225,7 +225,7 @@ FlareTail.app.Events = class Events {
 
     port.start();
     port.addEventListener('message', event => {
-      if (event.data.topic === topic && (event.data.id === id || global)) {
+      if (event.data.topic === topic && ((!event.data.id && !id) || global)) {
         callback(event.data.data);
       }
     });
