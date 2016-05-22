@@ -225,9 +225,11 @@ FlareTail.app.Events = class Events {
 
     port.start();
     port.addEventListener('message', event => {
-      if (event.data.topic === topic && ((!event.data.id && !id) || global)) {
-        callback(event.data.data);
+      if (event.data.topic !== topic || (!global && event.data.id && this.id && event.data.id !== this.id)) {
+        return;
       }
+
+      callback(event.data.data);
     });
   }
 
