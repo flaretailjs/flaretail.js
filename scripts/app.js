@@ -15,18 +15,17 @@ FlareTail.app.Router = class Router {
   /**
    * Get a Router instance.
    * @constructor
-   * @param {Object} config - Basic configurations of the eapp.
-   * @param {String} config.root - The app's root path. Usually '/'.
-   * @param {String} config.launch_path - The app's launch path.
+   * @param {String} root - The app's root path. Usually '/'.
+   * @param {String} launch_path - The app's launch path.
    * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains controller (Object) and
    *  catch_all (Boolean).
    * @returns {Object} router
    */
-  constructor (config, routes) {
+  constructor ({ root, launch_path } = {}, routes) {
     // Specify the base URL of the app, without a trailing slash
-    this.root = config.root.match(/(.*)\/$/)[1] || '';
+    this.root = root.match(/(.*)\/$/)[1] || '';
     // Specify the launch path
-    this.launch_path = config.launch_path || config.root || '/';
+    this.launch_path = launch_path || root || '/';
     // Specify the routes
     this.routes = routes;
 
