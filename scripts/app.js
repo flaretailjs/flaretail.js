@@ -8,8 +8,8 @@
 FlareTail.app = {};
 
 /*
- * Provide app router functionalities. The routes can be defined on the app's controllers using regular expressions,
- * e.g. BzDeck.controllers.DetailsPage.route = '/bug/(\\d+)';
+ * Provide app router functionalities. The routes can be defined on the app's presenters using regular expressions, e.g.
+ * BzDeck.presenters.DetailsPage.route = '/bug/(\\d+)';
  */
 FlareTail.app.Router = class Router {
   /**
@@ -17,7 +17,7 @@ FlareTail.app.Router = class Router {
    * @constructor
    * @param {String} root - The app's root path. Usually '/'.
    * @param {String} launch_path - The app's launch path.
-   * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains controller (Object) and
+   * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains presenter (Object) and
    *  catch_all (Boolean).
    * @returns {Object} router
    */
@@ -33,13 +33,13 @@ FlareTail.app.Router = class Router {
   }
 
   /**
-   * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
+   * Find a route usually by the URL. If found, create a new instance of the corresponding presenter. If not found, the
    * specified pathname is invalid, so navigate to the app's launch path instead.
    * @param {String} [path=location.pathname] - URL pathname used to find a route.
-   * @returns {Object} instance - A controller instance if found.
+   * @returns {Object} instance - A presenter instance if found.
    */
   locate (path = location.pathname) {
-    for (let [pattern, { controller, catch_all, map }] of Object.entries(this.routes)) {
+    for (let [pattern, { presenter, catch_all, map }] of Object.entries(this.routes)) {
       let instance;
       let match = path.match(new RegExp(`^${this.root}${pattern}$`));
 
@@ -55,7 +55,7 @@ FlareTail.app.Router = class Router {
 
         if (instance) {
           if (FlareTail.debug) {
-            console.info(`[Router] Reconnecting to an existing ${controller.name} instance for ${path}`);
+            console.info(`[Router] Reconnecting to an existing ${presenter.name} instance for ${path}`);
           }
 
           if (instance.reconnect) {
@@ -63,12 +63,12 @@ FlareTail.app.Router = class Router {
           }
         } else {
           if (FlareTail.debug) {
-            console.info(`[Router] Creating a new ${controller.name} instance for ${path}`);
+            console.info(`[Router] Creating a new ${presenter.name} instance for ${path}`);
           }
 
           // Call the constructor when a route is found
           // Pass arguments based on the RegExp pattern, taking numeric arguments into account
-          instance = new controller(...args);
+          instance = new presenter(...args);
           map.set(path, instance);
         }
 
@@ -108,7 +108,7 @@ FlareTail.app.Router = class Router {
 }
 
 /**
- * Provide app event functionalities. 
+ * Provide app event functionalities.
  */
 FlareTail.app.Events = class Events {
   /**
@@ -116,7 +116,7 @@ FlareTail.app.Events = class Events {
    * @deprecated This method fires a DOM event and passes the given data as a reference. For a better performance, use
    *  trigger() wherever possible.
    * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means
-   *  BugModel#Updated, #Error in SessionController means SessionController#Error, and so on.
+   *  BugModel#Updated, #Error in SessionPresenter means SessionPresenter#Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
    *  automatically appended to the data.
    * @returns {undefined}
@@ -140,16 +140,16 @@ FlareTail.app.Events = class Events {
    * @deprecated This method listens DOM events and receives the given data as a reference. For a better performance,
    *  use on() wherever possible.
    * @param {String} topic - Event name. Shorthand syntax is supported: M#Updated in BugView means BugModel#Updated,
-   *  V#AppMenuItemSelected in ToolbarController means ToolbarView#AppMenuItemSelected, and so on.
+   *  V#AppMenuItemSelected in ToolbarPresenter means ToolbarView#AppMenuItemSelected, and so on.
    * @param {Function} callback - Function called whenever the specified event is fired.
    * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
    *  and the instance have different id properties. Otherwise, the identity will be respected.
    * @returns {undefined}
    */
   on_safe (topic, callback, global = false) {
-    topic = topic.replace(/^([MVC])#/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + '#';
+    topic = topic.replace(/^([MVP])#/, (match, prefix) => {
+      return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
+              + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
     });
 
     window.addEventListener(topic, event => {
@@ -181,7 +181,7 @@ FlareTail.app.Events = class Events {
   /**
    * Publish an event asynchronously on a separate thread.
    * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means
-   *  BugModel#Updated, #Error in SessionController means SessionController#Error, and so on.
+   *  BugModel#Updated, #Error in SessionPresenter means SessionPresenter#Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
    *  automatically appended to the data. Note that the data will be cloned. Proxy will be automatically deproxified
    *  before being posted but complex objects like Error or URLSearchParams cannot be transferred and throw. See the
@@ -207,7 +207,7 @@ FlareTail.app.Events = class Events {
   /**
    * Subscribe an event.
    * @param {String} topic - Event name. Shorthand syntax is supported: M#Updated in BugView means BugModel#Updated,
-   *  V#AppMenuItemSelected in ToolbarController means ToolbarView#AppMenuItemSelected, and so on.
+   *  V#AppMenuItemSelected in ToolbarPresenter means ToolbarView#AppMenuItemSelected, and so on.
    * @param {Function} callback - Function called whenever the specified event is fired.
    * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
    *  and the instance have different id properties. Otherwise, the identity will be respected.
@@ -217,9 +217,9 @@ FlareTail.app.Events = class Events {
     let id = this.id;
     let port = FlareTail.app.Events.channel.port2;
 
-    topic = topic.replace(/^([MVC])#/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Controller)$/)[1]
-              + { M: 'Model', V: 'View', C: 'Controller' }[prefix] + '#';
+    topic = topic.replace(/^([MVP])#/, (match, prefix) => {
+      return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
+              + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
     });
 
     port.start();
@@ -249,13 +249,13 @@ FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
 FlareTail.app.Events.channel = new MessageChannel();
 
 /**
- * Provide app datasource functionalities. 
+ * Provide app datasource functionalities.
  * @extends FlareTail.app.Events
  */
 FlareTail.app.DataSource = class DataSource extends FlareTail.app.Events {}
 
 /**
- * Provide IndexedDB datasource functionalities. 
+ * Provide IndexedDB datasource functionalities.
  * @extends FlareTail.app.DataSource
  */
 FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.DataSource {
@@ -314,7 +314,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 }
 
 /**
- * Provide app model functionalities. 
+ * Provide app model functionalities.
  * @extends FlareTail.app.Events
  */
 FlareTail.app.Model = class Model extends FlareTail.app.Events {
@@ -374,7 +374,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
 }
 
 /**
- * Provide app collection functionalities. 
+ * Provide app collection functionalities.
  * @extends FlareTail.app.Events
  */
 FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
@@ -496,7 +496,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 }
 
 /**
- * Provide app view functionalities. 
+ * Provide app view functionalities.
  * @extends FlareTail.app.Events
  */
 FlareTail.app.View = class View extends FlareTail.app.Events {}
@@ -507,13 +507,13 @@ FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
 FlareTail.app.View.prototype.widgets = FlareTail.widgets;
 
 /**
- * Provide app helper functionalities. 
+ * Provide app helper functionalities.
  * @extends FlareTail.app.View
  */
 FlareTail.app.Helper = class Helper extends FlareTail.app.View {}
 
 /**
- * Provide app controller functionalities. 
+ * Provide app presenter functionalities.
  * @extends FlareTail.app.Events
  */
-FlareTail.app.Controller = class Controller extends FlareTail.app.Events {}
+FlareTail.app.Presenter = class Presenter extends FlareTail.app.Events {}
