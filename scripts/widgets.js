@@ -351,7 +351,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
   }
 
   /**
-   * Seelect one or more members with a mouse operation.
+   * Select one or more members with a mouse operation.
    * @param {MouseEvent} event - The mousedown event.
    * @returns {undefined}
    */
@@ -383,7 +383,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
   }
 
   /**
-   * Seelect one or more members with a keyboard operation.
+   * Select one or more members with a keyboard operation.
    * @param {KeyboardEvent} event - The keydown event.
    * @returns {undefined}
    */
@@ -771,7 +771,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       set: (obj, prop, value) => {
         switch (prop) {
           case 'selected': {
-            // Validation: this.selectd.value is always Array
+            // Validation: this.selected.value is always Array
             if (!Array.isArray(value)) {
               value = [value];
             }
@@ -1277,7 +1277,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     // Fire an event
     FlareTail.helpers.event.trigger($grid, 'Sorted', { detail: {
-      conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxyfied object
+      conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxified object
     }});
 
     let selected = this.view.selected;

@@ -34,7 +34,7 @@ FlareTail.app.Router = class Router {
 
   /**
    * Find a route usually by the URL. If found, create a new instance of the corresponding controller. If not found, the
-   * specified pathname is invalid, so nativate to the app's launch path instead.
+   * specified pathname is invalid, so navigate to the app's launch path instead.
    * @param {String} [path=location.pathname] - URL pathname used to find a route.
    * @returns {Object} instance - A controller instance if found.
    */
@@ -77,7 +77,7 @@ FlareTail.app.Router = class Router {
     }
 
     if (FlareTail.debug) {
-      console.info(`[Router] A route for ${path} cound not be found`);
+      console.info(`[Router] A route for ${path} could not be found`);
     }
 
     // Couldn't find a route; go to the launch path
@@ -335,7 +335,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
   }
 
   /**
-   * Cache data as a new Proxy, so the object is automatically saved when a property is modifled.
+   * Cache data as a new Proxy, so the object is automatically saved when a property is modified.
    * @param {Object} data - Raw data object.
    * @returns {Proxy} data - Proxified data object.
    */

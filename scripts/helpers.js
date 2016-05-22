@@ -760,14 +760,14 @@ FlareTail.helpers.array.join = (set, tag = undefined) => {
 
 FlareTail.helpers.array.sort = (array, cond) => {
   // Normalization: ignore brackets for comparison
-  let nomalized_values = new Map();
+  let normalized_values = new Map();
 
-  let nomalize = str => {
-    let value = nomalized_values.get(str);
+  let normalize = str => {
+    let value = normalized_values.get(str);
 
     if (!value) {
       value = str.replace(/[\"\'\(\)\[\]\{\}<>«»_]/g, '').toLowerCase();
-      nomalized_values.set(str, value);
+      normalized_values.set(str, value);
     }
 
     return value;
@@ -799,7 +799,7 @@ FlareTail.helpers.array.sort = (array, cond) => {
       }
 
       default: {
-        return nomalize(a_val) > nomalize(b_val);
+        return normalize(a_val) > normalize(b_val);
       }
     }
   });
