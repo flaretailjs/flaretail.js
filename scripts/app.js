@@ -8,8 +8,7 @@
 FlareTail.app = {};
 
 /*
- * Provide app router functionalities. The routes can be defined on the app's presenters using regular expressions, e.g.
- * BzDeck.presenters.DetailsPage.route = '/bug/(\\d+)';
+ * Provide app router functionalities.
  */
 FlareTail.app.Router = class Router {
   /**
@@ -17,9 +16,15 @@ FlareTail.app.Router = class Router {
    * @constructor
    * @param {String} root - The app's root path. Usually '/'.
    * @param {String} launch_path - The app's launch path.
-   * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains presenter (Object) and
-   *  catch_all (Boolean).
+   * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains `view` (Object) and
+   *  `catch_all` (Boolean, optional). See the example below.
    * @returns {Object} router
+   * @example
+   *  BzDeck.router = new FlareTail.app.Router(BzDeck.config.app, {
+   *    '/bug/(\\d+)': { view: BzDeck.DetailsPageView },
+   *    '/home/(\\w+)': { view: BzDeck.HomePageView, catch_all: true },
+   *    '/settings': { view: BzDeck.SettingsPageView },
+   *  });
    */
   constructor ({ root, launch_path } = {}, routes) {
     // Specify the base URL of the app, without a trailing slash
@@ -33,13 +38,13 @@ FlareTail.app.Router = class Router {
   }
 
   /**
-   * Find a route usually by the URL. If found, create a new instance of the corresponding presenter. If not found, the
+   * Find a route usually by the URL. If found, create a new instance of the corresponding view. If not found, the
    * specified pathname is invalid, so navigate to the app's launch path instead.
    * @param {String} [path=location.pathname] - URL pathname used to find a route.
-   * @returns {Object} instance - A presenter instance if found.
+   * @returns {Object} instance - A view instance if found.
    */
   locate (path = location.pathname) {
-    for (let [pattern, { presenter, catch_all, map }] of Object.entries(this.routes)) {
+    for (let [pattern, { view, catch_all, map }] of Object.entries(this.routes)) {
       let instance;
       let match = path.match(new RegExp(`^${this.root}${pattern}$`));
 
@@ -55,20 +60,20 @@ FlareTail.app.Router = class Router {
 
         if (instance) {
           if (FlareTail.debug) {
-            console.info(`[Router] Reconnecting to an existing ${presenter.name} instance for ${path}`);
+            console.info(`[Router] Reactivating to an existing ${view.name} instance for ${path}`);
           }
 
-          if (instance.reconnect) {
-            instance.reconnect(...args);
+          if (instance.reactivate) {
+            instance.reactivate(...args);
           }
         } else {
           if (FlareTail.debug) {
-            console.info(`[Router] Creating a new ${presenter.name} instance for ${path}`);
+            console.info(`[Router] Creating a new ${view.name} instance for ${path}`);
           }
 
           // Call the constructor when a route is found
           // Pass arguments based on the RegExp pattern, taking numeric arguments into account
-          instance = new presenter(...args);
+          instance = new view(...args);
           map.set(path, instance);
         }
 
