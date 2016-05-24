@@ -113,9 +113,20 @@ FlareTail.app.Router = class Router {
 }
 
 /**
- * Provide app event functionalities.
+ * Provide app event functionalities. This is the base class of other app framework classes.
  */
 FlareTail.app.Events = class Events {
+  /**
+   * Activate an instance. This should be called by all the derived classes using super().
+   * @param {String} [instance_id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned.
+   *  A View and the corresponding Presenter as well as its sub-Views/Presenters should share the same ID, otherwise
+   *  their communication through events won't work.
+   * @returns {Object} instance - New Events instance.
+   */
+  constructor (instance_id) {
+    this.instance_id = instance_id || URL.createObjectURL(new Blob()).substr(-7);
+  }
+
   /**
    * Publish an event asynchronously on a separate thread.
    * @deprecated This method fires a DOM event and passes the given data as a reference. For a better performance, use
@@ -127,11 +138,11 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   trigger_safe (topic, data = {}) {
+    let id = this.instance_id;
+
     if (topic.match(/^#/)) {
       topic = this.constructor.name + topic;
     }
-
-    let id = this.id;
 
     if (FlareTail.debug) {
       console.info('[Event]', topic, id || '(global)', data);
@@ -152,13 +163,15 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on_safe (topic, callback, global = false) {
+    let id = this.instance_id;
+
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
       return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
               + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
     });
 
     window.addEventListener(topic, event => {
-      if (!global && event.detail && event.detail.id && this.id && event.detail.id !== this.id) {
+      if (!global && event.detail && event.detail.id && id && event.detail.id !== id) {
         return false;
       }
 
@@ -195,7 +208,7 @@ FlareTail.app.Events = class Events {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
    */
   trigger (topic, data = {}) {
-    let id = this.id;
+    let id = this.instance_id;
     let port = FlareTail.app.Events.channel.port1;
 
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
@@ -219,7 +232,7 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on (topic, callback, global = false) {
-    let id = this.id;
+    let id = this.instance_id;
     let port = FlareTail.app.Events.channel.port2;
 
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
@@ -229,7 +242,7 @@ FlareTail.app.Events = class Events {
 
     port.start();
     port.addEventListener('message', event => {
-      if (event.data.topic !== topic || (!global && event.data.id && this.id && event.data.id !== this.id)) {
+      if (event.data.topic !== topic || (!global && event.data.id && id && event.data.id !== id)) {
         return;
       }
 
