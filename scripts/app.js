@@ -118,37 +118,35 @@ FlareTail.app.Router = class Router {
 FlareTail.app.Events = class Events {
   /**
    * Activate an instance. This should be called by all the derived classes using super().
-   * @param {String} [instance_id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned.
-   *  A View and the corresponding Presenter as well as its sub-Views/Presenters should share the same ID, otherwise
-   *  their communication through events won't work.
+   * @param {String} [id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned. A View
+   *  and the corresponding Presenter as well as its sub-Views/Presenters should share the same ID, otherwise their
+   *  communication through events won't work.
    * @returns {Object} instance - New Events instance.
    */
-  constructor (instance_id) {
-    this.instance_id = instance_id || URL.createObjectURL(new Blob()).substr(-7);
+  constructor (id) {
+    this.id = id || URL.createObjectURL(new Blob()).substr(-7);
   }
 
   /**
-   * Publish an event asynchronously on a separate thread.
+   * Publish an event asynchronously.
    * @deprecated This method fires a DOM event and passes the given data as a reference. For a better performance, use
    *  trigger() wherever possible.
-   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means
-   *  BugModel#Updated, #Error in SessionPresenter means SessionPresenter#Error, and so on.
+   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means BugModel#Updated,
+   *  #Error in SessionPresenter means SessionPresenter#Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
    *  automatically appended to the data.
    * @returns {undefined}
    */
   trigger_safe (topic, data = {}) {
-    let id = this.instance_id;
-
     if (topic.match(/^#/)) {
       topic = this.constructor.name + topic;
     }
 
     if (FlareTail.debug) {
-      console.info('[Event]', topic, id || '(global)', data);
+      console.info('[Event]', topic, this.id, data);
     }
 
-    this.helpers.event.trigger(window, topic, { detail: { id, data }});
+    this.helpers.event.trigger(window, topic, { detail: { id: this.id, data }});
   }
 
   /**
@@ -163,21 +161,17 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on_safe (topic, callback, global = false) {
-    let id = this.instance_id;
-
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
       return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
               + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
     });
 
     window.addEventListener(topic, event => {
-      if (!global && event.detail && event.detail.id && id && event.detail.id !== id) {
-        return false;
+      if (!global && event.detail && event.detail.id !== this.id) {
+        return;
       }
 
       callback(event.detail.data);
-
-      return true;
     });
   }
 
@@ -197,9 +191,9 @@ FlareTail.app.Events = class Events {
   }
 
   /**
-   * Publish an event asynchronously on a separate thread.
-   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means
-   *  BugModel#Updated, #Error in SessionPresenter means SessionPresenter#Error, and so on.
+   * Publish an event asynchronously.
+   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means BugModel#Updated,
+   *  #Error in SessionPresenter means SessionPresenter#Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
    *  automatically appended to the data. Note that the data will be cloned. Proxy will be automatically deproxified
    *  before being posted but complex objects like Error or URLSearchParams cannot be transferred and throw. See the
@@ -208,17 +202,16 @@ FlareTail.app.Events = class Events {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
    */
   trigger (topic, data = {}) {
-    let id = this.instance_id;
     let port = FlareTail.app.Events.channel.port1;
 
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
     data = Object.assign({}, data);
 
     port.start();
-    port.postMessage({ topic, id, data });
+    port.postMessage({ topic, id: this.id, data });
 
     if (FlareTail.debug) {
-      console.info('[Event]', topic, id || '(global)', data);
+      console.info('[Event]', topic, this.id, data);
     }
   }
 
@@ -232,7 +225,6 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on (topic, callback, global = false) {
-    let id = this.instance_id;
     let port = FlareTail.app.Events.channel.port2;
 
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
@@ -242,7 +234,7 @@ FlareTail.app.Events = class Events {
 
     port.start();
     port.addEventListener('message', event => {
-      if (event.data.topic !== topic || (!global && event.data.id && id && event.data.id !== id)) {
+      if (event.data.topic !== topic || (!global && event.data.id !== this.id)) {
         return;
       }
 
