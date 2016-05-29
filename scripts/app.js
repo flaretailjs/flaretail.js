@@ -146,7 +146,7 @@ FlareTail.app.Events = class Events {
       console.info('[Event]', topic, this.id, data);
     }
 
-    this.helpers.event.trigger(window, topic, { detail: { id: this.id, data }});
+    FlareTail.helpers.event.trigger(window, topic, { detail: { id: this.id, data }});
   }
 
   /**
@@ -253,8 +253,6 @@ FlareTail.app.Events = class Events {
     this.on(topic, data => this[topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
   }
 }
-
-FlareTail.app.Events.prototype.helpers = FlareTail.helpers,
 
 FlareTail.app.Events.channel = new MessageChannel();
 
@@ -514,7 +512,6 @@ FlareTail.app.View = class View extends FlareTail.app.Events {}
 FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
 FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
 FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
-FlareTail.app.View.prototype.widgets = FlareTail.widgets;
 
 /**
  * Provide app helper functionalities.
