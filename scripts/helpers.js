@@ -905,3 +905,11 @@ FlareTail.helpers.misc = {};
  * @param {String} guid - Such as 80B2A9ED-9103-4847-B69B-0BC37F7F7CF6
  */
 FlareTail.helpers.misc.uuidgen = () => URL.createObjectURL(new Blob()).match(/[0-9a-f\-]+$/)[0].toUpperCase();
+
+/**
+ * Generate a random 7-digit hash.
+ *
+ * @param {undefined}
+ * @param {String} guid - Such as f7f7cf6
+ */
+FlareTail.helpers.misc.hash = () => URL.createObjectURL(new Blob()).substr(-7);
