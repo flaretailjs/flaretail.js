@@ -3767,8 +3767,11 @@ FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
    * @returns {undefined}
    */
   iterate () {
-    for (let $owner of document.querySelectorAll('.scrollable[data-resize-detection-enabled="true"]')) {
-      this.detect($owner);
+    // Performance: Detect only when the document has focus
+    if (document.hasFocus()) {
+      for (let $owner of document.querySelectorAll('.scrollable[data-resize-detection-enabled="true"]')) {
+        this.detect($owner);
+      }
     }
 
     window.requestAnimationFrame(timestamp => this.iterate());
@@ -3780,6 +3783,11 @@ FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
    * @returns {undefined}
    */
   detect ($owner) {
+    // Performance: Detect only when the element is visible
+    if (!$owner.offsetParent) {
+      return;
+    }
+
     let { scrollHeight: s_height, clientHeight: c_height, scrollTopMax: s_top_max } = $owner;
     let detail = this.data.get($owner);
 
