@@ -49,6 +49,7 @@ FlareTail.helpers = {};
     'includes' in Array.prototype, // enabled in all channels with Firefox 43
     'getAll' in IDBObjectStore.prototype, // unprefixed with Firefox 44
     'entries' in Object || 'Iterator' in window, // Firefox 45; use the Iterator polyfill below for older versions
+    'insertAdjacentElement' in Element.prototype, // Firefox 48
   ];
 
   let compatible = true;

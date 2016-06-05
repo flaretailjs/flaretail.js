@@ -1685,7 +1685,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }
 
     if (!this.$input) {
-      this.$input = this.$container.insertBefore(document.createElement('span'), this.$container.firstElementChild);
+      this.$input = this.$container.insertAdjacentElement('afterbegin', document.createElement('span'));
       this.$input.setAttribute('role', 'textbox');
       this.$input.setAttribute('aria-readonly', this.$container.matches('[aria-readonly="true"]'));
     }
