@@ -431,51 +431,6 @@ FlareTail.helpers.env = {
 }
 
 /* ------------------------------------------------------------------------------------------------------------------
- * App
- * ------------------------------------------------------------------------------------------------------------------ */
-
-FlareTail.helpers.app = {};
-
-FlareTail.helpers.app.can_install = function (manifest = location.origin + '/manifest.webapp') {
-  let apps = navigator.mozApps;
-
-  return new Promise((resolve, reject) => {
-    if (apps) {
-      let request = apps.checkInstalled(manifest);
-
-      request.addEventListener('success', event =>
-        request.result ? reject(new Error('The app has already been installed')) : resolve());
-      request.addEventListener('error', event => reject(new Error('Unknown error')));
-    } else {
-      reject(new Error('The app runtime is not available'));
-    }
-  });
-};
-
-FlareTail.helpers.app.install = function (manifest = location.origin + '/manifest.webapp') {
-  let request = navigator.mozApps.install(manifest);
-
-  return new Promise((resolve, reject) => {
-    request.addEventListener('success', event => {
-      FlareTail.helpers.event.trigger(window, 'AppInstalled');
-      resolve();
-    });
-    request.addEventListener('error', event => {
-      FlareTail.helpers.event.trigger(window, 'AppInstallFailed');
-      reject(new Error(request.error.name));
-    });
-  });
-};
-
-FlareTail.helpers.app.fullscreen_enabled = function () {
-  return document.fullscreenEnabled;
-};
-
-FlareTail.helpers.app.toggle_fullscreen = function ($element = document.body) {
-  document.fullscreenElement ? document.exitFullscreen() : $element.requestFullscreen();
-};
-
-/* ------------------------------------------------------------------------------------------------------------------
  * Theme
  * ------------------------------------------------------------------------------------------------------------------ */
 
@@ -807,7 +762,6 @@ FlareTail.helpers.array.sort = (array, cond) => {
 
   return array;
 };
-
 
 /**
  * Split an array into chunks, like the array_chunk PHP function.
