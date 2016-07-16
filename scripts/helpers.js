@@ -179,7 +179,7 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
 
     // Set the URL as the link label if empty
     if (tag === 'a' && $item.href === value && !$item.text) {
-      $item.text = value;
+      $item.text = value.replace(/^https?:\/\//, '').replace(/\/$/, '');
     }
 
     // Set WAI-ARIA attribute when necessary
