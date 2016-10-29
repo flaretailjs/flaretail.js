@@ -17,7 +17,6 @@ FlareTail.helpers = {};
 
 {
   let features = [
-    'toLocaleFormat' in Date.prototype, // Gecko specific
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
     'createObjectURL' in URL, // Firefox 4
@@ -78,6 +77,12 @@ FlareTail.helpers = {};
 
     // ES6 Template Literals (Firefox 34)
     let e = `a: ${a}, b: ${b}`;
+
+    // ES6 Intl API time zone support (Firefox 52)
+    if (new Date(Date.UTC(2012, 11, 6, 12, 0, 0))
+          .toLocaleString(undefined, { hour: 'numeric', timeZone: 'US/Pacific' }) !== '4 AM') {
+      throw new Error;
+    }
   } catch (ex) {
     compatible = false;
     console.log(ex, features);
@@ -489,7 +494,9 @@ FlareTail.helpers.datetime = {};
 
 FlareTail.helpers.datetime.options = new Proxy({
   relative: false,
-  timezone: 'local',
+  simple: false,
+  timezone: undefined,
+  locale: undefined,
   updater_enabled: false,
   updater_interval: 60 // seconds
 }, {
@@ -514,17 +521,13 @@ FlareTail.helpers.datetime.options = new Proxy({
   }
 });
 
-FlareTail.helpers.datetime.format = function (str, options = {}) {
-  options.relative = options.relative !== undefined ? options.relative : this.options.relative;
-  options.simple = options.simple || false;
-  options.timezone = options.timezone || this.options.timezone;
-
+FlareTail.helpers.datetime.format = function (str, { relative = this.options.relative,
+    simple = this.options.simple, timezone = this.options.timezone, locale = this.options.locale } = {}) {
   let now = new Date();
   let date = new Date(str);
   let delta = now - date;
-  let shifted_date;
 
-  if (options.relative) {
+  if (relative) {
     let patterns = [
       [1000 * 60 * 60 * 24 * 365, '%dyr', 'Last year', '%d years ago'],
       [1000 * 60 * 60 * 24 * 30, '%dmo', 'Last month', '%d months ago'],
@@ -538,7 +541,7 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
     let format = (ms, simple, singular, plural) => {
       let value = Math.floor(delta / ms);
 
-      return (options.simple ? simple : value === 1 ? singular : plural).replace('%d', value);
+      return (simple ? simple : value === 1 ? singular : plural).replace('%d', value);
     };
 
     for (let pattern of patterns) if (delta > pattern[0]) {
@@ -546,18 +549,11 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
     }
   }
 
-  // Timezone conversion
-  // TODO: Rewrite this once the timezone support is added to the ECMAScript Intl API (Bug 837961)
-  // TODO: Get the timezone of the Bugzilla instance, instead of hardcoding PST
-  if (options.timezone !== 'local') {
-    shifted_date = this.get_shifted_date(date, options.timezone === 'PST' ? -8 : 0);
-  }
-
-  if (options.simple && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
+  if (simple && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
     let dates = now.getDate() - date.getDate();
 
     if (dates === 0) {
-      return (shifted_date || date).toLocaleFormat('%R');
+      return date.toLocaleTimeString(locale, { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: timezone });
     }
 
     if (dates === 1) {
@@ -565,16 +561,11 @@ FlareTail.helpers.datetime.format = function (str, options = {}) {
     }
   }
 
-  return (shifted_date || date).toLocaleFormat(options.simple ? '%b %e' : '%Y-%m-%d %R');
-};
+  if (simple) {
+    return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone: timezone });
+  }
 
-FlareTail.helpers.datetime.get_shifted_date = function (date, offset) {
-  let dst = Math.max((new Date(date.getFullYear(), 0, 1)).getTimezoneOffset(),
-                     (new Date(date.getFullYear(), 6, 1)).getTimezoneOffset())
-                      > date.getTimezoneOffset();
-  let utc = date.getTime() + (date.getTimezoneOffset() + (dst ? 60 : 0)) * 60000;
-
-  return new Date(utc + offset * 3600000);
+  return date.toLocaleDateString(locale, { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: timezone });
 };
 
 FlareTail.helpers.datetime.fill_element = function ($time, value, options = null) {
