@@ -366,18 +366,18 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
    * @param {Object} [data] - Raw data object.
    * @returns {Promise.<Proxy>} item - Proxified instance of the model object.
    */
-  save (data = undefined) {
+  async save (data = undefined) {
     if (data) {
       this.cache(data);
     }
 
-    return this.datasource.get_store(this.store_name).save(this.data).then(() => {
-      if (FlareTail.debug) {
-        console.info('Data saved:', this.constructor.name, this.data);
-      }
+    await this.datasource.get_store(this.store_name).save(this.data);
 
-      return Promise.resolve(this.proxy());
-    });
+    if (FlareTail.debug) {
+      console.info('Data saved:', this.constructor.name, this.data);
+    }
+
+    return Promise.resolve(this.proxy());
   }
 }
 
@@ -392,30 +392,29 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @param {undefined}
    * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
-  load () {
+  async load () {
     let store = this.datasource.get_store(this.store_name);
+    let items = await store.get_all();
 
-    return store.get_all().then(items => {
-      this.map = new Map(items.map(item => {
-        let key = item[store.obj.keyPath];
-        let value;
+    this.map = new Map(items.map(item => {
+      let key = item[store.obj.keyPath];
+      let value;
 
-        if (this.model) {
-          // Get a new instance
-          value = new this.model(item);
-        } else if (this.store_type === 'simple') {
-          // Use the value only
-          value = item.value;
-        } else {
-          // Use the object as is
-          value = item;
-        }
+      if (this.model) {
+        // Get a new instance
+        value = new this.model(item);
+      } else if (this.store_type === 'simple') {
+        // Use the value only
+        value = item.value;
+      } else {
+        // Use the object as is
+        value = item;
+      }
 
-        return [key, value];
-      }));
+      return [key, value];
+    }));
 
-      return Promise.resolve(this.map);
-    });
+    return Promise.resolve(this.map);
   }
 
   /**
@@ -450,18 +449,18 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @param {Object} [fallback_value] - If an item is not found, create a new model object with this value.
    * @returns {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
    */
-  get (key, fallback_value = undefined) {
-    return this.has(key).then(has => {
-      if (has) {
-        return this.map.get(key);
-      }
+  async get (key, fallback_value = undefined) {
+    let has_key = await this.has(key);
 
-      if (fallback_value) {
-        return this.set(key, fallback_value);
-      }
+    if (has_key) {
+      return this.map.get(key);
+    }
 
-      return undefined;
-    });
+    if (fallback_value) {
+      return this.set(key, fallback_value);
+    }
+
+    return undefined;
   }
 
   /**

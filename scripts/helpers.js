@@ -83,6 +83,9 @@ FlareTail.helpers = {};
           .toLocaleString(undefined, { hour: 'numeric', timeZone: 'US/Pacific' }) !== '4 AM') {
       throw new Error;
     }
+
+    // ES7 async functions
+    let f = async () => {};
   } catch (ex) {
     compatible = false;
     console.log(ex, features);
@@ -476,14 +479,12 @@ FlareTail.helpers.theme.preload_images = function () {
     }
   }
 
-  let _load = src => new Promise((resolve, reject) => {
+  return Promise.all([...images].map(src => new Promise(resolve => {
     let image = new Image();
 
     image.addEventListener('load', event => resolve());
     image.src = src;
-  });
-
-  return Promise.all([...images].map(src => _load(src)));
+  })));
 };
 
 /* ------------------------------------------------------------------------------------------------------------------
@@ -633,12 +634,14 @@ document.addEventListener('visibilitychange', event => {
 
 FlareTail.helpers.network = {};
 
-FlareTail.helpers.network.json = (url, body = undefined) => {
-  return window.fetch(new Request(url, {
+FlareTail.helpers.network.json = async (url, body = undefined) => {
+  let response = await window.fetch(new Request(url, {
     method: body ? 'POST' : 'GET',
     headers: new Headers({ Accept: 'application/json' }),
     body,
-  })).then(response => response.json());
+  }));
+
+  return response.json();
 };
 
 FlareTail.helpers.network.jsonp = url => {
