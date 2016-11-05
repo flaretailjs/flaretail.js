@@ -539,10 +539,10 @@ FlareTail.helpers.datetime.format = function (str, { relative = this.options.rel
       [0, 'Now', 'Just now', 'Just now'] // Less than 1 second
     ];
 
-    const format = (ms, simple, singular, plural) => {
+    const format = (ms, _simple, singular, plural) => {
       const value = Math.floor(delta / ms);
 
-      return (simple ? simple : value === 1 ? singular : plural).replace('%d', value);
+      return (simple ? _simple : value === 1 ? singular : plural).replace('%d', value);
     };
 
     for (const pattern of patterns) if (delta > pattern[0]) {
