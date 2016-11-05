@@ -16,7 +16,7 @@ FlareTail.helpers = {};
  * ------------------------------------------------------------------------------------------------------------------ */
 
 {
-  let features = [
+  const features = [
     'Proxy' in window, // Firefox 4
     'IDBObjectStore' in window, // Firefox 4
     'createObjectURL' in URL, // Firefox 4
@@ -61,7 +61,7 @@ FlareTail.helpers = {};
 
     // Destructuring assignment (Firefox 2)
     // for...of loop (Firefox 13)
-    for (let [key, value] of new Map([[1, 'a'], [2, 'b'], [3, 'c']])) if (key === 1) {}
+    for (const [key, value] of new Map([[1, 'a'], [2, 'b'], [3, 'c']])) if (key === 1) {}
 
     // Direct Proxy (Firefox 18; constructor)
     new Proxy({}, {});
@@ -70,13 +70,13 @@ FlareTail.helpers = {};
     [0, 1, 2].push(...[3, 4, 5]);
 
     // ES6 shorthand properties in object literals (Firefox 33)
-    let a = 1, b = 2, c = { a, b };
+    const a = 1, b = 2, c = { a, b };
 
     // ES6 computed property names (Firefox 34)
-    let k = 'id', d = { [k]: a };
+    const k = 'id', d = { [k]: a };
 
     // ES6 Template Literals (Firefox 34)
-    let e = `a: ${a}, b: ${b}`;
+    const e = `a: ${a}, b: ${b}`;
 
     // ES6 Intl API time zone support (Firefox 52)
     if (new Date(Date.UTC(2012, 11, 6, 12, 0, 0))
@@ -85,7 +85,7 @@ FlareTail.helpers = {};
     }
 
     // ES7 async functions
-    let f = async () => {};
+    const f = async () => {};
   } catch (ex) {
     compatible = false;
     console.log(ex, features);
@@ -132,9 +132,9 @@ FlareTail.helpers.content = {};
  * @returns {Element} $scope
  */
 FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
-  let iterate = ($scope, data) => {
-    for (let [prop, value] of Object.entries(data)) {
-      for (let $prop of $scope.querySelectorAll(`[itemprop=${prop}]`)) {
+  const iterate = ($scope, data) => {
+    for (const [prop, value] of Object.entries(data)) {
+      for (const $prop of $scope.querySelectorAll(`[itemprop=${prop}]`)) {
         // Unlike Microdata API's Element.properties, Element.querySelectorAll doesn't consider itemscopes.
         // Check if the node is in the same itemscope
         if ($prop.parentElement.closest('[itemscope]') !== $scope) {
@@ -143,13 +143,13 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
 
         // Multiple items
         if (Array.isArray(value)) {
-          let $parent = $prop.parentElement;
-          let $_item = $parent.removeChild($prop);
+          const $parent = $prop.parentElement;
+          const $_item = $parent.removeChild($prop);
 
           $parent.innerHTML = ''; // Empty the loop before adding items
 
-          for (let _value of value) {
-            let $item = $parent.appendChild($_item.cloneNode(true));
+          for (const _value of value) {
+            const $item = $parent.appendChild($_item.cloneNode(true));
 
             typeof _value === 'object' ? iterate($item, _value) : fill($item, _value);
           }
@@ -160,12 +160,12 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
     }
   };
 
-  let fill = ($item, value) => {
+  const fill = ($item, value) => {
     if (value === undefined) {
       return;
     }
 
-    let tag = $item.tagName.toLowerCase();
+    const tag = $item.tagName.toLowerCase();
 
     // Mimic Microdata API's Element.itemValue
     // http://www.w3.org/TR/microdata/#dom-itemvalue
@@ -202,23 +202,23 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
   iterate($scope, data);
 
   // Attributes
-  for (let [attr, value] of Object.entries(attrs)) {
-    let $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
+  for (const [attr, value] of Object.entries(attrs)) {
+    const $items = [...$scope.querySelectorAll(`[data-attrs~="${CSS.escape(attr)}"]`)];
 
     if ($scope.matches(`[data-attrs~="${CSS.escape(attr)}"]`)) {
       $items.push($scope);
     }
 
-    for (let $item of $items) if (value !== undefined) {
+    for (const $item of $items) if (value !== undefined) {
       $item.setAttribute(attr, value);
     }
   }
 
   // Support simple if-else switches
-  for (let $if of $scope.querySelectorAll('[data-if]')) {
+  for (const $if of $scope.querySelectorAll('[data-if]')) {
     // Hide the element if the data is undefined
-    let hidden = $if.hidden = !data[$if.getAttribute('data-if')];
-    let $next = $if.nextElementSibling;
+    const hidden = $if.hidden = !data[$if.getAttribute('data-if')];
+    const $next = $if.nextElementSibling;
 
     if ($next && $next.hasAttribute('data-else')) {
       $next.hidden = !hidden;
@@ -231,11 +231,11 @@ FlareTail.helpers.content.fill = function ($scope, data, attrs = {}) {
 };
 
 FlareTail.helpers.content.get_fragment = function (id, prefix = undefined) {
-  let $fragment = document.getElementById(id).content.cloneNode(true);
+  const $fragment = document.getElementById(id).content.cloneNode(true);
 
   if (prefix) {
-    for (let attr of ['id', 'aria-owns', 'aria-controls', 'aria-labelledby']) {
-      for (let $element of $fragment.querySelectorAll(`[${attr}]`)) {
+    for (const attr of ['id', 'aria-owns', 'aria-controls', 'aria-labelledby']) {
+      for (const $element of $fragment.querySelectorAll(`[${attr}]`)) {
         $element.setAttribute(attr, $element.getAttribute(attr).replace(/TID/, prefix));
       }
     }
@@ -267,7 +267,7 @@ FlareTail.helpers.event.bind = function (that, $target, types, use_capture = fal
     return false;
   }
 
-  for (let type of types) {
+  for (const type of types) {
     if (!that[`on${type}`]) {
       continue; // No such handler
     }
@@ -300,7 +300,7 @@ FlareTail.helpers.event.async = function (callback) {
 
 // Custom event dispatcher. The async option is enabled by default
 FlareTail.helpers.event.trigger = function ($target, type, options = {}, async = true) {
-  let callback = () => $target.dispatchEvent(new CustomEvent(type, options));
+  const callback = () => $target.dispatchEvent(new CustomEvent(type, options));
 
   // Local files have no origin (Bug 878297)
   async && location.origin !== 'null' ? this.async(callback) : callback();
@@ -323,12 +323,12 @@ FlareTail.helpers.kbd = {};
  * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState}
  */
 FlareTail.helpers.kbd.assign = function ($target, map) {
-  let bindings = new Set();
+  const bindings = new Set();
 
-  for (let [_combos, command] of Object.entries(map)) for (let _combo of _combos.split('|')) {
-    let combo = _combo.split('+');
-    let key = combo.pop().toLowerCase().replace('Space', ' '); // Space is an exception
-    let modifiers = new Set(combo);
+  for (const [_combos, command] of Object.entries(map)) for (const _combo of _combos.split('|')) {
+    const combo = _combo.split('+');
+    const key = combo.pop().toLowerCase().replace('Space', ' '); // Space is an exception
+    const modifiers = new Set(combo);
 
     bindings.add([key, modifiers, command]);
   }
@@ -336,14 +336,14 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
   $target.addEventListener('keydown', event => {
     let found = false;
 
-    outer: for (let [key, modifiers, command] of bindings) {
+    outer: for (const [key, modifiers, command] of bindings) {
       // Check the key value
       if (event.key.toLowerCase() !== key) {
         continue;
       }
 
       // Check modifier keys
-      for (let mod of ['Alt', 'Shift', 'Accel']) {
+      for (const mod of ['Alt', 'Shift', 'Accel']) {
         if (modifiers.has(mod) && !event.getModifierState(mod) ||
             !modifiers.has(mod) && event.getModifierState(mod)) {
           continue outer;
@@ -407,9 +407,9 @@ FlareTail.helpers.env = {
 };
 
 {
-  let env = FlareTail.helpers.env;
-  let ua_str = navigator.userAgent;
-  let pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
+  const env = FlareTail.helpers.env;
+  const ua_str = navigator.userAgent;
+  const pf_match = ua_str.match(/Windows|Macintosh|Linux|Android|Firefox/);
 
   // Platform
   if (pf_match) {
@@ -461,26 +461,26 @@ Object.defineProperties(FlareTail.helpers.theme, {
 });
 
 FlareTail.helpers.theme.preload_images = function () {
-  let pattern = 'url\\("(.+?)"\\)';
-  let images = new Set(); // Use a Set to avoid duplicates
+  const pattern = 'url\\("(.+?)"\\)';
+  const images = new Set(); // Use a Set to avoid duplicates
 
-  for (let sheet of document.styleSheets) {
-    for (let rule of sheet.cssRules) {
-      let match = rule.style && rule.style.backgroundImage && rule.style.backgroundImage.match(RegExp(pattern, 'g'));
+  for (const sheet of document.styleSheets) {
+    for (const rule of sheet.cssRules) {
+      const match = rule.style && rule.style.backgroundImage && rule.style.backgroundImage.match(RegExp(pattern, 'g'));
 
       if (!match) {
         continue;
       }
 
       // Support for multiple background
-      for (let m of match) {
+      for (const m of match) {
         images.add(m.match(RegExp(pattern))[1]);
       }
     }
   }
 
   return Promise.all([...images].map(src => new Promise(resolve => {
-    let image = new Image();
+    const image = new Image();
 
     image.addEventListener('load', event => resolve());
     image.src = src;
@@ -502,7 +502,7 @@ FlareTail.helpers.datetime.options = new Proxy({
   updater_interval: 60 // seconds
 }, {
   set: (obj, prop, value) => {
-    let dt = FlareTail.helpers.datetime;
+    const dt = FlareTail.helpers.datetime;
 
     obj[prop] = value;
 
@@ -524,12 +524,12 @@ FlareTail.helpers.datetime.options = new Proxy({
 
 FlareTail.helpers.datetime.format = function (str, { relative = this.options.relative,
     simple = this.options.simple, timezone = this.options.timezone, locale = this.options.locale } = {}) {
-  let now = new Date();
-  let date = new Date(str);
-  let delta = now - date;
+  const now = new Date();
+  const date = new Date(str);
+  const delta = now - date;
 
   if (relative) {
-    let patterns = [
+    const patterns = [
       [1000 * 60 * 60 * 24 * 365, '%dyr', 'Last year', '%d years ago'],
       [1000 * 60 * 60 * 24 * 30, '%dmo', 'Last month', '%d months ago'],
       [1000 * 60 * 60 * 24, '%dd', 'Yesterday', '%d days ago'],
@@ -539,19 +539,19 @@ FlareTail.helpers.datetime.format = function (str, { relative = this.options.rel
       [0, 'Now', 'Just now', 'Just now'] // Less than 1 second
     ];
 
-    let format = (ms, simple, singular, plural) => {
-      let value = Math.floor(delta / ms);
+    const format = (ms, simple, singular, plural) => {
+      const value = Math.floor(delta / ms);
 
       return (simple ? simple : value === 1 ? singular : plural).replace('%d', value);
     };
 
-    for (let pattern of patterns) if (delta > pattern[0]) {
+    for (const pattern of patterns) if (delta > pattern[0]) {
       return format(...pattern);
     }
   }
 
   if (simple && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()) {
-    let dates = now.getDate() - date.getDate();
+    const dates = now.getDate() - date.getDate();
 
     if (dates === 0) {
       return date.toLocaleTimeString(locale, { hour: 'numeric', minute: 'numeric', hour12: false, timeZone: timezone });
@@ -593,10 +593,9 @@ FlareTail.helpers.datetime.fill_element = function ($time, value, options = null
 };
 
 FlareTail.helpers.datetime.update_elements = function () {
-  for (let $time of document.querySelectorAll('time')) {
-    let data = $time.dataset;
-
-    let time = this.format($time.dateTime, {
+  for (const $time of document.querySelectorAll('time')) {
+    const data = $time.dataset;
+    const time = this.format($time.dateTime, {
       relative: data.relative !== undefined ? data.relative === 'true' : this.options.relative,
       simple: data.simple !== undefined ? data.simple === 'true' : this.options.simple
     });
@@ -618,7 +617,7 @@ FlareTail.helpers.datetime.stop_updater = function () {
 };
 
 document.addEventListener('visibilitychange', event => {
-  let dt = FlareTail.helpers.datetime;
+  const dt = FlareTail.helpers.datetime;
 
   if (!document.hidden && dt.options.relative && dt.options.updater_enabled && !dt.updater) {
     dt.update_elements();
@@ -635,7 +634,7 @@ document.addEventListener('visibilitychange', event => {
 FlareTail.helpers.network = {};
 
 FlareTail.helpers.network.json = async (url, body = undefined) => {
-  let response = await window.fetch(new Request(url, {
+  const response = await window.fetch(new Request(url, {
     method: body ? 'POST' : 'GET',
     headers: new Headers({ Accept: 'application/json' }),
     body,
@@ -645,9 +644,9 @@ FlareTail.helpers.network.json = async (url, body = undefined) => {
 };
 
 FlareTail.helpers.network.jsonp = url => {
-  let $script = document.body.appendChild(document.createElement('script'));
-  let callback_id = 'jsonp_' + Date.now();
-  let cleanup = () => { $script.remove(); delete window[callback_id]; };
+  const $script = document.body.appendChild(document.createElement('script'));
+  const callback_id = 'jsonp_' + Date.now();
+  const cleanup = () => { $script.remove(); delete window[callback_id]; };
 
   return new Promise((resolve, reject) => {
     window[callback_id] = data => resolve(data);
@@ -700,19 +699,18 @@ FlareTail.helpers.array = {};
 FlareTail.helpers.array.clone = array => [...array];
 
 FlareTail.helpers.array.join = (set, tag = undefined) => {
-  let open_tag = tag ? `<${tag}>` : '';
-  let close_tag = tag ? `</${tag}>` : '';
-  let array = [...set].map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag);
-  let last = array.pop();
+  const open_tag = tag ? `<${tag}>` : '';
+  const close_tag = tag ? `</${tag}>` : '';
+  const array = [...set].map(item => open_tag + FlareTail.helpers.string.sanitize(item) + close_tag);
+  const last = array.pop();
 
   return array.length ? array.join(', ') + ' and ' + last : last; // l10n
 };
 
 FlareTail.helpers.array.sort = (array, cond) => {
   // Normalization: ignore brackets for comparison
-  let normalized_values = new Map();
-
-  let normalize = str => {
+  const normalized_values = new Map();
+  const normalize = str => {
     let value = normalized_values.get(str);
 
     if (!value) {
@@ -728,8 +726,8 @@ FlareTail.helpers.array.sort = (array, cond) => {
       [a, b] = [b, a]; // reverse()
     }
 
-    let a_val = a.data ? a.data[cond.key] : a[cond.key];
-    let b_val = b.data ? b.data[cond.key] : b[cond.key];
+    const a_val = a.data ? a.data[cond.key] : a[cond.key];
+    const b_val = b.data ? b.data[cond.key] : b[cond.key];
 
     if (!a_val || !b_val) {
       return true;
@@ -766,7 +764,7 @@ FlareTail.helpers.array.sort = (array, cond) => {
  * @see {@link http://php.net/manual/en/function.array-chunk.php}
  */
 FlareTail.helpers.array.chunk = (array, size) => {
-  let chunks = [];
+  const chunks = [];
 
   for (let i = 0; i < array.length; i = i + size) {
     chunks.push(array.slice(i, i + size));
@@ -782,7 +780,7 @@ FlareTail.helpers.array.chunk = (array, size) => {
 FlareTail.helpers.string = {};
 
 FlareTail.helpers.string.sanitize = str => {
-  let $p = document.createElement('p');
+  const $p = document.createElement('p');
 
   $p.textContent = str;
 
@@ -790,7 +788,7 @@ FlareTail.helpers.string.sanitize = str => {
 };
 
 FlareTail.helpers.string.strip_tags = str => {
-  let $p = document.createElement('p');
+  const $p = document.createElement('p');
 
   $p.innerHTML = str;
 
@@ -812,17 +810,11 @@ FlareTail.helpers.number = {};
  * @todo Support languages other than English.
  */
 FlareTail.helpers.number.format_file_size = (number, fixed = 1) => {
+  const units = { 1000: 'KB', 1000000: 'MB', 1000000000: 'GB', 1000000000000: 'TB' };
   let rounder = 1;
   let unit = number === 1 ? 'byte' : 'bytes';
 
-  let units = {
-    1000: 'KB',
-    1000000: 'MB',
-    1000000000: 'GB',
-    1000000000000: 'TB',
-  };
-
-  for (let [_rounder, _unit] of Object.entries(units)) {
+  for (const [_rounder, _unit] of Object.entries(units)) {
     if (number >= _rounder) {
       rounder = _rounder;
       unit = _unit;

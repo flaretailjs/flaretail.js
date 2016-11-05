@@ -44,18 +44,18 @@ FlareTail.app.Router = class Router {
    * @returns {Object} instance - A view instance if found.
    */
   locate (path = location.pathname) {
-    for (let [pattern, { view, catch_all, map }] of Object.entries(this.routes)) {
+    for (const [pattern, { view, catch_all, map }] of Object.entries(this.routes)) {
+      const match = path.match(new RegExp(`^${this.root}${pattern}$`));
       let instance;
-      let match = path.match(new RegExp(`^${this.root}${pattern}$`));
 
       if (match) {
-        let args = match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg));
+        const args = match.slice(1).map(arg => isNaN(arg) ? arg : Number(arg));
 
         if (map) {
           // Find an existing instance from the map
           instance = catch_all ? [...map.values()][0] : map.get(path);
         } else {
-          map = this.routes[pattern].map = new Map();
+          this.routes[pattern].map = new Map();
         }
 
         if (instance) {
@@ -74,7 +74,7 @@ FlareTail.app.Router = class Router {
           // Call the constructor when a route is found
           // Pass arguments based on the RegExp pattern, taking numeric arguments into account
           instance = new view(...args);
-          map.set(path, instance);
+          this.routes[pattern].map.set(path, instance);
         }
 
         return instance;
@@ -101,7 +101,7 @@ FlareTail.app.Router = class Router {
   navigate (path, state = {}, replace = false) {
     state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
 
-    let args = [state, 'Loading...', this.root + path]; // l10n
+    const args = [state, 'Loading...', this.root + path]; // l10n
 
     replace ? history.replaceState(...args) : history.pushState(...args);
     window.dispatchEvent(new PopStateEvent('popstate'));
@@ -202,7 +202,7 @@ FlareTail.app.Events = class Events {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
    */
   trigger (topic, data = {}) {
-    let port = FlareTail.app.Events.channel.port1;
+    const port = FlareTail.app.Events.channel.port1;
 
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
     data = Object.assign({}, data);
@@ -225,7 +225,7 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on (topic, callback, global = false) {
-    let port = FlareTail.app.Events.channel.port2;
+    const port = FlareTail.app.Events.channel.port2;
 
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
       return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
@@ -274,7 +274,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
    * @returns {Promise.<(IDBDatabase|Error)>} database - The target database.
    */
   open_database (name, version = 1) {
-    let request = indexedDB.open(name, version);
+    const request = indexedDB.open(name, version);
 
     return new Promise((resolve, reject) => {
       // Create object stores when the database is created or upgraded
@@ -303,9 +303,8 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
    * @returns {Object} store - Set of operation methods that return a Promise.
    */
   get_store (name, return_request = false) {
-    let store = this.database.transaction(name, 'readwrite').objectStore(name);
-
-    let send = request => new Promise((resolve, reject) => {
+    const store = this.database.transaction(name, 'readwrite').objectStore(name);
+    const send = request => new Promise((resolve, reject) => {
       request.addEventListener('success', event => resolve(return_request ? event.target : event.target.result));
       request.addEventListener('error', event => reject(event.target.error));
     });
@@ -393,11 +392,11 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
    */
   async load () {
-    let store = this.datasource.get_store(this.store_name);
-    let items = await store.get_all();
+    const store = this.datasource.get_store(this.store_name);
+    const items = await store.get_all();
 
     this.map = new Map(items.map(item => {
-      let key = item[store.obj.keyPath];
+      const key = item[store.obj.keyPath];
       let value;
 
       if (this.model) {
@@ -428,7 +427,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
       value = new this.model(value);
       value.save();
     } else {
-      let store = this.datasource.get_store(this.store_name);
+      const store = this.datasource.get_store(this.store_name);
 
       // Support simple key-value data
       store.save(this.store_type === 'simple' ? { [store.obj.keyPath]: key, value } : value);
@@ -450,7 +449,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @returns {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
    */
   async get (key, fallback_value = undefined) {
-    let has_key = await this.has(key);
+    const has_key = await this.has(key);
 
     if (has_key) {
       return this.map.get(key);
