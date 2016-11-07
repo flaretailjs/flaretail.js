@@ -139,13 +139,10 @@ FlareTail.app.Events = class Events {
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
    */
   trigger (topic, data = {}) {
-    const port = FlareTail.app.Events.channel.port1;
-
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
     data = Object.assign({}, data);
 
-    port.start();
-    port.postMessage({ topic, id: this.id, data });
+    (new BroadcastChannel(topic)).postMessage({ id: this.id, data });
 
     if (FlareTail.debug) {
       console.info('[Event]', topic, this.id, data);
@@ -162,20 +159,15 @@ FlareTail.app.Events = class Events {
    * @returns {undefined}
    */
   on (topic, callback, global = false) {
-    const port = FlareTail.app.Events.channel.port2;
-
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
       return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
               + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
     });
 
-    port.start();
-    port.addEventListener('message', event => {
-      if (event.data.topic !== topic || (!global && event.data.id !== this.id)) {
-        return;
+    (new BroadcastChannel(topic)).addEventListener('message', event => {
+      if (global || event.data.id === this.id) {
+        callback(event.data.data);
       }
-
-      callback(event.data.data);
     });
   }
 
@@ -190,8 +182,6 @@ FlareTail.app.Events = class Events {
     this.on(topic, data => this[topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
   }
 }
-
-FlareTail.app.Events.channel = new MessageChannel();
 
 /**
  * Provide app datasource functionalities.
