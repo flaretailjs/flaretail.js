@@ -129,69 +129,6 @@ FlareTail.app.Events = class Events {
 
   /**
    * Publish an event asynchronously.
-   * @deprecated This method fires a DOM event and passes the given data as a reference. For a better performance, use
-   *  trigger() wherever possible.
-   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means BugModel#Updated,
-   *  #Error in SessionPresenter means SessionPresenter#Error, and so on.
-   * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
-   *  automatically appended to the data.
-   * @returns {undefined}
-   */
-  trigger_safe (topic, data = {}) {
-    if (topic.match(/^#/)) {
-      topic = this.constructor.name + topic;
-    }
-
-    if (FlareTail.debug) {
-      console.info('[Event]', topic, this.id, data);
-    }
-
-    FlareTail.helpers.event.trigger(window, topic, { detail: { id: this.id, data }});
-  }
-
-  /**
-   * Subscribe an event.
-   * @deprecated This method listens DOM events and receives the given data as a reference. For a better performance,
-   *  use on() wherever possible.
-   * @param {String} topic - Event name. Shorthand syntax is supported: M#Updated in BugView means BugModel#Updated,
-   *  V#AppMenuItemSelected in ToolbarPresenter means ToolbarView#AppMenuItemSelected, and so on.
-   * @param {Function} callback - Function called whenever the specified event is fired.
-   * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
-   *  and the instance have different id properties. Otherwise, the identity will be respected.
-   * @returns {undefined}
-   */
-  on_safe (topic, callback, global = false) {
-    topic = topic.replace(/^([MVP])#/, (match, prefix) => {
-      return this.constructor.name.match(/(.*)(Model|View|Presenter)$/)[1]
-              + { M: 'Model', V: 'View', P: 'Presenter' }[prefix] + '#';
-    });
-
-    window.addEventListener(topic, event => {
-      if (!global && event.detail && event.detail.id !== this.id) {
-        return;
-      }
-
-      callback(event.detail.data);
-    });
-  }
-
-  /**
-   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
-   * example, if the topic is 'V#NavigationRequested', on_navigation_requested will be set as the callback function.
-   * @deprecated This method listens DOM events and receives the given data as a reference. For a better performance,
-   *  use subscribe() wherever possible.
-   * @param {String} topic - See the 'on' function above for details.
-   * @param {Boolean} [global=false] - See the 'on' function above for details.
-   * @returns {undefined}
-   */
-  subscribe_safe (topic, global = false) {
-    this.on_safe(topic, data => {
-      this[topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data);
-    }, global);
-  }
-
-  /**
-   * Publish an event asynchronously.
    * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means BugModel#Updated,
    *  #Error in SessionPresenter means SessionPresenter#Error, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
