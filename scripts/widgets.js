@@ -3488,7 +3488,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
 
     $controller.tabIndex = -1;
-    $controller.style.top = '2px';
     $controller.setAttribute('role', 'scrollbar');
     $controller.setAttribute('aria-controls', $owner.id);
     $controller.setAttribute('aria-disabled', 'true');
@@ -3596,7 +3595,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
 
     $controller.setAttribute('aria-valuenow', st);
-    $controller.style.top = `${st + 2 + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
+    $controller.style.top = `${st + Math.floor((ch - ctrl_adj) * (st / sh))}px`;
   }
 
   /**
@@ -3616,7 +3615,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   onresize (event) {
     const $controller = this.view.$controller;
     const { s_height, c_height, s_top_max } = event.detail;
-    const ctrl_height = Math.floor(c_height * c_height / s_height) - 4;
+    const ctrl_height = Math.floor(c_height * c_height / s_height);
 
     $controller.tabIndex = s_height === c_height ? -1 : 0;
     $controller.style.setProperty('height', ctrl_height <= 0 ? 0 : `${ctrl_height}px`);

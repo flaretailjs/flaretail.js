@@ -625,15 +625,24 @@ a[role="menuitem"] {
 }
 
 [role="scrollbar"] {
+  display: flex;
   position: absolute;
-  right: .2rem;
+  right: 0;
   z-index: 1000;
   outline: 0;
-  width: .8rem;
-  min-height: 1.6rem;
+  width: 1.2rem;
+  min-height: 1.2rem;
   opacity: .2;
   transition: opacity .3s;
+  pointer-events: none;
+}
+
+/* gripper */
+[role="scrollbar"]::before {
+  flex: auto;
+  margin: .2rem;
   pointer-events: auto;
+  content: '';
 }
 
 [role="scrollbar"]:hover,
