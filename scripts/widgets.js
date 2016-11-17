@@ -60,13 +60,10 @@ FlareTail.widgets.RoleType = class RoleType {
       // KeyboardEvent
       'keydown', 'keypress', 'keyup',
       // DragEvent
-      'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend'
-    ], false);
-
-    FTue.bind(this, $container, [
+      'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend',
       // FocusEvent
-      'focus', 'blur',
-    ], true); // Set use_capture true to catch events on descendants
+      'focusin', 'focusout',
+    ], false);
 
     return;
   }
@@ -306,11 +303,11 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
  */
 FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
   /**
-   * Called whenever a focus event is triggered. Set the aria-activedescendant attribute when necessary.
-   * @param {FocusEvent} event - The focus event.
+   * Called whenever a focusin event is triggered. Set the aria-activedescendant attribute when necessary.
+   * @param {FocusEvent} event - The focusin event.
    * @returns {undefined}
    */
-  onfocus (event) {
+  onfocusin (event) {
     if (this.view.members.includes(event.target) && event.target.id) {
       this.view.$container.setAttribute('aria-activedescendant', event.target.id);
     } else {
@@ -319,11 +316,11 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
   }
 
   /**
-   * Called whenever a blur event is triggered. Remove the aria-activedescendant attribute when necessary.
-   * @param {FocusEvent} event - The blur event.
+   * Called whenever a focusout event is triggered. Remove the aria-activedescendant attribute when necessary.
+   * @param {FocusEvent} event - The focusout event.
    * @returns {undefined}
    */
-  onblur (event) {
+  onfocusout (event) {
     this.view.$container.removeAttribute('aria-activedescendant');
     FlareTail.helpers.event.ignore(event);
   }
@@ -1692,7 +1689,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$input.contentEditable = !this.readonly;
     this.$input.addEventListener('keydown', event => this.input_onkeydown(event));
     this.$input.addEventListener('input', event => this.input_oninput(event));
-    this.$input.addEventListener('blur', event => this.input_onblur(event));
+    this.$input.addEventListener('focusout', event => this.input_onfocusout(event));
     this.$$input = new FlareTail.widgets.TextBox(this.$input);
 
     if (!this.$listbox) {
@@ -1944,10 +1941,10 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
 
   /**
    * Called whenever the text field loose a focus. Hide the dropdown list.
-   * @param {FocusEvent} event - The blur event.
+   * @param {FocusEvent} event - The focusout event.
    * @returns {undefined}
    */
-  input_onblur (event) {
+  input_onfocusout (event) {
     // Use a timer in case of the listbox getting focus for a second
     window.setTimeout(() => {
       if (!this.$input.matches(':focus')) {
@@ -2459,17 +2456,17 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   }
 
   /**
-   * Called whenever a blur event is triggered. Close the menu.
-   * @param {FocusEvent} event - The blur event.
+   * Called whenever a focusout event is triggered. Close the menu.
+   * @param {FocusEvent} event - The focusout event.
    * @returns {undefined}
    */
-  onblur (event) {
+  onfocusout (event) {
     if (event.currentTarget === window) {
       this.close(true);
     }
 
     // The default behavior
-    super.onblur(event);
+    super.onfocusout(event);
   }
 
   /**
@@ -2547,7 +2544,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       $container.classList.add('dir-left');
     }
 
-    FlareTail.helpers.event.bind(this, window, ['mousedown', 'blur']);
+    FlareTail.helpers.event.bind(this, window, ['mousedown', 'focusout']);
   }
 
   /**
@@ -2572,7 +2569,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @returns {undefined}
    */
   close (propagation) {
-    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
+    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'focusout']);
 
     const $container = this.view.$container;
     const parent = this.data.parent;
@@ -2736,7 +2733,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
    * @returns {undefined}
    */
   close () {
-    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'blur']);
+    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'focusout']);
 
     this.view.selected = [];
   }
