@@ -18,7 +18,7 @@ FlareTail.app.Router = class Router {
    * @param {String} launch_path - The app's launch path.
    * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains `view` (Object) and
    *  `catch_all` (Boolean, optional). See the example below.
-   * @returns {Object} router
+   * @returns {Router}
    * @example
    *  BzDeck.router = new FlareTail.app.Router(BzDeck.config.app, {
    *    '/bug/(\\d+)': { view: BzDeck.DetailsPageView },
@@ -41,7 +41,7 @@ FlareTail.app.Router = class Router {
    * Find a route usually by the URL. If found, create a new instance of the corresponding view. If not found, the
    * specified pathname is invalid, so navigate to the app's launch path instead.
    * @param {String} [path=location.pathname] - URL pathname used to find a route.
-   * @returns {Object} instance - A view instance if found.
+   * @returns {Object} A view instance if found.
    */
   locate (path = location.pathname) {
     for (const [pattern, { view, catch_all, map }] of Object.entries(this.routes)) {
@@ -96,7 +96,6 @@ FlareTail.app.Router = class Router {
    * @param {String} path - URL pathname to go.
    * @param {Object} [state={}] - History state object.
    * @param {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
-   * @returns {undefined}
    */
   navigate (path, state = {}, replace = false) {
     state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
@@ -121,7 +120,7 @@ FlareTail.app.Events = class Events {
    * @param {String} [id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned. A View
    *  and the corresponding Presenter as well as its sub-Views/Presenters should share the same ID, otherwise their
    *  communication through events won't work.
-   * @returns {Object} instance - New Events instance.
+   * @returns {Events} New Events instance.
    */
   constructor (id) {
     this.id = id || URL.createObjectURL(new Blob()).substr(-7);
@@ -135,8 +134,7 @@ FlareTail.app.Events = class Events {
    *  automatically appended to the data. Note that the data will be cloned. Proxy will be automatically deproxified
    *  before being posted but complex objects like Error or URLSearchParams cannot be transferred and throw. See the
    *  following MDN document for details.
-   * @returns {undefined}
-   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm}
+   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm MDN}
    */
   trigger (topic, data = {}) {
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
@@ -156,7 +154,6 @@ FlareTail.app.Events = class Events {
    * @param {Function} callback - Function called whenever the specified event is fired.
    * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
    *  and the instance have different id properties. Otherwise, the identity will be respected.
-   * @returns {undefined}
    */
   on (topic, callback, global = false) {
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
@@ -176,7 +173,6 @@ FlareTail.app.Events = class Events {
    * example, if the topic is 'V#NavigationRequested', on_navigation_requested will be set as the callback function.
    * @param {String} topic - See the 'on' function above for details.
    * @param {Boolean} [global=false] - See the 'on' function above for details.
-   * @returns {undefined}
    */
   subscribe (topic, global = false) {
     this.on(topic, data => this[topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
@@ -198,9 +194,9 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
    * Open a local IndexedDB database by name, and return it.
    * @param {String} name - Name of the database.
    * @param {Integer} version - Database version.
-   * @returns {Promise.<(IDBDatabase|Error)>} database - The target database.
+   * @returns {Promise.<(IDBDatabase|Error)>} The target database.
    */
-  open_database (name, version = 1) {
+  async open_database (name, version = 1) {
     const request = indexedDB.open(name, version);
 
     return new Promise((resolve, reject) => {
@@ -227,7 +223,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
    * Get a IndexedDB store in a convenient way.
    * @param {String} name - Name of the object store.
    * @param {Boolean} [return_request=false] - If true, operation methods return IDBRequest instead of result Array.
-   * @returns {Object} store - Set of operation methods that return a Promise.
+   * @returns {Object} Set of operation methods that return a Promise.
    */
   get_store (name, return_request = false) {
     const store = this.database.transaction(name, 'readwrite').objectStore(name);
@@ -254,8 +250,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 FlareTail.app.Model = class Model extends FlareTail.app.Events {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
-   * @param {undefined}
-   * @returns {Proxy} this - Proxified `this` object.
+   * @returns {Proxy} Proxified `this` object.
    */
   proxy () {
     return new Proxy(this, {
@@ -271,7 +266,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
   /**
    * Cache data as a new Proxy, so the object is automatically saved when a property is modified.
    * @param {Object} data - Raw data object.
-   * @returns {Proxy} data - Proxified data object.
+   * @returns {Proxy} Proxified data object.
    */
   cache (data) {
     // Deproxify the object just in case
@@ -290,7 +285,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
   /**
    * Save data in the local IndexedDB storage.
    * @param {Object} [data] - Raw data object.
-   * @returns {Promise.<Proxy>} item - Proxified instance of the model object.
+   * @returns {Promise.<Proxy>} Proxified instance of the model object.
    */
   async save (data = undefined) {
     if (data) {
@@ -315,8 +310,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
-   * @param {undefined}
-   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} Model instances.
    */
   async load () {
     const store = this.datasource.get_store(this.store_name);
@@ -347,7 +341,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * Set or add an item data to the database.
    * @param {(Number|String)} key - Key of the item.
    * @param {*} value - Raw data object or any value.
-   * @returns {Promise.<Proxy>} item - Promise to be resolved in a model instance.
+   * @returns {Promise.<Proxy>} Model instance.
    */
   set (key, value) {
     if (this.model) {
@@ -373,7 +367,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * Get an item by a specific key.
    * @param {(Number|String)} key - Key of the item.
    * @param {Object} [fallback_value] - If an item is not found, create a new model object with this value.
-   * @returns {Promise.<(Proxy|undefined)>} item - Promise to be resolved in a model instance.
+   * @returns {Promise.<(Proxy|undefined)>} Model instance.
    */
   async get (key, fallback_value = undefined) {
     const has_key = await this.has(key);
@@ -392,27 +386,26 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
   /**
    * Get items by specific keys.
    * @param {(Array|Set).<(String|Number)>} keys - Key list.
-   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} Model instances.
    */
-  get_some (keys) {
+  async get_some (keys) {
     return Promise.resolve(new Map([...keys].map(key => [key, this.map.get(key)])));
   }
 
   /**
    * Get all items locally-stored in IndexedDB.
-   * @param {undefined}
-   * @returns {Promise.<Map.<(String|Number), Proxy>>} items - Promise to be resolved in model instances.
+   * @returns {Promise.<Map.<(String|Number), Proxy>>} Model instances.
    */
-  get_all () {
+  async get_all () {
     return Promise.resolve(this.map);
   }
 
   /**
    * Check if an item with a specific key is in the database.
    * @param {(Number|String)} key - Key of the item.
-   * @returns {Promise.<Boolean>} result - Promise to be resolved in whether the item exists.
+   * @returns {Promise.<Boolean>} whether the item exists.
    */
-  has (key) {
+  async has (key) {
     return Promise.resolve(this.map.has(key));
   }
 
@@ -421,7 +414,7 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
    * @param {(Number|String)} key - Key of the item.
    * @returns {Promise.<undefined>} result
    */
-  delete (key) {
+  async delete (key) {
     this.map.delete(key);
 
     return this.datasource.get_store(this.store_name).delete(key);

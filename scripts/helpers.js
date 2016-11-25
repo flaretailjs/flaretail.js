@@ -106,7 +106,6 @@ FlareTail.helpers.content = {};
 /**
  * Fill DOM nodes with data using Microdata, and optionally set arbitrary attributes. This method also supports simple
  * if-else switches in the markup; use the data-if and data-else attributes.
- *
  * @example Markup:
  *  <span itemprop="creator" itemscope itemtype="http://schema.org/Person" data-attrs="title data-id">
  *    <meta itemprop="email">
@@ -314,13 +313,12 @@ FlareTail.helpers.kbd = {};
 
 /**
  * Assign keyboard shortcuts on a specific element
- *
  * @param {Element} $target
  * @param {Object.<String, Function>} map - Keybind patterns (S, Accel+Shift+R, Accel+O, etc. Multiple pattern should
  *  be separated with `|`) and function. Possible key values can be found at MDN. The supported modifiers here include
  *  Alt, Shift and Accel; Control and Meta are not supported.
- * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key}
- * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState}
+ * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key KeyboardEvent.key}
+ * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/getModifierState KeyboardEvent.getModifierState}
  */
 FlareTail.helpers.kbd.assign = function ($target, map) {
   const bindings = new Set();
@@ -363,7 +361,6 @@ FlareTail.helpers.kbd.assign = function ($target, map) {
 
 /**
  * Fire a keydown event on a specific element.
- *
  * @param {Element} $target
  * @param {Integer} key
  */
@@ -379,7 +376,6 @@ FlareTail.helpers.prefs = {};
 
 /* ------------------------------------------------------------------------------------------------------------------
  * User Agent
- *
  * This utility only considers Gecko-based products for now
  * https://developer.mozilla.org/en-US/docs/Gecko_user_agent_string_reference
  * ------------------------------------------------------------------------------------------------------------------ */
@@ -460,7 +456,7 @@ Object.defineProperties(FlareTail.helpers.theme, {
   }
 });
 
-FlareTail.helpers.theme.preload_images = function () {
+FlareTail.helpers.theme.preload_images = async function () {
   const pattern = 'url\\("(.+?)"\\)';
   const images = new Set(); // Use a Set to avoid duplicates
 
@@ -643,7 +639,7 @@ FlareTail.helpers.network.json = async (url, body = undefined) => {
   return response.json();
 };
 
-FlareTail.helpers.network.jsonp = url => {
+FlareTail.helpers.network.jsonp = async url => {
   const $script = document.body.appendChild(document.createElement('script'));
   const callback_id = 'jsonp_' + Date.now();
   const cleanup = () => { $script.remove(); delete window[callback_id]; };
@@ -757,11 +753,10 @@ FlareTail.helpers.array.sort = (array, cond) => {
 
 /**
  * Split an array into chunks, like the array_chunk PHP function.
- *
  * @param {Array.<*>} array - Array to split.
  * @param {Number} size - Number of items in each chunk.
- * @returns {Array.<Array.<*>>} chunks - Multidimensional array.
- * @see {@link http://php.net/manual/en/function.array-chunk.php}
+ * @returns {Array.<Array.<*>>} Multidimensional array.
+ * @see {@link http://php.net/manual/en/function.array-chunk.php PHP array_chunk()}
  */
 FlareTail.helpers.array.chunk = (array, size) => {
   const chunks = [];
@@ -803,10 +798,9 @@ FlareTail.helpers.number = {};
 
 /**
  * Format a number for a file size with a unit like KB.
- *
  * @param {Number} number - Number to format.
  * @param {Number} fixed - Number of digits to appear after the decimal point.
- * @returns {String} size - Formatted file size.
+ * @returns {String} Formatted file size.
  * @todo Support languages other than English.
  */
 FlareTail.helpers.number.format_file_size = (number, fixed = 1) => {
@@ -841,7 +835,6 @@ FlareTail.helpers.misc = {};
 
 /**
  * Create a GUID.
- *
  * @param {undefined}
  * @param {String} guid - Such as 80B2A9ED-9103-4847-B69B-0BC37F7F7CF6
  */
@@ -849,7 +842,6 @@ FlareTail.helpers.misc.uuidgen = () => URL.createObjectURL(new Blob()).match(/[0
 
 /**
  * Generate a random 7-digit hash.
- *
  * @param {undefined}
  * @param {String} guid - Such as f7f7cf6
  */
