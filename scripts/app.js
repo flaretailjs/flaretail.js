@@ -4,6 +4,7 @@
 
 /**
  * Provide a lightweight application framework.
+ * @member {Object}
  */
 FlareTail.app = {};
 
@@ -427,9 +428,9 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
  */
 FlareTail.app.View = class View extends FlareTail.app.Events {}
 
-FlareTail.app.View.prototype.get_fragment = FlareTail.helpers.content.get_fragment;
-FlareTail.app.View.prototype.get_template = FlareTail.helpers.content.get_template;
-FlareTail.app.View.prototype.fill = FlareTail.helpers.content.fill;
+FlareTail.app.View.prototype.get_fragment = FlareTail.util.Content.get_fragment;
+FlareTail.app.View.prototype.get_template = FlareTail.util.Content.get_template;
+FlareTail.app.View.prototype.fill = FlareTail.util.Content.fill;
 
 /**
  * Provide app helper functionalities.

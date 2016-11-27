@@ -4,6 +4,7 @@
 
 /**
  * Provide application widgets based on the WAI-ARIA roles.
+ * @member {Object}
  * @see {@link http://www.w3.org/TR/wai-aria/ WAI-ARIA Spec}
  */
 FlareTail.widgets = {};
@@ -18,7 +19,6 @@ FlareTail.widgets.RoleType = class RoleType {
    * @param {Boolean} [rebuild=false] - Whether the widget is to be just restructured.
    */
   activate (rebuild = false) {
-    const FTue = FlareTail.helpers.event;
     const $container = this.view.$container;
 
     if (!$container) {
@@ -50,7 +50,7 @@ FlareTail.widgets.RoleType = class RoleType {
     }
 
     // Add event listeners
-    FTue.bind(this, $container, [
+    FlareTail.util.Events.bind(this, $container, [
       // MouseEvent
       'mousedown', 'contextmenu', 'mouseup', 'click', 'dblclick',
       'mouseover',
@@ -85,7 +85,7 @@ FlareTail.widgets.RoleType = class RoleType {
    * @param {Object} map - See the helper method for details.
    */
   assign_key_bindings (map) {
-    FlareTail.helpers.kbd.assign(this.view.$container, map);
+    FlareTail.util.Keybind.assign(this.view.$container, map);
   }
 
   /**
@@ -103,7 +103,7 @@ FlareTail.widgets.RoleType = class RoleType {
    * @param {MouseEvent} event - The contextmenu event.
    */
   oncontextmenu (event) {
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -180,7 +180,7 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
       toggle: $button.hasAttribute('aria-pressed')
     };
 
-    FlareTail.helpers.event.bind(this, $button, ['click', 'keydown']);
+    FlareTail.util.Events.bind(this, $button, ['click', 'keydown']);
 
     if ($button.matches('[aria-haspopup="true"]')) {
       this.activate_popup();
@@ -194,7 +194,7 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
   onclick (event) {
     let pressed = false;
 
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
 
     if (this.data.disabled) {
       return;
@@ -204,7 +204,7 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
       pressed = this.data.pressed = !this.data.pressed;
     }
 
-    FlareTail.helpers.event.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
+    FlareTail.util.Events.trigger(this.view.$button, 'Pressed', { detail: { pressed }});
   }
 
   /**
@@ -308,7 +308,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    */
   onfocusout (event) {
     this.view.$container.removeAttribute('aria-activedescendant');
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -374,7 +374,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
 
     // Do nothing if Alt key is pressed
     if (event.altKey) {
-      return FlareTail.helpers.event.ignore(event);
+      return FlareTail.util.Events.ignore(event);
     }
 
     const items = this.view.members;
@@ -598,7 +598,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
       }
     }
 
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -628,7 +628,7 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
         }
       }
 
-      FlareTail.helpers.event.trigger(this.view.$container, 'Selected', { detail: {
+      FlareTail.util.Events.trigger(this.view.$container, 'Selected', { detail: {
         oldval,
         items: newval || [],
         ids: newval ? newval.map($item => $item.dataset.id || $item.id) : [],
@@ -804,7 +804,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
           }
 
           case 'width': {
-            value = Number.parseInt(FlareTail.helpers.style.get(obj.$element, 'width'));
+            value = Number.parseInt(FlareTail.util.Style.get(obj.$element, 'width'));
 
             break;
           }
@@ -826,7 +826,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
         switch (prop) {
           case 'hidden': {
             // Fire an event
-            FlareTail.helpers.event.trigger(this.view.$container, 'ColumnModified', { detail: { columns }});
+            FlareTail.util.Events.trigger(this.view.$container, 'ColumnModified', { detail: { columns }});
 
             // Reflect the change of row's visibility to UI
             value === true ? this.hide_column(obj) : this.show_column(obj);
@@ -890,7 +890,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
                       = new FlareTail.widgets.ScrollBar($grid_body, { adjusted: true, arrow_keys_enabled: false });
     const option = this.options.adjust_scrollbar;
 
-    $$scrollbar.options.adjusted = option === undefined ? FlareTail.helpers.env.device.desktop : option;
+    $$scrollbar.options.adjusted = option === undefined ? FlareTail.env.device.desktop : option;
   }
 
   /**
@@ -902,7 +902,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     if ($target.matches('[role="columnheader"]')) {
       if (event.buttons <= 1 && this.options.reorderable) {
-        FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
+        FlareTail.util.Events.bind(this, window, ['mousemove', 'mouseup']);
       }
 
       if (event.buttons === 2) {
@@ -919,7 +919,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
       this.data.rows[index].data[id] = !$target.matches('[aria-checked="true"]');
 
-      return FlareTail.helpers.event.ignore(event);
+      return FlareTail.util.Events.ignore(event);
     }
 
     // The default behavior
@@ -939,8 +939,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @param {MouseEvent} event - The mouseup event.
    */
   onmouseup (event) {
-    FlareTail.helpers.event.ignore(event);
-    FlareTail.helpers.event.unbind(this, window, ['mousemove', 'mouseup']);
+    FlareTail.util.Events.ignore(event);
+    FlareTail.util.Events.unbind(this, window, ['mousemove', 'mouseup']);
 
     if (event.button !== 0) {  // event.buttons is 0 since this is a mouseup event handler
       return;
@@ -993,7 +993,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
       }
     }
 
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -1113,7 +1113,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
         if (column.type === 'boolean') {
           $child.setAttribute('aria-checked', value === true);
         } else if (column.type === 'time') {
-          FlareTail.helpers.datetime.fill_element($child, value, this.options.date);
+          FlareTail.util.DateTime.fill_element($child, value, this.options.date);
         } else {
           $child.textContent = value;
         }
@@ -1128,7 +1128,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     if (row_data) {
       this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
       this.activate_rows();
-      FlareTail.helpers.event.trigger($grid, 'Rebuilt');
+      FlareTail.util.Events.trigger($grid, 'Rebuilt');
     }
   }
 
@@ -1208,7 +1208,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     if (data_only) {
       cond.order = cond.order || 'ascending';
-      FlareTail.helpers.array.sort(this.data.rows, cond);
+      FlareTail.util.Array.sort(this.data.rows, cond);
 
       return true;
     }
@@ -1230,7 +1230,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     $tbody.setAttribute('aria-busy', 'true'); // display: none
 
-    FlareTail.helpers.array.sort(this.data.rows, cond);
+    FlareTail.util.Array.sort(this.data.rows, cond);
 
     $tbody.removeAttribute('aria-busy');
     $sorter.setAttribute('aria-sort', cond.order);
@@ -1239,8 +1239,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     this.view.members = [...$grid.querySelectorAll(this.options.item_selector)];
 
     // Fire an event
-    FlareTail.helpers.event.trigger($grid, 'Sorted', { detail: {
-      conditions: FlareTail.helpers.object.clone(cond) // Clone cond as it's a proxified object
+    FlareTail.util.Events.trigger($grid, 'Sorted', { detail: {
+      conditions: FlareTail.util.Object.clone(cond) // Clone cond as it's a proxified object
     }});
 
     const selected = this.view.selected;
@@ -1500,7 +1500,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     }
 
     // Fire an event
-    FlareTail.helpers.event.trigger($grid, 'ColumnModified', { detail: { columns }});
+    FlareTail.util.Events.trigger($grid, 'ColumnModified', { detail: { columns }});
 
     // Cleanup
     drag.$header.removeAttribute('data-grabbed');
@@ -1542,7 +1542,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
     $grid_body.scrollTop = 0;
     $grid_body.removeAttribute('aria-busy');
 
-    FlareTail.helpers.event.trigger(this.view.$container, 'Filtered');
+    FlareTail.util.Events.trigger(this.view.$container, 'Filtered');
   }
 }
 
@@ -1827,7 +1827,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
       } else if (event.key === 'Enter') {
         this.listbox_onmousedown(event);
       } else {
-        FlareTail.helpers.kbd.dispatch(this.$listbox, event.key);
+        FlareTail.util.Keybind.dispatch(this.$listbox, event.key);
 
         if (event.key.match(/^Arrow(Up|Down)$/)) {
 
@@ -1840,7 +1840,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
 
           if (this.autocomplete === 'list') {
             this.$$input.value = value;
-            FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
+            FlareTail.util.Events.trigger(this.$container, 'Change', { detail: { $target, value }});
           }
 
           this.$input.focus(); // Keep focus on <input>
@@ -1873,7 +1873,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
       return;
     }
 
-    FlareTail.helpers.event.trigger(this.$container, 'Input', { detail: { value, $target: this.$input }});
+    FlareTail.util.Events.trigger(this.$container, 'Input', { detail: { value, $target: this.$input }});
 
     event.stopPropagation();
   }
@@ -1902,7 +1902,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
       this.show_dropdown();
     }
 
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -1917,8 +1917,8 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$$input.value = value;
     this.$input.focus();
 
-    FlareTail.helpers.event.trigger(this.$container, 'Change', { detail: { $target, value }});
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.trigger(this.$container, 'Change', { detail: { $target, value }});
+    FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2125,7 +2125,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 
     if ($owner && !$owner.matches('[role="menuitem"]')) {
       this.view.$owner = $owner;
-      FlareTail.helpers.event.bind(this, $owner, ['contextmenu', 'keydown']);
+      FlareTail.util.Events.bind(this, $owner, ['contextmenu', 'keydown']);
     }
 
     Object.defineProperties(this, {
@@ -2210,7 +2210,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     }
 
     if (event.buttons > 1) {
-      FlareTail.helpers.event.ignore(event);
+      FlareTail.util.Events.ignore(event);
 
       return;
     }
@@ -2229,7 +2229,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       this.close(true);
     }
 
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2241,7 +2241,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       this.view.selected = this.view.$focused = event.target;
     }
 
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2270,7 +2270,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       }
     }
 
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2323,7 +2323,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       return;
     }
 
-    FlareTail.helpers.event.ignore(event);
+    FlareTail.util.Events.ignore(event);
 
     switch (event.key) {
       case 'ArrowRight': {
@@ -2455,7 +2455,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 
     $container.setAttribute('aria-expanded', 'true');
     $container.removeAttribute('aria-activedescendant');
-    FlareTail.helpers.event.trigger($container, 'MenuOpened');
+    FlareTail.util.Events.trigger($container, 'MenuOpened');
 
     const parent = this.data.parent;
 
@@ -2465,7 +2465,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       $container.classList.add('dir-left');
     }
 
-    FlareTail.helpers.event.bind(this, window, ['mousedown', 'focusout']);
+    FlareTail.util.Events.bind(this, window, ['mousedown', 'focusout']);
   }
 
   /**
@@ -2473,7 +2473,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @param {(MouseEvent|KeyboardEvent)} event - The mousedown or keydown event.
    */
   select (event) {
-    FlareTail.helpers.event.trigger(this.view.$container, 'MenuItemSelected', {
+    FlareTail.util.Events.trigger(this.view.$container, 'MenuItemSelected', {
       bubbles: true,
       cancelable: false,
       detail: {
@@ -2488,14 +2488,14 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
    * @param {Boolean} propagation - Whether the parent menu, if exists, should be closed.
    */
   close (propagation) {
-    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'focusout']);
+    FlareTail.util.Events.unbind(this, window, ['mousedown', 'focusout']);
 
     const $container = this.view.$container;
     const parent = this.data.parent;
 
     $container.setAttribute('aria-expanded', 'false');
     $container.removeAttribute('aria-activedescendant');
-    FlareTail.helpers.event.trigger($container, 'MenuClosed');
+    FlareTail.util.Events.trigger($container, 'MenuClosed');
     this.view.selected = [];
 
     if (parent) {
@@ -2551,7 +2551,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
    */
   onmousedown (event) {
     if (event.buttons > 1) {
-      FlareTail.helpers.event.ignore(event);
+      FlareTail.util.Events.ignore(event);
 
       return;
     }
@@ -2561,7 +2561,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     } else if (this.view.selected.length) {
       this.close();
     } else {
-      FlareTail.helpers.event.ignore(event);
+      FlareTail.util.Events.ignore(event);
     }
   }
 
@@ -2574,7 +2574,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
       this.view.selected = this.view.$focused = event.target;
     }
 
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2631,7 +2631,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
       }
     }
 
-    return FlareTail.helpers.event.ignore(event);
+    return FlareTail.util.Events.ignore(event);
   }
 
   /**
@@ -2646,7 +2646,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
    * Close a menu.
    */
   close () {
-    FlareTail.helpers.event.unbind(this, window, ['mousedown', 'focusout']);
+    FlareTail.util.Events.unbind(this, window, ['mousedown', 'focusout']);
 
     this.view.selected = [];
   }
@@ -3095,7 +3095,7 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     document.getElementById($selected.getAttribute('aria-controls')).parentElement.appendChild($panel);
 
     // Notify
-    FlareTail.helpers.event.trigger(this.view.$container, 'Opened', { detail: { id: $tab.id }});
+    FlareTail.util.Events.trigger(this.view.$container, 'Opened', { detail: { id: $tab.id }});
 
     return $tab;
   }
@@ -3109,7 +3109,7 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     const index = items.indexOf($tab);
 
     // Notify
-    FlareTail.helpers.event.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
+    FlareTail.util.Events.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
 
     // Switch tab
     if (this.view.selected[0] === $tab) {
@@ -3166,7 +3166,7 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
       },
     });
 
-    FlareTail.helpers.event.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
+    FlareTail.util.Events.bind(this, this.$textbox, ['cut', 'copy', 'paste', 'keydown', 'input']);
   }
 
   /**
@@ -3249,7 +3249,7 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
    * Called whenever the text value is changed. Fire a custom event.
    */
   onedit () {
-    FlareTail.helpers.event.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
+    FlareTail.util.Events.trigger(this.$textbox, 'Edited', { detail: { value: this.value }});
   }
 
   /**
@@ -3294,7 +3294,7 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
         get: () => $checkbox.getAttribute('aria-checked') === 'true',
         set: checked => {
           $checkbox.setAttribute('aria-checked', checked);
-          FlareTail.helpers.event.trigger($checkbox, 'Toggled', { detail: { checked }});
+          FlareTail.util.Events.trigger($checkbox, 'Toggled', { detail: { checked }});
 
           // Set Microdata when necessary
           if ($checkbox.matches('meta[content]')) {
@@ -3304,7 +3304,7 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
       }
     });
 
-    FlareTail.helpers.event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+    FlareTail.util.Events.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
   }
 
   /**
@@ -3360,7 +3360,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     super(); // This does nothing but is required before using `this`
 
     const $controller = document.createElement('div');
-    const FTue = FlareTail.helpers.event;
 
     this.view = { $owner, $controller };
     this.data = {};
@@ -3370,7 +3369,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     $owner.setAttribute('data-resize-detection-enabled', resize_detection_enabled);
 
     // On mobile, we can just use native scrollbars, so do not add a custom scrollbar and observers
-    if (FlareTail.helpers.env.device.mobile) {
+    if (FlareTail.env.device.mobile) {
       return;
     }
 
@@ -3382,8 +3381,8 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     $controller.setAttribute('aria-valuenow', '0');
     $owner.appendChild($controller);
 
-    FTue.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'resize']);
-    FTue.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
+    FlareTail.util.Events.bind(this, $owner, ['wheel', 'scroll', 'keydown', 'resize']);
+    FlareTail.util.Events.bind(this, $controller, ['mousedown', 'contextmenu', 'keydown']);
   }
 
   /**
@@ -3519,7 +3518,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
    */
   scroll_with_mouse (event) {
     const $owner = this.view.$owner;
-    const FTue = FlareTail.helpers.event;
 
     if (event.type === 'mousedown') {
       this.data.rect = {
@@ -3529,7 +3527,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
         cy: event.clientY
       };
 
-      FTue.bind(this, window, ['mousemove', 'mouseup']);
+      FlareTail.util.Events.bind(this, window, ['mousemove', 'mouseup']);
     }
 
     if (event.type === 'mousemove') {
@@ -3553,7 +3551,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     if (event.type === 'mouseup') {
       delete this.data.rect;
 
-      FTue.unbind(this, window, ['mousemove', 'mouseup']);
+      FlareTail.util.Events.unbind(this, window, ['mousemove', 'mouseup']);
     }
   }
 
@@ -3601,7 +3599,7 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
     }
 
     if (event.target === $controller) {
-      return FlareTail.helpers.event.ignore(event);
+      return FlareTail.util.Events.ignore(event);
     }
 
     return true;
@@ -3662,7 +3660,7 @@ FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
     if (!detail || detail.s_height !== s_height || detail.c_height !== c_height) {
       detail = { s_height, c_height, s_top_max };
       this.data.set($owner, detail);
-      FlareTail.helpers.event.trigger($owner, 'resize', { detail });
+      FlareTail.util.Events.trigger($owner, 'resize', { detail });
     }
   }
 }
@@ -3781,7 +3779,7 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
    */
   activate () {
     // Add event listeners
-    FlareTail.helpers.event.bind(this, this.view.$dialog, ['keypress']);
+    FlareTail.util.Events.bind(this, this.view.$dialog, ['keypress']);
   }
 
   /**
@@ -3874,7 +3872,7 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
       controls: {}
     };
 
-    const style = ($element, prop) => Number.parseInt(FlareTail.helpers.style.get($element, prop));
+    const style = ($element, prop) => Number.parseInt(FlareTail.util.Style.get($element, prop));
     const $outer = this.view.$outer;
     const orientation = $splitter.getAttribute('aria-orientation') || 'horizontal';
     const outer_bounds = $outer.getBoundingClientRect();
@@ -3981,7 +3979,7 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
             }
 
             $before.style.setProperty(this.data.orientation === 'horizontal' ? 'height' : 'width', value);
-            FlareTail.helpers.event.trigger($splitter, 'Resized', { detail: { position: value }});
+            FlareTail.util.Events.trigger($splitter, 'Resized', { detail: { position: value }});
           }
         }
 
@@ -3992,7 +3990,7 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     });
 
     // Add event listeners
-    FlareTail.helpers.event.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
+    FlareTail.util.Events.bind(this, $splitter, ['mousedown', 'contextmenu', 'keydown']);
 
     for (const [i, id] of $splitter.getAttribute('aria-controls').split(/\s+/).entries()) {
       const $target = document.getElementById(id);
@@ -4045,7 +4043,7 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     this.view.$outer.dataset.splitter = this.data.orientation;
 
     // Add event listeners
-    FlareTail.helpers.event.bind(this, window, ['mousemove', 'mouseup']);
+    FlareTail.util.Events.bind(this, window, ['mousemove', 'mouseup']);
   }
 
   /**
@@ -4074,7 +4072,7 @@ FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator 
     this.view.$splitter.setAttribute('aria-grabbed', 'false');
 
     // Cleanup
-    FlareTail.helpers.event.unbind(this, document.body, ['mousemove', 'mouseup']);
+    FlareTail.util.Events.unbind(this, document.body, ['mousemove', 'mouseup']);
 
     delete this.view.$outer.dataset.splitter;
   }
