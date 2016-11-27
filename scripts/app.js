@@ -124,7 +124,7 @@ FlareTail.app.Events = class Events {
    * @returns {Events} New Events instance.
    */
   constructor (id) {
-    this.id = id || URL.createObjectURL(new Blob()).substr(-7);
+    this.id = id || FlareTail.util.Misc.hash(7, true);
   }
 
   /**
@@ -206,17 +206,17 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
         if (typeof this.onupgradeneeded === 'function') {
           this.onupgradeneeded(event);
         }
-      });
+      }, { once: true });
 
       request.addEventListener('success', event => {
         this.database = event.target.result;
         resolve(event.target.result);
-      });
+      }, { once: true });
 
       request.addEventListener('error', event => {
         reject(new Error('Failed to open the database. \
                           Make sure you’re not using private browsing mode or IndexedDB doesn’t work.'))
-      });
+      }, { once: true });
     });
   }
 

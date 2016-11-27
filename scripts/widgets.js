@@ -62,7 +62,7 @@ FlareTail.widgets.RoleType = class RoleType {
       'dragstart', 'drag', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend',
       // FocusEvent
       'focusin', 'focusout',
-    ], false);
+    ]);
 
     return;
   }
@@ -3778,8 +3778,8 @@ FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
    * Activate the widget.
    */
   activate () {
-    // Add event listeners
-    FlareTail.util.Events.bind(this, this.view.$dialog, ['keypress']);
+    // Add event listener, enable the `once` option because the dialog will be removed once an event fired
+    FlareTail.util.Events.bind(this, this.view.$dialog, ['keypress'], false, true);
   }
 
   /**

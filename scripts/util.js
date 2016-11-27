@@ -355,38 +355,31 @@ FlareTail.util.Events = class Events {
    * @param {Object} obj - A class or object containing event handlers as the member functions.
    * @param {HTMLElement} $target - A target node that fires events on it.
    * @param {Array.<String>} types - Event types, like `['click', 'keydown']`.
-   * @param {Boolean} [use_capture=false] - Whether the events should captured.
-   * @param {Boolean} [unbind=false] - Whether the event handlers should be removed rather than added.
-   * @returns {Boolean} `true` if the target element is found, `false` otherwise.
+   * @param {Boolean} [capture=false] - Whether the events should captured.
+   * @param {Boolean} [once=false] - Whether the event handler should be removed after called once.
    */
-  static bind (obj, $target, types, use_capture = false, unbind = false) {
-    if (!$target) {
-      return false;
-    }
-
-    for (const type of types) {
-      if (!obj[`on${type}`]) {
-        continue; // No such handler
-      }
-
-      if (unbind) {
-        $target.removeEventListener(type, obj, use_capture);
-      } else {
-        $target.addEventListener(type, obj, use_capture);
+  static bind (obj, $target, types, capture = false, once = false) {
+    if ($target) {
+      for (const type of types) if (obj[`on${type}`]) {
+        $target.addEventListener(type, obj, { capture, once });
       }
     }
-
-    return true;
   }
 
   /**
    * Remove multiple event listeners as once from a given element.
    * @static
-   * @param {...*} [args] - The same arguments as the `bind` method other than `unbind`.
-   * @returns {Boolean} `true` if the target element is found, `false` otherwise.
+   * @param {Object} obj - A class or object containing event handlers as the member functions.
+   * @param {HTMLElement} $target - A target node that fires events on it.
+   * @param {Array.<String>} types - Event types, like `['click', 'keydown']`.
+   * @param {Boolean} [capture=false] - Whether the events should captured.
    */
-  static unbind (...args) {
-    return this.bind(...args, true);
+  static unbind (obj, $target, types, capture = false) {
+    if ($target) {
+      for (const type of types) if (obj[`on${type}`]) {
+        $target.removeEventListener(type, obj, { capture });
+      }
+    }
   }
 
   /**
@@ -693,8 +686,8 @@ FlareTail.util.Network = class Network {
 
     return new Promise((resolve, reject) => {
       window[callback_id] = data => resolve(data);
-      $script.addEventListener('load', event => cleanup());
-      $script.addEventListener('error', event => { cleanup(); reject(new Error()); });
+      $script.addEventListener('load', event => cleanup(), { once: true });
+      $script.addEventListener('error', event => { cleanup(); reject(new Error()); }, { once: true });
       $script.src = url + '?callback=' + callback_id;
     });
   }
@@ -945,7 +938,12 @@ FlareTail.util.Misc = class Misc {
    * @returns {String} A GUID, such as `80B2A9ED-9103-4847-B69B-0BC37F7F7CF6`.
    */
   static uuidgen () {
-    return URL.createObjectURL(new Blob()).match(/[0-9a-f\-]+$/)[0].toUpperCase();
+    const url = URL.createObjectURL(new Blob());
+
+    // Immediately remove the URL as it won't be used anymore
+    URL.revokeObjectURL(url);
+
+    return url.substr(-36).toUpperCase();
   }
 
   /**
