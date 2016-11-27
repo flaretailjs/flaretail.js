@@ -155,91 +155,6 @@ FlareTail.env = (() => {
 FlareTail.util = {};
 
 /**
- * Provide theming-related functions based on alternative stylesheets.
- * @see {@link https://developer.mozilla.org/en-US/docs/Web/CSS/Alternative_style_sheets MDN}
- * @deprecated
- */
-FlareTail.util.Theme = class Theme {
-  /**
-   * Get a list of the available themes.
-   * @static
-   * @returns {DOMStringList.<String>} A list of stylesheet names.
-   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/styleSheetSets MDN}
-   * @deprecated This is redundant.
-   */
-  static get list () {
-    return document.styleSheetSets;
-  }
-
-  /**
-   * Get the name of the default theme.
-   * @static
-   * @returns {String} The name of the default stylesheet.
-   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/preferredStyleSheetSet MDN}
-   * @deprecated This is redundant.
-   */
-  static get default () {
-    return document.preferredStyleSheetSet;
-  }
-
-  /**
-   * Get the name of the currently selected theme.
-   * @static
-   * @returns {String} The name of the selected stylesheet.
-   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/selectedStyleSheetSet MDN}
-   * @deprecated This is redundant.
-   */
-  static get selected () {
-    return document.selectedStyleSheetSet;
-  }
-
-  /**
-   * Set the currently selected theme.
-   * @static
-   * @param {String} name - The name of the new stylesheet.
-   * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/selectedStyleSheetSet MDN}
-   * @deprecated This is redundant.
-   */
-  static set selected (name) {
-    document.selectedStyleSheetSet = name;
-  }
-
-  /**
-   * Parse all the stylesheets and preload detected background images, so that they can be displayed quickly when
-   * switching themes.
-   * @static
-   * @returns {Promise.<Array.<String>>} A list of background image path names.
-   * @deprecated This is no longer necessary because all the images should be loaded and cached via the service worker.
-   */
-  static async preload_images () {
-    const pattern = 'url\\("(.+?)"\\)';
-    const images = new Set(); // Use a Set to avoid duplicates
-
-    for (const sheet of document.styleSheets) {
-      for (const rule of sheet.cssRules) {
-        const match = rule.style && (rule.style.backgroundImage || '').match(RegExp(pattern, 'g'));
-
-        if (!match) {
-          continue;
-        }
-
-        // Support for multiple background
-        for (const m of match) {
-          images.add(m.match(RegExp(pattern))[1]);
-        }
-      }
-    }
-
-    return Promise.all([...images].map(src => new Promise(resolve => {
-      const image = new Image();
-
-      image.addEventListener('load', event => resolve(src));
-      image.src = src;
-    })));
-  }
-}
-
-/**
  * Provide functions to manipulate HTML content.
  */
 FlareTail.util.Content = class Content {
@@ -475,40 +390,17 @@ FlareTail.util.Events = class Events {
   }
 
   /**
-   * Asynchronously call a method using `postMessage`.
-   * @static
-   * @param {Function} callback - A function to be called.
-   * @deprecated Use an immediately-invoked `async` function instead.
-   */
-  static async (callback) {
-    if (this.queue === undefined) {
-      this.queue = [];
-
-      window.addEventListener('message', event => {
-        if (event.source === window && event.data === 'AsyncEvent' && this.queue.length) {
-          this.queue.shift().call();
-        }
-      });
-    }
-
-    this.queue.push(callback);
-    window.postMessage('AsyncEvent', location.origin);
-  }
-
-  /**
    * Fire a custom event on a given element.
    * @static
    * @param {HTMLElement} $target - A target node that fires events on it.
    * @param {String} type - An event type.
    * @param {Object} [init] - An event options including the `detail`.
    * @param {Boolean} [async=true] - Whether the event should be called asynchronously.
-   * @deprecated Use an immediately-invoked `async` function instead.
    */
   static trigger ($target, type, init = {}, async = true) {
     const callback = () => $target.dispatchEvent(new CustomEvent(type, init));
 
-    // Local files have no origin (Bug 878297)
-    async && location.origin !== 'null' ? this.async(callback) : callback();
+    async ? (async () => callback())() : callback();
   }
 }
 
