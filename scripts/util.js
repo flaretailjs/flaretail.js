@@ -157,7 +157,7 @@ FlareTail.util = {};
 /**
  * Provide functions to manipulate HTML content.
  */
-FlareTail.util.Content = class Content {
+FlareTail.util.Content = class {
   /**
    * Fill DOM nodes with data using Microdata, and optionally set arbitrary attributes. This method also supports simple
    * if-else switches in the markup; use the `data-if` and `data-else` attributes.
@@ -335,7 +335,7 @@ FlareTail.util.Content = class Content {
 /**
  * Provide event-related functions.
  */
-FlareTail.util.Events = class Events {
+FlareTail.util.Events = class {
   /**
    * Prevent the default browser action and propagation at the same time.
    * @static
@@ -400,7 +400,7 @@ FlareTail.util.Events = class Events {
 /**
  * Provide keyboard shortcut-related functions.
  */
-FlareTail.util.Keybind = class Keybind {
+FlareTail.util.Keybind = class {
   /**
    * Assign keyboard shortcuts on a given element.
    * @static
@@ -466,13 +466,13 @@ FlareTail.util.Keybind = class Keybind {
 /**
  * Provide preference-related functions.
  */
-FlareTail.util.Prefs = class Prefs {
+FlareTail.util.Prefs = class {
 }
 
 /**
  * Provide date and time-related functions.
  */
-FlareTail.util.DateTime = class DateTime {
+FlareTail.util.DateTime = class {
   /**
    * Start the auto-updater.
    * @static
@@ -658,7 +658,7 @@ FlareTail.util.DateTime.options = new Proxy({
 /**
  * Provide network-related functions.
  */
-FlareTail.util.Network = class Network {
+FlareTail.util.Network = class {
   /**
    * Send a request to an API, decode the response JSON, and return the result.
    * @static
@@ -699,25 +699,25 @@ FlareTail.util.Network = class Network {
 /**
  * Provide browser history-related functions.
  */
-FlareTail.util.History = class History {
+FlareTail.util.History = class {
 }
 
 /**
  * Provide localization-related functions.
  */
-FlareTail.util.L10N = class L10N {
+FlareTail.util.L10N = class {
 }
 
 /**
  * Provide internationalization-related functions.
  */
-FlareTail.util.I18N = class I18N {
+FlareTail.util.I18N = class {
 }
 
 /**
  * Provide CSS-related functions.
  */
-FlareTail.util.Style = class Style {
+FlareTail.util.Style = class {
   /**
    * Get the computed CSS property value for a given element.
    * @static
@@ -733,7 +733,7 @@ FlareTail.util.Style = class Style {
 /**
  * Provide object-related functions.
  */
-FlareTail.util.Object = class Object {
+FlareTail.util.Object = class {
   /**
    * Clone an object. This can also be used to convert a `Proxy` to a normal object.
    * @static
@@ -748,7 +748,7 @@ FlareTail.util.Object = class Object {
 /**
  * Provide array-related functions.
  */
-FlareTail.util.Array = class Array {
+FlareTail.util.Array = class {
   /**
    * Clone an array. Note that this is a shallow copy. Non-primitive array members, such as objects, will not be cloned.
    * @static
@@ -855,7 +855,7 @@ FlareTail.util.Array = class Array {
 /**
  * Provide string-related functions.
  */
-FlareTail.util.String = class String {
+FlareTail.util.String = class {
   /**
    * Convert any HTML tags in a given string to character entity references, so that the string can be used safely.
    * @static
@@ -888,7 +888,7 @@ FlareTail.util.String = class String {
 /**
  * Provide number-related functions.
  */
-FlareTail.util.Number = class Number {
+FlareTail.util.Number = class {
   /**
    * Format a number in a file size format with a unit like KB.
    * @static
@@ -916,7 +916,7 @@ FlareTail.util.Number = class Number {
 /**
  * Provide regular expression-related functions.
  */
-FlareTail.util.RegExp = class RegExp {
+FlareTail.util.RegExp = class {
   /**
    * Quote any regular expression characters in a string, like the PHP `preg_quote` function, so that the string can be
    * used safely for regular expressions.
@@ -934,7 +934,7 @@ FlareTail.util.RegExp = class RegExp {
 /**
  * Provide miscellaneous functions.
  */
-FlareTail.util.Misc = class Misc {
+FlareTail.util.Misc = class {
   /**
    * Generate a GUID.
    * @static
