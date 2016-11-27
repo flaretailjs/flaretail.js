@@ -949,11 +949,20 @@ FlareTail.util.Misc = class Misc {
   }
 
   /**
-   * Generate a random 7-character hash.
+   * Generate a random hash.
    * @static
+   * @param {Number} [length=7] How many characters to be included in the hash, maximum of 32.
+   * @param {Boolean} [starts_with_char=false] Whether the hash should start with a character instead of a number, so
+   *  that it can also be used for the `id` attribute on an HTML element.
    * @returns {String} A hash, such as `f7f7cf6`.
    */
-  static hash () {
-    return URL.createObjectURL(new Blob()).substr(-7);
+  static hash (length = 7, starts_with_char = false) {
+    for (;;) {
+      const str = this.uuidgen().toLowerCase().replace(/-/g, '').substr(-length);
+
+      if (!starts_with_char || starts_with_char && str.match(/^\D/)) {
+        return str;
+      }
+    }
   }
 }
