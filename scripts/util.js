@@ -403,6 +403,7 @@ FlareTail.util.Events = class Events {
 FlareTail.util.Keybind = class Keybind {
   /**
    * Assign keyboard shortcuts on a given element.
+   * @static
    * @param {Element} $target - A target element.
    * @param {Object.<String, Function>} map - A mapping of keybind patterns (`S`, `Accel+Shift+R`, `Accel+O`, etc.
    *  Multiple pattern should be separated with `|`) and function. Possible key values can be found at MDN. The
@@ -452,6 +453,7 @@ FlareTail.util.Keybind = class Keybind {
 
   /**
    * Fire a `keydown` event on a given element to call the event handler for an assigned keyboard shortcut.
+   * @static
    * @param {Element} $target - A target element.
    * @param {String} key - A key name like `ArrowDown`.
    * @see {@link https://developer.mozilla.org/docs/Web/API/KeyboardEvent/key MDN}
@@ -506,6 +508,7 @@ FlareTail.util.DateTime = class DateTime {
 
   /**
    * Called whenever an option has been changed. This is a `Proxy` handler.
+   * @static
    * @param {Object} obj - The options.
    * @param {String} prop - A property name.
    * @param {*} value - A new property value.
@@ -894,7 +897,7 @@ FlareTail.util.Number = class Number {
    * @returns {String} A formatted file size with a unit and thousands separators.
    * @todo Support languages other than English.
    */
-  format_file_size (number, fixed = 1) {
+  static format_file_size (number, fixed = 1) {
     const units = { 1000: 'KB', 1000000: 'MB', 1000000000: 'GB', 1000000000000: 'TB' };
     let rounder = 1;
     let unit = number === 1 ? 'byte' : 'bytes';
