@@ -3108,9 +3108,6 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     const items = this.view.members;
     const index = items.indexOf($tab);
 
-    // Notify
-    FlareTail.util.Events.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
-
     // Switch tab
     if (this.view.selected[0] === $tab) {
       const $new_tab = items[index - 1] || items[index + 1];
@@ -3124,6 +3121,9 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
     // Remove tab
     items.splice(index, 1); // Update data
     $tab.remove(); // Update view
+
+    // Notify
+    FlareTail.util.Events.trigger(this.view.$container, 'Closed', { detail: { id: $tab.id }});
   }
 }
 
