@@ -2381,19 +2381,6 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   }
 
   /**
-   * Called whenever a focusout event is triggered. Close the menu.
-   * @param {FocusEvent} event - The focusout event.
-   */
-  onfocusout (event) {
-    if (event.currentTarget === window) {
-      this.close(true);
-    }
-
-    // The default behavior
-    super.onfocusout(event);
-  }
-
-  /**
    * Build the menu dynamically with the provided data.
    * @param {Array.<Object>} [data] - Optional data.
    */
