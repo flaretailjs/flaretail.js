@@ -13,10 +13,6 @@ body {
   cursor: default;
 }
 
-:active {
-  background-color: transparent; /* Suppress the default style on Firefox for mobile */
-}
-
 /* ----------------------------------------------------------------------------------------------
  * App
  * ---------------------------------------------------------------------------------------------- */
@@ -334,7 +330,7 @@ canvas[id^="column-drag-image-"].follower {
 
 [role="menu"] {
   position: absolute;
-  padding: .4rem 0; 
+  padding: .4rem 0;
 }
 
 [role="menu"] [role="menu"] {
@@ -692,6 +688,11 @@ a[role="menuitem"] {
 /* ----------------------------------------------------------------------------------------------
  * Textbox
  * ---------------------------------------------------------------------------------------------- */
+
+input:active,
+textarea:active {
+  background-color: transparent; /* Suppress the default style on Firefox for mobile */
+}
 
 [role="textbox"], [role="searchbox"] {
   display: inline-block;
