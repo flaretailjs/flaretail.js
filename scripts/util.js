@@ -335,7 +335,7 @@ FlareTail.util.Content = class {
 /**
  * Provide event-related functions.
  */
-FlareTail.util.Events = class {
+FlareTail.util.Event = class {
   /**
    * Prevent the default browser action and propagation at the same time.
    * @static
@@ -447,7 +447,7 @@ FlareTail.util.Keybind = class {
         break;
       }
 
-      return found ? FlareTail.util.Events.ignore(event) : true;
+      return found ? FlareTail.util.Event.ignore(event) : true;
     });
   }
 
