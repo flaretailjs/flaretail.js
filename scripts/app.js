@@ -115,7 +115,7 @@ FlareTail.app.Router = class Router {
 /**
  * Provide app event functionalities. This is the base class of other app framework classes.
  */
-FlareTail.app.Events = class Events {
+FlareTail.app.Event = class _Event {
   /**
    * Activate an instance. This should be called by all the derived classes using super().
    * @param {String} [id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned. A View
@@ -190,9 +190,9 @@ FlareTail.app.Events = class Events {
 
 /**
  * Provide app datasource functionalities.
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Event
  */
-FlareTail.app.DataSource = class DataSource extends FlareTail.app.Events {}
+FlareTail.app.DataSource = class DataSource extends FlareTail.app.Event {}
 
 /**
  * Provide IndexedDB datasource functionalities.
@@ -254,9 +254,9 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 
 /**
  * Provide app model functionalities.
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Event
  */
-FlareTail.app.Model = class Model extends FlareTail.app.Events {
+FlareTail.app.Model = class Model extends FlareTail.app.Event {
   /**
    * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
    * @returns {Proxy} Proxified `this` object.
@@ -313,9 +313,9 @@ FlareTail.app.Model = class Model extends FlareTail.app.Events {
 
 /**
  * Provide app collection functionalities.
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Event
  */
-FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
+FlareTail.app.Collection = class Collection extends FlareTail.app.Event {
   /**
    * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
    * faster access.
@@ -432,9 +432,9 @@ FlareTail.app.Collection = class Collection extends FlareTail.app.Events {
 
 /**
  * Provide app view functionalities.
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Event
  */
-FlareTail.app.View = class View extends FlareTail.app.Events {}
+FlareTail.app.View = class View extends FlareTail.app.Event {}
 
 FlareTail.app.View.prototype.get_fragment = FlareTail.util.Content.get_fragment;
 FlareTail.app.View.prototype.get_template = FlareTail.util.Content.get_template;
@@ -448,6 +448,6 @@ FlareTail.app.Helper = class Helper extends FlareTail.app.View {}
 
 /**
  * Provide app presenter functionalities.
- * @extends FlareTail.app.Events
+ * @extends FlareTail.app.Event
  */
-FlareTail.app.Presenter = class Presenter extends FlareTail.app.Events {}
+FlareTail.app.Presenter = class Presenter extends FlareTail.app.Event {}
