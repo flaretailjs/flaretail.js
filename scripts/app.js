@@ -176,7 +176,15 @@ FlareTail.app.Events = class Events {
    * @param {Boolean} [global=false] - See the 'on' function above for details.
    */
   subscribe (topic, global = false) {
-    this.on(topic, data => this[topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase()](data), global);
+    const method_name = topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase();
+
+    this.on(topic, data => {
+      if (typeof this[method_name] === 'function') {
+        this[method_name](data);
+      } else {
+        throw new TypeError(`${this.constructor.name}.prototype.${method_name} is not a function`);
+      }
+    }, global);
   }
 }
 
