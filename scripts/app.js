@@ -8,24 +8,26 @@
  */
 FlareTail.app = {};
 
-/*
+/**
  * Provide app router functionalities.
  */
 FlareTail.app.Router = class Router {
   /**
    * Get a Router instance.
    * @constructor
-   * @param {String} root - The app's root path. Usually '/'.
+   * @param {String} root - The app's root path. Usually `/`.
    * @param {String} launch_path - The app's launch path.
    * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains `view` (Object) and
    *  `catch_all` (Boolean, optional). See the example below.
    * @returns {Router}
    * @example
+   *  ```js
    *  BzDeck.router = new FlareTail.app.Router(BzDeck.config.app, {
    *    '/bug/(\\d+)': { view: BzDeck.DetailsPageView },
    *    '/home/(\\w+)': { view: BzDeck.HomePageView, catch_all: true },
    *    '/settings': { view: BzDeck.SettingsPageView },
    *  });
+   *  ```
    */
   constructor ({ root, launch_path } = {}, routes) {
     // Specify the base URL of the app, without a trailing slash
@@ -96,7 +98,7 @@ FlareTail.app.Router = class Router {
    * Navigate to the specified URL pathname by manipulating the browser history.
    * @param {String} path - URL pathname to go.
    * @param {Object} [state={}] - History state object.
-   * @param {Boolean} [replace=false] - If true, the current history state will be replaced, otherwise appended.
+   * @param {Boolean} [replace=false] - If `true`, the current history state will be replaced, otherwise appended.
    */
   navigate (path, state = {}, replace = false) {
     state.previous = replace && history.state && history.state.previous ? history.state.previous : location.pathname;
@@ -117,9 +119,9 @@ FlareTail.app.Router = class Router {
  */
 FlareTail.app.Event = class _Event {
   /**
-   * Activate an instance. This should be called by all the derived classes using super().
+   * Activate an instance. This should be called by all the derived classes using `super()`.
    * @param {String} [id] - Unique instance identifier. If omitted, a random 7-character hash will be assigned. A View
-   *  and the corresponding Presenter as well as its sub-Views/Presenters should share the same ID, otherwise their
+   *  and the corresponding Presenter as well as its sub-Views/Presenters should share the same `id`, otherwise their
    *  communication through events won't work.
    * @returns {Events} New Events instance.
    */
@@ -129,11 +131,11 @@ FlareTail.app.Event = class _Event {
 
   /**
    * Publish an event asynchronously.
-   * @param {String} topic - An event name. Shorthand syntax is supported: #Updated in BugModel means BugModel#Updated,
-   *  #Error in SessionPresenter means SessionPresenter#Error, and so on.
+   * @param {String} topic - An event name. Shorthand syntax is supported: `#Updated` in `BugModel` means
+   *  `BugModel#Updated`, `#Error` in `SessionPresenter` means `SessionPresenter#Error`, and so on.
    * @param {Object} [data={}] - Data to pass the subscribers. If the instance has set the id property, that id will be
-   *  automatically appended to the data. Note that the data will be cloned. Proxy will be automatically deproxified
-   *  before being posted but complex objects like Error or URLSearchParams cannot be transferred and throw. See the
+   *  automatically appended to the data. Note that the data will be cloned. `Proxy` will be automatically deproxified
+   *  before being posted but complex objects like `Error` or `URLSearchParams` cannot be transferred and throw. See the
    *  following MDN document for details.
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm MDN}
    */
@@ -150,11 +152,12 @@ FlareTail.app.Event = class _Event {
 
   /**
    * Subscribe an event.
-   * @param {String} topic - Event name. Shorthand syntax is supported: M#Updated in BugView means BugModel#Updated,
-   *  V#AppMenuItemSelected in ToolbarPresenter means ToolbarView#AppMenuItemSelected, and so on.
+   * @param {String} topic - Event name. Shorthand syntax is supported: `M#Updated` in `BugView` means
+   *  `BugModel#Updated`, `V#AppMenuItemSelected` in `ToolbarPresenter` means `ToolbarView#AppMenuItemSelected`, and so
+   *  on.
    * @param {Function} callback - Function called whenever the specified event is fired.
-   * @param {Boolean} [global=false] - If true, the callback function will be fired even when the event detail object
-   *  and the instance have different id properties. Otherwise, the identity will be respected.
+   * @param {Boolean} [global=false] - If `true`, the callback function will be fired even when the event detail object
+   *  and the instance have different `id` properties. Otherwise, the identity will be respected.
    */
   on (topic, callback, global = false) {
     topic = topic.replace(/^([MVP])#/, (match, prefix) => {
@@ -170,10 +173,10 @@ FlareTail.app.Event = class _Event {
   }
 
   /**
-   * Subscribe an event with an automatically determined callback. So this is the 'on' function's shorthand. For
-   * example, if the topic is 'V#NavigationRequested', on_navigation_requested will be set as the callback function.
-   * @param {String} topic - See the 'on' function above for details.
-   * @param {Boolean} [global=false] - See the 'on' function above for details.
+   * Subscribe an event with an automatically determined callback. So this is the `on` function's shorthand. For
+   * example, if the `topic` is `V#NavigationRequested`, `on_navigation_requested` will be set as the callback function.
+   * @param {String} topic - See the `on` function above for details.
+   * @param {Boolean} [global=false] - See the `on` function above for details.
    */
   subscribe (topic, global = false) {
     const method_name = topic.replace(/^.+?\#/, 'on').replace(/([A-Z])/g, '_$1').toLowerCase();
@@ -231,8 +234,9 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
   /**
    * Get a IndexedDB store in a convenient way.
    * @param {String} name - Name of the object store.
-   * @param {Boolean} [return_request=false] - If true, operation methods return IDBRequest instead of result Array.
-   * @returns {Object} Set of operation methods that return a Promise.
+   * @param {Boolean} [return_request=false] - If `true`, operation methods return an `IDBRequest` instead of the result
+   *  `Array`.
+   * @returns {Object} Set of operation methods that return a `Promise`.
    */
   get_store (name, return_request = false) {
     const store = this.database.transaction(name, 'readwrite').objectStore(name);
@@ -258,7 +262,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
  */
 FlareTail.app.Model = class Model extends FlareTail.app.Event {
   /**
-   * Get a proxified `this` object, so consumers can access data seamlessly using obj.prop instead of obj.data.prop.
+   * Get a proxified `this` object, so consumers can access data seamlessly using `obj.prop` instead of `obj.data.prop`.
    * @returns {Proxy} Proxified `this` object.
    */
   proxy () {
@@ -273,7 +277,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Event {
   }
 
   /**
-   * Cache data as a new Proxy, so the object is automatically saved when a property is modified.
+   * Cache data as a new `Proxy`, so the object is automatically saved when a property is modified.
    * @param {Object} data - Raw data object.
    * @returns {Proxy} Proxified data object.
    */
@@ -317,8 +321,8 @@ FlareTail.app.Model = class Model extends FlareTail.app.Event {
  */
 FlareTail.app.Collection = class Collection extends FlareTail.app.Event {
   /**
-   * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new Map for
-   * faster access.
+   * Load the all data from local IndexedDB, create a new model instance for each item, then cache them in a new `Map`
+   * for faster access.
    * @returns {Promise.<Map.<(String|Number), Proxy>>} Model instances.
    */
   async load () {
