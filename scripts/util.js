@@ -954,7 +954,7 @@ FlareTail.util.Misc = class {
    */
   static hash (length = 7, starts_with_char = false) {
     for (;;) {
-      const str = this.uuidgen().toLowerCase().replace(/-/g, '').substr(-length);
+      const str = Array(length).fill(0).map(() => Math.floor((Math.random() * 16)).toString(16)).join('');
 
       if (!starts_with_char || starts_with_char && str.match(/^\D/)) {
         return str;
