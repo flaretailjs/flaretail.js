@@ -1643,7 +1643,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
         get: () => this.$listbox.querySelector('[role="option"][aria-selected="true"]'),
         set: $selected => {
           this.$$listbox.view.selected = this.$$listbox.view.$focused = $selected;
-          this.$$input.value = $selected.dataset.value || $selected.textContent;
+          this.$$input.value = $selected.textContent;
         },
       },
       selectedIndex: {
@@ -1653,7 +1653,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
           const $selected = this.$$listbox.view.selected = this.$$listbox.view.$focused
                           = this.$$listbox.view.members[index];
 
-          this.$$input.value = $selected.dataset.value || $selected.textContent;
+          this.$$input.value = $selected.textContent;
         },
       },
     });
@@ -1707,7 +1707,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     const $selected = this.$listbox.querySelector('[role="option"][aria-selected="true"]');
 
     if ($selected) {
-      this.$$input.value = $selected.dataset.value || $selected.textContent;
+      this.$$input.value = $selected.textContent;
     }
   }
 
@@ -1781,7 +1781,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     const $selected = this.$$listbox.view.selected[0];
 
     if (this.autocomplete === 'list' && $selected) {
-      this.$$input.value = $selected.dataset.value || $selected.textContent;
+      this.$$input.value = $selected.textContent;
     }
   }
 
@@ -1789,26 +1789,29 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
    * Build the dropdown list with the provided data.
    * @param {Object} data - Data to be filled in.
    * @param {String} data.value - Item value.
+   * @param {String} [data.label] - Item's displayed value. If omitted, `data.value` will be used.
    * @param {Boolean} [data.selected] - Whether the item to be selected.
    */
   build_dropdown (data) {
     this.clear_dropdown();
 
-    for (const { value, selected } of data) {
-      this.add_item(value, selected);
+    for (const item of data) {
+      this.add_item(item);
     }
   }
 
   /**
    * Add an item to the dropdown list.
    * @param {String} value - Item value.
+   * @param {String} [label] - Item's displayed value. If omitted, `value` will be used.
    * @param {Boolean} [selected=false] - Whether the item to be selected.
    * @returns {HTMLElement} Added node.
    */
-  add_item (value, selected = false) {
+  add_item ({ value, label, selected = false } = {}) {
     const $option = document.createElement('li');
 
-    $option.dataset.value = $option.textContent = value;
+    $option.dataset.value = value;
+    $option.textContent = label || value;
     $option.setAttribute('role', 'option');
     $option.setAttribute('aria-selected', selected);
 
@@ -1877,10 +1880,10 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
           }
 
           const $target = this.$$listbox.view.selected[0];
-          const value = $target.dataset.value || $target.textContent;
+          const value = $target.dataset.value;
 
           if (this.autocomplete === 'list') {
-            this.$$input.value = value;
+            this.$$input.value = $target.textContent;
             FlareTail.util.Event.trigger(this.$container, 'Change', { detail: { $target, value }});
           }
 
@@ -1952,10 +1955,10 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
    */
   listbox_onmousedown (event) {
     const $target = this.$$listbox.view.selected[0];
-    const value = $target.dataset.value || $target.textContent;
+    const value = $target.dataset.value;
 
     this.hide_dropdown();
-    this.$$input.value = value;
+    this.$$input.value = $target.textContent;
     this.$input.focus();
 
     FlareTail.util.Event.trigger(this.$container, 'Change', { detail: { $target, value }});
