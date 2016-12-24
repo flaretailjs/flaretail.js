@@ -134,7 +134,36 @@ FlareTail.widgets.Section = class Section extends FlareTail.widgets.Structure {}
  * @extends FlareTail.widgets.RoleType
  * @see {@link http://www.w3.org/TR/wai-aria/complete#widget WAI-ARIA Spec}
  */
-FlareTail.widgets.Widget = class Widget extends FlareTail.widgets.RoleType {}
+FlareTail.widgets.Widget = class Widget extends FlareTail.widgets.RoleType {
+  /**
+   * Add icon and label to the widget, specifically button, checkbox and radio.
+   * @param {HTMLElement} $item - $widget
+   */
+  add_icon ($item) {
+    if (!$item.querySelector('label') && $item.textContent) {
+      const $label = document.createElement('label');
+
+      $label.textContent = $item.textContent;
+      $item.innerHTML = '';
+      $item.appendChild($label);
+    }
+
+    if (!$item.querySelector('.icon')) {
+      const $icon = document.createElement('span');
+
+      $icon.className = 'icon';
+      $icon.setAttribute('class', 'icon');
+      $icon.setAttribute('aria-hidden', 'true');
+
+      if ($item.hasAttribute('data-icon')) {
+        $icon.setAttribute('data-icon', $item.getAttribute('data-icon'));
+        $item.removeAttribute('data-icon');
+      }
+
+      $item.insertAdjacentElement('afterbegin', $icon);
+    }
+  }
+}
 
 /**
  * Implement the command abstract role.
@@ -181,6 +210,12 @@ FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
     };
 
     FlareTail.util.Event.bind(this, $button, ['click', 'keydown']);
+
+    if (!$button.hasAttribute('tabindex')) {
+      $button.tabIndex = 0;
+    }
+
+    this.add_icon($button);
 
     if ($button.matches('[aria-haspopup="true"]')) {
       this.activate_popup();
@@ -1624,8 +1659,14 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     });
 
     if (!this.$button && !this.nobutton) {
+      const $icon = document.createElement('span');
+
+      $icon.setAttribute('class', 'icon');
+      $icon.setAttribute('aria-hidden', 'true');
+
       this.$button = this.$container.appendChild(document.createElement('span'));
       this.$button.setAttribute('role', 'button');
+      this.$button.insertAdjacentElement('afterbegin', $icon);
     }
 
     if (this.$button) {
@@ -2665,6 +2706,10 @@ FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select
     };
 
     this.activate();
+
+    for (const $radio of this.view.members) {
+      this.add_icon($radio);
+    }
   }
 }
 
@@ -3023,11 +3068,15 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
    */
   set_close_button ($tab) {
     const $button = document.createElement('span');
+    const $icon = $button.appendChild(document.createElement('span'));
 
     $button.className = 'close';
     $button.title = 'Close Tab'; // l10n
     $button.setAttribute('role', 'button');
     $button.setAttribute('aria-controls', $tab.id);
+    $icon.setAttribute('class', 'icon');
+    $icon.setAttribute('aria-hidden', 'true');
+
     $tab.appendChild($button);
   }
 
@@ -3292,6 +3341,8 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
     });
 
     FlareTail.util.Event.bind(this, $checkbox, ['keydown', 'click', 'contextmenu']);
+
+    this.add_icon($checkbox);
   }
 
   /**

@@ -291,6 +291,15 @@ canvas[id^="column-drag-image-"].follower {
 }
 
 /* ----------------------------------------------------------------------------------------------
+ * Toolbar
+ * ---------------------------------------------------------------------------------------------- */
+
+[role="toolbar"],
+[role="toolbar"] > [role="group"] {
+  display: flex;
+}
+
+/* ----------------------------------------------------------------------------------------------
  * Menu
  * ---------------------------------------------------------------------------------------------- */
 
@@ -558,15 +567,11 @@ a[role="menuitem"] {
   height: 2rem;
 }
 
-[role="combobox"] [role="button"]::after {
+[role="combobox"] [role="button"] .icon {
   position: absolute;
   top: 0;
   right: 0;
   width: 2rem;
-  height: 2rem;
-  line-height: 2rem;
-  text-align: center; /* icon can be placed */
-  vertical-align: top;
 }
 
 [role="combobox"] .listbox-outer {
@@ -655,23 +660,24 @@ a[role="menuitem"] {
  * RadioGroup & CheckBox
  * ---------------------------------------------------------------------------------------------- */
 
-[role="radio"],
-[role="checkbox"] {
-  display: inline-block;
-  line-height: 1.2rem;
-  vertical-align: top;
+[role="checkbox"],
+[role="radio"] {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
   pointer-events: auto;
 }
 
-[role="radio"]::before,
-[role="checkbox"]::before {
-  display: inline-block;
-  margin-right: .4rem;
-  width: 1.2rem;
-  height: 1.2rem;
-  background-position: center;
-  vertical-align: top;
-  content: '';
+[role="checkbox"] .icon,
+[role="radio"] .icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+[role="checkbox"] *,
+[role="radio"] * {
+  pointer-events: none;
 }
 
 /* ----------------------------------------------------------------------------------------------
@@ -683,6 +689,18 @@ a[role="menuitem"] {
   background-image: none; /* Suppress the default style on Firefox for mobile */
   font-family: inherit; /* Suppress the default style on Firefox for mobile */
   pointer-events: auto;
+}
+
+[role="button"] .icon {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+[role="button"] * {
+  pointer-events: none;
 }
 
 /* ----------------------------------------------------------------------------------------------

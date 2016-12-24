@@ -257,11 +257,6 @@ FlareTail.util.Content = class {
       if (tag === 'a' && $item.href === value && !$item.text) {
         $item.text = value.replace(/^https?:\/\//, '').replace(/\/$/, '');
       }
-
-      // Set WAI-ARIA attribute when necessary
-      if ($item.matches('meta[role="checkbox"]')) {
-        $item.setAttribute('aria-checked', value);
-      }
     };
 
     $scope.setAttribute('aria-busy', 'true');
