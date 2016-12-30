@@ -692,6 +692,27 @@ FlareTail.util.Network = class {
 }
 
 /**
+ * Provide browser navigation-related functions.
+ */
+FlareTail.util.Navigator = class {
+  /**
+   * Open a new browser tab/window without the `opener` property.
+   * @param {String} url - URL of the destination.
+   * @param {String} [name] - Name of the new window.
+   * @return {Window} Reference to the new window.
+   */
+  static open_window (url, name = '') {
+    const win = window.open();
+
+    win.opener = null;
+    win.name = name;
+    win.location = url;
+
+    return win;
+  }
+}
+
+/**
  * Provide browser history-related functions.
  */
 FlareTail.util.History = class {
