@@ -33,11 +33,11 @@ FlareTail.widgets.RoleType = class RoleType {
     this.update_members();
 
     // Focus Management
-    for (const [i, $item] of this.view.members.entries()) {
-      $item.tabIndex = i === 0 ? 0 : -1;
+    if (this.options.maintain_tabindex !== false) {
+      for (const [i, $item] of this.view.members.entries()) {
+        $item.tabIndex = i === 0 ? 0 : -1;
+      }
     }
-
-    $container.removeAttribute('tabindex');
 
     this.data = this.data || {};
 
@@ -402,8 +402,8 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    * @param {KeyboardEvent} event - The keydown event.
    */
   select_with_keyboard (event) {
-    // Focus shift with tab key
     if (event.key === 'Tab') {
+      // Allow moving focus
       return true;
     }
 
@@ -671,18 +671,26 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
       }});
     }
 
-    if (prop === '$focused') {
+    if (prop === '$focused' && oldval !== newval) {
+      const maintain_tabindex = this.options.maintain_tabindex !== false;
       let $element;
 
       if (newval) {
         $element = newval;
-        $element.tabIndex = 0;
+
+        if (maintain_tabindex) {
+          $element.tabIndex = 0;
+        }
+
         $element.focus();
       }
 
       if (oldval) {
         $element = oldval;
-        $element.tabIndex = -1;
+
+        if (maintain_tabindex) {
+          $element.tabIndex = -1;
+        }
       }
     }
 
@@ -1000,8 +1008,8 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * @param {KeyboardEvent} event - The keydown event.
    */
   onkeydown (event) {
-    // Focus shift with tab key
     if (event.key === 'Tab') {
+      // Allow moving focus
       return true;
     }
 
@@ -2005,6 +2013,7 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
     this.options = {
       item_roles: ['option'],
       item_selector: '[role="option"]',
+      maintain_tabindex: false, // Keep focus on the listbox; each option won't have the tabindex attribute
       search_enabled: options.search_enabled !== undefined ? options.search_enabled : true
     };
 
@@ -2320,6 +2329,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   /**
    * Called whenever a keydown event is triggered. Select a menu item when necessary.
    * @param {KeyboardEvent} event - The keydown event.
+   * @returns {Boolean} `true` for Tab focus management, `false` otherwise.
    */
   onkeydown (event) {
     const parent = this.data.parent;
@@ -2333,7 +2343,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
       event.target.rel = 'noopener';
       event.target.target = '_blank';
 
-      return;
+      return false;
     }
 
     // The owner of the context menu
@@ -2356,20 +2366,31 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
           break;
         }
 
-        case 'Escape':
-        case 'Tab': {
+        case 'Escape': {
           this.close();
 
           break;
         }
+
+        case 'Tab': {
+          if ($owner.matches('[aria-pressed="true"]')) {
+            this.close();
+          }
+
+          // Allow moving focus
+          return true;
+        }
       }
 
-      return;
+      return false;
     }
 
-    FlareTail.util.Event.ignore(event);
-
     switch (event.key) {
+      case 'Tab': {
+        // Allow moving focus
+        return true;
+      }
+
       case 'ArrowRight': {
         if (has_submenu) {
           // Select the first item in the submenu
@@ -2422,6 +2443,8 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
         super.onkeydown(event);
       }
     }
+
+    return FlareTail.util.Event.ignore(event);
   }
 
   /**
@@ -3056,12 +3079,10 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
 
     // Current tabpanel
     $panel = document.getElementById($current_tab.getAttribute('aria-controls'))
-    $panel.tabIndex = -1;
     $panel.setAttribute('aria-hidden', 'true');
 
     // New tabpanel
     $panel = document.getElementById($new_tab.getAttribute('aria-controls'))
-    $panel.tabIndex = 0;
     $panel.setAttribute('aria-hidden', 'false');
   }
 
@@ -3125,7 +3146,6 @@ FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
 
     $panel = $panel || document.createElement('section');
     $panel.id = `tabpanel-${name}`;
-    $panel.tabIndex = -1;
     $panel.setAttribute('role', 'tabpanel');
     $panel.setAttribute('aria-hidden', 'true');
     $panel.setAttribute('aria-labelledby', $tab.id);
@@ -3261,6 +3281,11 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
    * @returns {Boolean} False if the editor is readonly. True otherwise.
    */
   onkeydown (event) {
+    if (event.key === 'Tab') {
+      // Allow moving focus
+      return true;
+    }
+
     event.stopPropagation();
 
     if (this.readonly) {
