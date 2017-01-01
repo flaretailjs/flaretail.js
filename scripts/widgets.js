@@ -1299,7 +1299,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
    * Initialize the column picker on the grid header.
    */
   init_columnpicker () {
-    const $picker = this.view.$columnpicker = document.createElement('ul');
+    const $picker = this.view.$columnpicker = document.createElement('div');
     const $header = this.view.$header;
 
     $picker.id = `${this.view.$container.id}-columnpicker`;
@@ -1696,7 +1696,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     this.$$input = new FlareTail.widgets.TextBox(this.$input);
 
     if (!this.$listbox) {
-      this.$listbox = this.$container.appendChild(document.createElement('ul'));
+      this.$listbox = this.$container.appendChild(document.createElement('div'));
       this.$listbox.setAttribute('role', 'listbox');
     }
 
@@ -1816,7 +1816,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
    * @returns {HTMLElement} Added node.
    */
   add_item ({ value, label, selected = false } = {}) {
-    const $option = document.createElement('li');
+    const $option = document.createElement('div');
 
     $option.dataset.value = value;
     $option.textContent = label || value;
@@ -2056,7 +2056,7 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
   build () {
     const map = this.data.map = new Map();
     const $fragment = new DocumentFragment();
-    const $_item = document.createElement('li');
+    const $_item = document.createElement('div');
 
     $_item.tabIndex = -1;
     $_item.setAttribute('role', 'option');
@@ -2209,7 +2209,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   activate (rebuild = false) {
     // Redefine items
     const not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
-    const selector = `#${this.view.$container.id} > li > ${this.options.item_selector}${not_selector}`;
+    const selector = `#${this.view.$container.id} > ${this.options.item_selector}${not_selector}`;
     const items = this.view.members = [...document.querySelectorAll(selector)];
     const menus = this.data.menus = new WeakMap();
 
@@ -2454,8 +2454,8 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   build (data) {
     const $container = this.view.$container;
     const $fragment = new DocumentFragment();
-    const $_separator = document.createElement('li');
-    const $_outer = document.createElement('li');
+    const $_separator = document.createElement('div');
+    const $_outer = document.createElement('div');
     let rebuild = false;
 
     if (data) {
@@ -2855,10 +2855,10 @@ FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
   build () {
     const $tree = this.view.$container;
     const $fragment = new DocumentFragment();
-    const $outer = document.createElement('li');
+    const $outer = document.createElement('div');
     const $treeitem = document.createElement('span');
     const $expander = document.createElement('span');
-    const $group = document.createElement('ul');
+    const $group = document.createElement('div');
     const structure = this.data.structure;
     const map = this.data.map = new WeakMap();
     let level = 1;
