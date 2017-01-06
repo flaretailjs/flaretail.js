@@ -2158,6 +2158,7 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
     this.view = { $container };
 
     this.options = {
+      container_role: 'menu',
       item_roles: ['menuitem', 'menuitemcheckbox', 'menuitemradio'],
       item_selector: '[role^="menuitem"]',
       focus_cycling: true
@@ -2209,8 +2210,9 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   activate (rebuild = false) {
     // Redefine items
     const not_selector = ':not([aria-disabled="true"]):not([aria-hidden="true"])';
-    const selector = `#${this.view.$container.id} > ${this.options.item_selector}${not_selector}`;
-    const items = this.view.members = [...document.querySelectorAll(selector)];
+    const selector = `${this.options.item_selector}${not_selector}`;
+    const items = this.view.members = [...this.view.$container.querySelectorAll(selector)]
+        .filter($item => $item.closest(`[role="${this.options.container_role}"]`) === this.view.$container);
     const menus = this.data.menus = new WeakMap();
 
     for (const $item of items) {
@@ -2590,6 +2592,7 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
     this.view = { $container };
 
     this.options = {
+      container_role: 'menubar',
       item_roles: ['menuitem'],
       item_selector: '[role="menuitem"]',
       focus_cycling: true
