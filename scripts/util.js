@@ -89,7 +89,7 @@ FlareTail.compatible = (() => {
 
     // ES6 Intl API time zone support (Firefox 52)
     if ((new Date(Date.UTC(2012, 11, 6, 12, 0, 0)))
-          .toLocaleString(undefined, { hour: 'numeric', timeZone: 'US/Pacific' }) !== '4 AM') {
+          .toLocaleString('en-US', { hour: 'numeric', timeZone: 'US/Pacific' }) !== '4 AM') {
       throw new Error;
     }
 
