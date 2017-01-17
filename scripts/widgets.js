@@ -330,8 +330,18 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
    * @param {FocusEvent} event - The focusin event.
    */
   onfocusin (event) {
-    if (this.view.members.includes(event.target) && event.target.id) {
-      this.view.$container.setAttribute('aria-activedescendant', event.target.id);
+    let $target;
+
+    if (this.options.maintain_tabindex !== false) {
+      if (event.target && this.view.members.includes(event.target)) {
+        $target = event.target;
+      }
+    } else if (this.view.selected.length) {
+      $target = this.view.selected.slice(-1)[0];
+    }
+
+    if ($target && $target.id) {
+      this.view.$container.setAttribute('aria-activedescendant', $target.id);
     } else {
       this.view.$container.removeAttribute('aria-activedescendant');
     }
@@ -680,9 +690,11 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
 
         if (maintain_tabindex) {
           $element.tabIndex = 0;
+          $element.focus();
+        } else {
+          // Manually fire a `focusin` event to update the `aria-activedescendant` attribute on the container
+          window.setTimeout(() => this.view.$container.dispatchEvent(new FocusEvent('focusin')), 50);
         }
-
-        $element.focus();
       }
 
       if (oldval) {
