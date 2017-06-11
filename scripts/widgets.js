@@ -160,7 +160,7 @@ FlareTail.widgets.Widget = class Widget extends FlareTail.widgets.RoleType {
         $item.removeAttribute('data-icon');
       }
 
-      $item.insertAdjacentElement('afterbegin', $icon);
+      $item.prepend($icon);
     }
   }
 }
@@ -1686,7 +1686,7 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
 
       this.$button = this.$container.appendChild(document.createElement('span'));
       this.$button.setAttribute('role', 'button');
-      this.$button.insertAdjacentElement('afterbegin', $icon);
+      this.$button.prepend($icon);
     }
 
     if (this.$button) {
@@ -1695,9 +1695,10 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
     }
 
     if (!this.$input) {
-      this.$input = this.$container.insertAdjacentElement('afterbegin', document.createElement('span'));
+      this.$input = document.createElement('span');
       this.$input.setAttribute('role', 'textbox');
       this.$input.setAttribute('aria-readonly', this.$container.matches('[aria-readonly="true"]'));
+      this.$container.prepend(this.$input);
     }
 
     this.$input.tabIndex = 0;
