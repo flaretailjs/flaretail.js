@@ -180,7 +180,6 @@ FlareTail.widgets.Command = class Command extends FlareTail.widgets.Widget {}
 FlareTail.widgets.Button = class Button extends FlareTail.widgets.Command {
   /**
    * Get a Button instance.
-   * @constructor
    * @param {HTMLElement} $button - <span role="button">
    * @returns {Button} Widget.
    */
@@ -720,7 +719,6 @@ FlareTail.widgets.Composite = class Composite extends FlareTail.widgets.Widget {
 FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
   /**
    * Get a Grid instance.
-   * @constructor
    * @param {HTMLElement} $container - <table role="grid">
    * @param {Object} [data] - Optional data including columns, rows and order.
    * @param {Object} [options] - These attributes on the grid element are also supported:
@@ -1619,7 +1617,6 @@ FlareTail.widgets.Select = class Select extends FlareTail.widgets.Composite {}
 FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
   /**
    * Get a ComboBox instance.
-   * @constructor
    * @param {HTMLElement} $container - <div role="combobox">
    * @returns {ComboBox} Widget.
    */
@@ -2011,7 +2008,6 @@ FlareTail.widgets.ComboBox = class ComboBox extends FlareTail.widgets.Select {
 FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
   /**
    * Get a ListBox instance.
-   * @constructor
    * @param {HTMLElement} $container - <menu role="listbox">
    * @param {Array.<Object>} [data] - Optional data.
    * @param {Object} [options] - This attribute on the listbox element is also supported:
@@ -2154,7 +2150,6 @@ FlareTail.widgets.ListBox = class ListBox extends FlareTail.widgets.Select {
 FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
   /**
    * Get a Menu instance.
-   * @constructor
    * @param {HTMLElement} $container - <menu role="menu">
    * @param {Array.<Object>} [data] - Optional data.
    * @param {Boolean} [subclass=false] - Whether the method is called in a subclass.
@@ -2594,7 +2589,6 @@ FlareTail.widgets.Menu = class Menu extends FlareTail.widgets.Select {
 FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
   /**
    * Get a MenuBar instance.
-   * @constructor
    * @param {HTMLElement} $container - <menu role="menubar">
    * @param {Array.<Object>} [data] - Optional data.
    * @returns {MenuBar} Widget.
@@ -2730,7 +2724,6 @@ FlareTail.widgets.MenuBar = class MenuBar extends FlareTail.widgets.Menu {
 FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select {
   /**
    * Get a RadioGroup instance.
-   * @constructor
    * @param {HTMLElement} $container - <menu role="radiogroup">
    * @param {Array.<Object>} data - Optional data.
    * @returns {RadioGroup} Widget.
@@ -2763,7 +2756,6 @@ FlareTail.widgets.RadioGroup = class RadioGroup extends FlareTail.widgets.Select
 FlareTail.widgets.Tree = class Tree extends FlareTail.widgets.Select {
   /**
    * Get a Tree instance.
-   * @constructor
    * @param {HTMLElement} $container - <menu role="tree">
    * @param {Array.<Object>} data - Optional data.
    * @returns {Tree} Widget.
@@ -3013,7 +3005,6 @@ FlareTail.widgets.TreeGrid = class TreeGrid extends FlareTail.widgets.Grid {}
 FlareTail.widgets.TabList = class TabList extends FlareTail.widgets.Composite {
   /**
    * Get a TabList instance.
-   * @constructor
    * @param {HTMLElement} $container - <ul role="tablist">. Those attributes are supported as options:
    *  - data-removable: If true, tabs can be opened and/or closed (default: false)
    *  - data-reorderable: If true, tabs can be reordered by drag (default: false)
@@ -3217,7 +3208,6 @@ FlareTail.widgets.Input = class Input extends FlareTail.widgets.Widget {}
 FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
   /**
    * Get a TextBox instance.
-   * @constructor
    * @param {HTMLElement} $textbox - <span role="textbox">
    * @param {Boolean} [richtext=false] - Whether the richtext editing to be enabled.
    * @returns {TextBox} Widget.
@@ -3357,7 +3347,6 @@ FlareTail.widgets.TextBox = class TextBox extends FlareTail.widgets.Input {
 FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
   /**
    * Get a CheckBox instance.
-   * @constructor
    * @param {HTMLElement} $checkbox - <span role="checkbox">
    * @returns {CheckBox} Widget.
    */
@@ -3428,7 +3417,6 @@ FlareTail.widgets.CheckBox = class CheckBox extends FlareTail.widgets.Input {
 FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
   /**
    * Get a ScrollBar instance.
-   * @constructor
    * @param {HTMLElement} $owner - Element to be scrolled.
    * @param {Object} options
    * @param {Boolean} [options.adjusted=false] - Adjust the scrolling increment for Grid, Tree, ListBox.
@@ -3704,7 +3692,6 @@ FlareTail.widgets.ScrollBar = class ScrollBar extends FlareTail.widgets.Input {
 FlareTail.widgets.ScrollBar.Helper = class ScrollBarHelper {
   /**
    * Get a ScrollBarHelper instance.
-   * @constructor
    * @returns {ScrollBarHelper} Helper instance.
    */
   constructor () {
@@ -3765,7 +3752,6 @@ FlareTail.widgets.Window = class Window extends FlareTail.widgets.RoleType {}
 FlareTail.widgets.Dialog = class Dialog extends FlareTail.widgets.Window {
   /**
    * Get a Dialog instance.
-   * @constructor
    * @param {Object} options
    *  - id (optional)
    *  - type: alert, confirm or prompt
@@ -3941,7 +3927,6 @@ FlareTail.widgets.Separator = class Separator extends FlareTail.widgets.Structur
 FlareTail.widgets.Splitter = class Splitter extends FlareTail.widgets.Separator {
   /**
    * Get a Splitter instance.
-   * @constructor
    * @param {HTMLElement} $splitter - <div class="splitter" role="separator">
    * @returns {Splitter} Widget.
    */

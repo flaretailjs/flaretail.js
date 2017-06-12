@@ -14,7 +14,6 @@ FlareTail.app = {};
 FlareTail.app.Router = class Router {
   /**
    * Get a Router instance.
-   * @constructor
    * @param {String} root - The app's root path. Usually `/`.
    * @param {String} launch_path - The app's launch path.
    * @param {Object} routes - Custom routes. The key is a pattern, value is an Object contains `view` (Object) and
