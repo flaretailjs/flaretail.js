@@ -754,16 +754,6 @@ FlareTail.util.Style = class {
  */
 FlareTail.util.Array = class {
   /**
-   * Clone an array. Note that this is a shallow copy. Non-primitive array members, such as objects, will not be cloned.
-   * @static
-   * @param {Array} array - An orignal array.
-   * @returns {Array} A cloned array.
-   */
-  static clone (array) {
-    return [...array];
-  }
-
-  /**
    * Join array members to create a string in a human-readable format, like "A, B and C".
    * @static
    * @param {(Array|Set)} set - An original array.
