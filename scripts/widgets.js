@@ -1293,7 +1293,7 @@ FlareTail.widgets.Grid = class Grid extends FlareTail.widgets.Composite {
 
     // Fire an event
     FlareTail.util.Event.trigger($grid, 'Sorted', { detail: {
-      conditions: FlareTail.util.Object.clone(cond) // Clone cond as it's a proxified object
+      conditions: { ...cond } // Clone cond as it's a proxified object
     }});
 
     const selected = this.view.selected;

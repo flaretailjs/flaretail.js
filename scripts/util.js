@@ -95,6 +95,9 @@ FlareTail.compatible = (() => {
 
     // ES7 async functions
     const f = async () => {};
+
+    // Spread in object literals (Firefox 55)
+    const g = { foo: 1 }, h = { ...g };
   } catch (ex) {
     compatible = false;
     console.log(ex, features);
@@ -743,21 +746,6 @@ FlareTail.util.Style = class {
    */
   static get ($element, property) {
     return window.getComputedStyle($element, null).getPropertyValue(property);
-  }
-}
-
-/**
- * Provide object-related functions.
- */
-FlareTail.util.Object = class {
-  /**
-   * Clone an object. This can also be used to convert a `Proxy` to a normal object.
-   * @static
-   * @param {(Object|Proxy)} obj - An original object.
-   * @returns {Object} A cloned object.
-   */
-  static clone (obj) {
-    return Object.assign({}, obj);
   }
 }
 

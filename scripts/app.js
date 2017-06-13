@@ -140,7 +140,7 @@ FlareTail.app.Event = class _Event {
    */
   trigger (topic, data = {}) {
     topic = topic.match(/^#/) ? this.constructor.name + topic : topic;
-    data = Object.assign({}, data);
+    data = { ...data };
 
     (new BroadcastChannel(topic)).postMessage({ id: this.id, data });
 
@@ -246,7 +246,7 @@ FlareTail.app.DataSource.IndexedDB = class IDBDataSource extends FlareTail.app.D
 
     return {
       obj: store, // IDBObjectStore
-      save: obj => send(store.put(Object.assign({}, obj))), // Deproxify the object before saving
+      save: obj => send(store.put({ ...obj })), // Deproxify the object before saving
       get: key => send(store.get(key)),
       get_all: () => send(store.getAll()),
       delete: key => send(store.delete(key)),
@@ -282,7 +282,7 @@ FlareTail.app.Model = class Model extends FlareTail.app.Event {
    */
   cache (data) {
     // Deproxify the object just in case
-    data = Object.assign({}, data);
+    data = { ...data };
 
     return this.data = new Proxy(data, {
       set: (obj, prop, value) => {
