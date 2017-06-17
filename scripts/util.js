@@ -628,7 +628,8 @@ FlareTail.util.DateTime = class {
       return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone });
     }
 
-    return date.toLocaleDateString(locale, { hour: 'numeric', minute: 'numeric', hour12: false, timeZone });
+    // Hardcode the en-CA locale so it will produce 'YYYY-MM-DD, hh:mm'
+    return date.toLocaleDateString('en-CA', { hour: 'numeric', minute: 'numeric', hour12: false, timeZone });
   }
 }
 
